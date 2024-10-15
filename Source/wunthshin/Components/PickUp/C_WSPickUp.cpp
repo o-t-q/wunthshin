@@ -23,24 +23,73 @@ void UC_WSPickUp::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
+	bTaken = false;
 	EnablePickUp();
 	OnPickUp.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnPickUp);
+	OnDropping.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnDropping);
 }
 
-void UC_WSPickUp::HandleOnPickUp(AActor* InTriggeredActor)
+void UC_WSPickUp::HandleOnPickUp(TScriptInterface<I_WSTaker> InTriggeredActor)
 {
+	// 이미 해당 물건의 소유자가 있으므로 무시
+	if (bTaken)
+	{
+		// 만약 소유자가 없다면 예외처리
+		check(GetOwner());
+		UE_LOG(LogPickUpComponent, Log, TEXT("Object is already taken, Owner: %s"), *GetOwner()->GetName());
+		return;
+	}
+	
 	if (InTriggeredActor)
 	{
-		I_WSTaker* TakingObject = Cast<I_WSTaker>(InTriggeredActor);
-		ensureAlwaysMsgf(TakingObject, TEXT("Triggered Object is not a taking object!"));
-
-		if (TakingObject->Take(this))
+		if (InTriggeredActor->Take(this))
 		{
+			bTaken = true;
 			DisablePickUp();
+
+			// 물체를 시야에서 숨기고, 충돌 처리를 끔
+			GetOwner()->SetActorEnableCollision(false);
+			GetOwner()->SetActorHiddenInGame(true);
 		}
 		else
 		{
-			UE_LOG(LogPickUpComponent, Log, TEXT("IWS_Taker returns false"));
+			UE_LOG(LogPickUpComponent, Log, TEXT("IWS_Taker::Take returns false"));
+		}
+	}
+}
+
+void UC_WSPickUp::HandleOnDropping(TScriptInterface<I_WSTaker> InTriggeringActor)
+{
+	if (!bTaken)
+	{
+		UE_LOG(LogPickUpComponent, Log, TEXT("Object is not taken by anyone"));
+		return;
+	}
+
+	if (InTriggeringActor)
+	{
+		if (InTriggeringActor->Drop(this))
+		{
+			bTaken = false;
+			EnablePickUp();
+
+			// 떨어뜨리는 객체의 위치 근방으로 이동시킴
+			if (const AActor* ActorCheck = Cast<AActor>(InTriggeringActor.GetInterface()))
+			{
+				FVector Origin, Extents;
+				GetOwner()->GetActorBounds(true, Origin, Extents);
+
+				const FVector XYGap{Extents.X + 1.f, Extents.Y + 1.f, 0.f};
+				GetOwner()->SetActorLocation(ActorCheck->GetActorLocation() + XYGap);
+			}
+
+			// 물체를 다시 보여줌
+			GetOwner()->SetActorEnableCollision(true);
+			GetOwner()->SetActorHiddenInGame(false);
+		}
+		else
+		{
+			UE_LOG(LogPickUpComponent, Log, TEXT("IWS_Taker::Drop return false"))
 		}
 	}
 }
@@ -63,15 +112,9 @@ void UC_WSPickUp::DisablePickUp()
 
 void UC_WSPickUp::OnActorBeginOverlapProxy(AActor* OverlappedActor, AActor* /*OtherActor*/)
 {
-	OnPickUp.Broadcast(OverlappedActor);
-}
-
-
-// Called every frame
-void UC_WSPickUp::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	// ...
+	if (Cast<I_WSTaker>(OverlappedActor))
+	{
+		OnPickUp.Broadcast(OverlappedActor);
+	}
 }
 

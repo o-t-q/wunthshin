@@ -7,7 +7,7 @@
 #include "wunthshin/Interfaces/Taker/Taker.h"
 #include "Logging/LogMacros.h"
 
-#include "A_WSCharacter.generated.h"
+#include "AA_WSCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
@@ -17,8 +17,8 @@ struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-UCLASS(config=Game)
-class A_WSCharacter : public ACharacter, public I_WSTaker
+UCLASS(config=Game, Blueprintable)
+class AA_WSCharacter : public ACharacter, public I_WSTaker
 {
 	GENERATED_BODY()
 
@@ -49,11 +49,14 @@ class A_WSCharacter : public ACharacter, public I_WSTaker
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* PickUpAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* DropAction;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Test", meta = (AllowPrivateAccess = "true"))
 	AActor* Item;
 	
 public:
-	A_WSCharacter();
+	AA_WSCharacter();
 	
 
 protected:
@@ -65,6 +68,8 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	void FindAndTake();
+
+	void CheckItemAndDrop();
 
 protected:
 	// APawn interface
@@ -80,5 +85,7 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	virtual bool Take(UC_WSPickUp* InTakenComponent) override;
+
+	virtual bool Drop(UC_WSPickUp* InTakenComponent) override;
 };
 
