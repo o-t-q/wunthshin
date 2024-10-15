@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "wunthshinGameMode.h"
-#include "A_WSCharacter.h"
+#include "wunthshin/Actors/AA_WSCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
 AwunthshinGameMode::AwunthshinGameMode()
