@@ -19,12 +19,15 @@ public:
 	UC_WSPickUp();
 
 	// 해당 물체가 줍기를 당할 경우 해당 Delegate를 Broadcast
+	UPROPERTY(BlueprintAssignable)
 	FOnPickUp OnPickUp;
 
 	// 충돌 처리 활성화
+	UFUNCTION(BlueprintCallable)
 	void EnablePickUp();
 
 	// 충돌 처리 비활성화
+	UFUNCTION(BlueprintCallable)
 	void DisablePickUp();
 
 protected:
