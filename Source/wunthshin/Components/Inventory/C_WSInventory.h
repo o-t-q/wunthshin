@@ -6,12 +6,16 @@
 #include "Components/ActorComponent.h"
 #include "C_WSInventory.generated.h"
 
+class AA_WSItem;
 DECLARE_LOG_CATEGORY_EXTERN(LogInventory, Log, All);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class WUNTHSHIN_API UC_WSInventory : public UActorComponent
 {
 	GENERATED_BODY()
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta=(AllowPrivateAccess))
+	TArray<AActor*> Items;
 
 public:	
 	// Sets default values for this component's properties
@@ -26,13 +30,8 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	void AddItem(AActor* InItem, int Count = 1);	// 아이템 추가
-	void RemoveItem(AActor* InItem, int Count = 1); // 아이템 빼기
-	void UseItem(AActor* InItem, int Count = 1);	// 아이템 사용
-
-
-protected:
-	TArray<AActor*> Items;
-
+	void AddItem(AA_WSItem* InItem, int Count = 1);	// 아이템 추가
+	void RemoveItem(AA_WSItem* InItem, int Count = 1); // 아이템 빼기
+	void UseItem(AA_WSItem* InItem, int Count = 1);	// 아이템 사용
 
 };

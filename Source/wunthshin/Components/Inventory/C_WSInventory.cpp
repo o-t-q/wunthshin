@@ -3,6 +3,8 @@
 
 #include "C_WSInventory.h"
 
+#include "wunthshin/Actors/Item/A_WSItem.h"
+
 DEFINE_LOG_CATEGORY(LogInventory);
 
 // Sets default values for this component's properties
@@ -36,7 +38,7 @@ void UC_WSInventory::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	// ...
 }
 
-void UC_WSInventory::AddItem(AActor* InItem, int Count)
+void UC_WSInventory::AddItem(AA_WSItem* InItem, int Count)
 {
 	for (auto item : Items)
 	{
@@ -53,7 +55,7 @@ void UC_WSInventory::AddItem(AActor* InItem, int Count)
 	Items.Emplace(InItem);
 }
 
-void UC_WSInventory::RemoveItem(AActor* InItem, int Count)
+void UC_WSInventory::RemoveItem(AA_WSItem* InItem, int Count)
 {
 	if (Items.IsEmpty())
 	{
@@ -65,7 +67,7 @@ void UC_WSInventory::RemoveItem(AActor* InItem, int Count)
 	Items.Shrink();
 }
 
-void UC_WSInventory::UseItem(AActor* InItem, int Count)
+void UC_WSInventory::UseItem(AA_WSItem* InItem, int Count)
 {
 	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::UseItem"));
 }
