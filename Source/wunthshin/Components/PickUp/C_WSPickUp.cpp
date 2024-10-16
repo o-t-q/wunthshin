@@ -24,7 +24,6 @@ void UC_WSPickUp::BeginPlay()
 
 	// ...
 	bTaken = false;
-	EnablePickUp();
 	OnPickUp.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnPickUp);
 	OnDropping.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnDropping);
 }
@@ -45,7 +44,6 @@ void UC_WSPickUp::HandleOnPickUp(TScriptInterface<I_WSTaker> InTriggeredActor)
 		if (InTriggeredActor->Take(this))
 		{
 			bTaken = true;
-			DisablePickUp();
 
 			// 물체를 시야에서 숨기고, 충돌 처리를 끔
 			GetOwner()->SetActorEnableCollision(false);
@@ -71,7 +69,6 @@ void UC_WSPickUp::HandleOnDropping(TScriptInterface<I_WSTaker> InTriggeringActor
 		if (InTriggeringActor->Drop(this))
 		{
 			bTaken = false;
-			EnablePickUp();
 
 			// 떨어뜨리는 객체의 위치 근방으로 이동시킴
 			if (const AActor* ActorCheck = Cast<AActor>(InTriggeringActor.GetInterface()))
@@ -93,28 +90,3 @@ void UC_WSPickUp::HandleOnDropping(TScriptInterface<I_WSTaker> InTriggeringActor
 		}
 	}
 }
-
-void UC_WSPickUp::EnablePickUp()
-{
-	if (AActor* OwningActor = GetOwner())
-	{
-		OwningActor->OnActorBeginOverlap.AddUniqueDynamic(this, &UC_WSPickUp::OnActorBeginOverlapProxy);
-	}
-}
-
-void UC_WSPickUp::DisablePickUp()
-{
-	if (AActor* OwningActor = GetOwner())
-	{
-		OwningActor->OnActorBeginOverlap.RemoveAll(this);
-	}
-}
-
-void UC_WSPickUp::OnActorBeginOverlapProxy(AActor* OverlappedActor, AActor* /*OtherActor*/)
-{
-	if (Cast<I_WSTaker>(OverlappedActor))
-	{
-		OnPickUp.Broadcast(OverlappedActor);
-	}
-}
-

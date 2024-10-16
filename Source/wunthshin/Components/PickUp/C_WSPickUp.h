@@ -32,14 +32,7 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnDropping OnDropping;
 
-	// 충돌 처리 활성화
-	UFUNCTION(BlueprintCallable)
-	void EnablePickUp();
-
-	// 충돌 처리 비활성화
-	UFUNCTION(BlueprintCallable)
-	void DisablePickUp();
-
+	// 물체의 소유권자가 있는지 확인
 	UFUNCTION(BlueprintCallable)
 	bool IsTaken() const { return bTaken; }
 
@@ -52,10 +45,5 @@ protected:
 
 	UFUNCTION()
 	void HandleOnDropping(TScriptInterface<I_WSTaker> InTriggeringActor);
-
-private:
-	// OnActorBeginOverlap을 OnPickUp에 Bind하기 위한 프록시 함수
-	UFUNCTION()
-	void OnActorBeginOverlapProxy(AActor* OverlappedActor, AActor* OtherActor);
-
+	
 };
