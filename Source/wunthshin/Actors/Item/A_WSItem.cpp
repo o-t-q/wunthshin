@@ -72,9 +72,15 @@ void AA_WSItem::InitializeCollisionComponent(TSubclassOf<UShapeComponent> InClas
 	}
 	
 	CollisionComponent = NewObject<UShapeComponent>(this, InClass, CollisionComponentName);
-	CollisionComponent->RegisterComponent();
-	
-	InitializeCollisionLazy();
+	if (CollisionComponent)
+	{
+		CollisionComponent->RegisterComponent();
+		InitializeCollisionLazy();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Unknown error! Collision component is not initialized properly!"));
+	}
 }
 
 // Called when the game starts or when spawned
