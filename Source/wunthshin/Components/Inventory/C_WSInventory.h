@@ -15,11 +15,13 @@ class WUNTHSHIN_API UC_WSInventory : public UActorComponent
 	GENERATED_BODY()
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta=(AllowPrivateAccess))
-	TArray<AActor*> Items;
+	TArray<AA_WSItem*> Items;
 
 public:	
 	// Sets default values for this component's properties
 	UC_WSInventory();
+
+	const TArray<AA_WSItem*>& GetItems() const { return Items; }
 
 protected:
 	// Called when the game starts
