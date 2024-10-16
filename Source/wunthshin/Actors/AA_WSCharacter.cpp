@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
+#include "../Components/C_WSInventory.h"
 #include "Engine/OverlapResult.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -52,6 +53,8 @@ AA_WSCharacter::AA_WSCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	// Create a Inventory
+	Inventory = CreateDefaultSubobject<UC_WSInventory>(TEXT("Inventory"));
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 }
@@ -65,16 +68,18 @@ void AA_WSCharacter::BeginPlay()
 bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
 {
 	// 이미 아이템을 소유하고 있는 경우
-	if (Item)
-	{
-		// todo: 테스트 용도, 손이 바빠도 인벤토리에 넣을 수 있음
-		return false;
-	}
+	//if (Item)
+	//{
+	//	// todo: 테스트 용도, 손이 바빠도 인벤토리에 넣을 수 있음
+	//	return false;
+	//}
 
 	// 아이템을 저장
 	// todo: 테스트 용도, 무기 컴포넌트나 인벤토리 컴포넌트에 의해 관리되어야 함
 	Item = InTakenComponent->GetOwner();
 	UE_LOG(LogTemplateCharacter, Log, TEXT("Pick up item: %s"), *Item->GetName());
+	Inventory->AddItem(Item);
+
 	return true;
 }
 
@@ -86,6 +91,7 @@ bool AA_WSCharacter::Drop(UC_WSPickUp* InTakenComponent)
 	}
 	
 	UE_LOG(LogTemplateCharacter, Log, TEXT("Drop item: %s"), *Item->GetName());
+	Inventory->RemoveItem(Item);
 	Item = nullptr;
 	return true;
 }
