@@ -12,7 +12,7 @@ void UBaseAnimInstance::NativeInitializeAnimation()
 	APawn* Pawn = TryGetPawnOwner();
 	if (GIsEditor && FApp::IsGame() && !Pawn)
 	{
-		checkf(false, TEXT("UBaisicCharacterAnimInstance¸¦ »ç¿ëÇÏ·Á¸é ¼ÒÀ¯±ÇÀÚ°¡ PawnÀÌ¿©¾ß ÇÕ´Ï´Ù."));
+		checkf(false, TEXT("UBaisicCharacterAnimInstanceë¥¼ ì‚¬ìš©í•˜ë ¤ë©´ ì†Œìœ ê¶Œìê°€ Pawnì´ì—¬ì•¼ í•©ë‹ˆë‹¤."));
 		return;
 	}
 	else if (!Pawn) { return; }
