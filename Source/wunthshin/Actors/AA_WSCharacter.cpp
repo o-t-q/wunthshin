@@ -11,7 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
-#include "../Components/C_WSInventory.h"
+#include "wunthshin/Components/Inventory/C_WSInventory.h"
 #include "Engine/OverlapResult.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
