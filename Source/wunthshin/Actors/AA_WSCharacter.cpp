@@ -13,6 +13,7 @@
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Components/Inventory/C_WSInventory.h"
 #include "Engine/OverlapResult.h"
+#include "Item/A_WSItem.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -75,25 +76,26 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
 	//}
 
 	// 아이템을 저장
-	// todo: 테스트 용도, 무기 컴포넌트나 인벤토리 컴포넌트에 의해 관리되어야 함
-	Item = InTakenComponent->GetOwner();
+	AA_WSItem* Item = Cast<AA_WSItem>(InTakenComponent->GetOwner());
+	ensure(Item);
 	UE_LOG(LogTemplateCharacter, Log, TEXT("Pick up item: %s"), *Item->GetName());
 	Inventory->AddItem(Item);
-
 	return true;
 }
 
 bool AA_WSCharacter::Drop(UC_WSPickUp* InTakenComponent)
 {
-	if (!Item)
+	AA_WSItem* Item = Cast<AA_WSItem>(InTakenComponent->GetOwner());
+	ensure(Item);
+
+	if (Item)
 	{
-		return false;
+		UE_LOG(LogTemplateCharacter, Log, TEXT("Drop item: %s"), *Item->GetName());
+		Inventory->RemoveItem(Item);
+		return true;
 	}
-	
-	UE_LOG(LogTemplateCharacter, Log, TEXT("Drop item: %s"), *Item->GetName());
-	Inventory->RemoveItem(Item);
-	Item = nullptr;
-	return true;
+
+	return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -174,13 +176,8 @@ void AA_WSCharacter::Look(const FInputActionValue& Value)
 void AA_WSCharacter::FindAndTake()
 {
 	TArray<FOverlapResult> OverlapResults;
-
 	FCollisionQueryParams QueryParams(NAME_None, false, this);
-	// 지금 들고 있는 아이템과의 충돌을 무시한다
-	if (Item)
-	{
-		QueryParams.AddIgnoredActor(Item);	
-	}
+	QueryParams.AddIgnoredActors(reinterpret_cast<const TArray<AActor*>&>(Inventory->GetItems()));
 
 	// 반환 값은 blocking일때 참을 반환하나, overlap으로 trace channel을 쓰기 때문에 무시함
 	GetWorld()->OverlapMultiByChannel
@@ -225,8 +222,11 @@ void AA_WSCharacter::FindAndTake()
 
 void AA_WSCharacter::CheckItemAndDrop()
 {
-	if (Item)
+	// 인벤토리가 비어있지 않다면
+	if (!Inventory->GetItems().IsEmpty())
 	{
+		// 인벤토리의 첫번째 아이템을 버린다
+		const AA_WSItem* Item = Inventory->GetItems().Top();
 		const UC_WSPickUp* PickUpComponent = Item->GetComponentByClass<UC_WSPickUp>();
 		PickUpComponent->OnDropping.Broadcast(this);
 	}

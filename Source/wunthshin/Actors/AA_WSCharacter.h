@@ -54,9 +54,6 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker
 	UInputAction* DropAction;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Test", meta = (AllowPrivateAccess = "true"))
-	AActor* Item;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Test", meta = (AllowPrivateAccess = "true"))
 	UC_WSInventory* Inventory;
 
 public:
