@@ -6,31 +6,9 @@
 #include "wunthshin/Actors/Item/A_WSItem.h"
 #include "A_WSWeapon.generated.h"
 
+struct FWeaponTableRow;
 class UAnimMontage;
 class UC_WSWeapon;
-
-UENUM()
-enum class EWeaponType : uint8
-{
-	Melee,
-	Range
-};
-
-USTRUCT()
-struct WUNTHSHIN_API FWeaponTableRow : public FItemTableRow
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere)
-	EWeaponType WeaponType;
-	
-	UPROPERTY(EditAnywhere)
-	int32 Damage;
-
-	UPROPERTY(EditAnywhere)
-	UAnimMontage* DefaultAttackMontage;
-	
-};
 
 /**
  * 
@@ -52,12 +30,12 @@ public:
 	
 	// 자식 클래스가 Weapon Component를 override할 수 있도록 ObjectInitializer 생성자로
 	AA_WSWeapon(const FObjectInitializer& ObjectInitializer);
-
-	virtual void SetData(const FDataTableRowHandle& InRowHandle) override;
+	
+	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
 
 	// 기본 공격 모션 몽타주 getter
 	UFUNCTION(BlueprintCallable)
-	UAnimMontage* GetDefaultAttackMontage() const { return DefaultAttackMontage; }
+	FORCEINLINE UAnimMontage* GetDefaultAttackMontage() const { return DefaultAttackMontage; }
 	
 	
 };

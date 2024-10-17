@@ -5,6 +5,8 @@
 
 #include "Components/ShapeComponent.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
+#include "wunthshin/Data/ItemTableRow.h"
+#include "wunthshin/Data/CharacterTableRow.h"
 
 const FName AA_WSItem::CollisionComponentName = TEXT("Collision");
 
@@ -68,7 +70,7 @@ void AA_WSItem::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
 
-	SetData(DataTableRowHandle);
+	FetchAsset<TRowTableType>(this, AssetName);
 }
 
 void AA_WSItem::InitializeCollisionComponent(TSubclassOf<UShapeComponent> InClass)
@@ -91,13 +93,11 @@ void AA_WSItem::InitializeCollisionComponent(TSubclassOf<UShapeComponent> InClas
 	}
 }
 
-void AA_WSItem::SetData(const FDataTableRowHandle& InRowHandle)
+void AA_WSItem::ApplyAsset(const FDataTableRowHandle& InRowHandle)
 {
-	DataTableRowHandle = InRowHandle;
-	
-	if (DataTableRowHandle.IsNull()) return;
+	if (InRowHandle.IsNull()) return;
 
-	TRowTableType* Data = DataTableRowHandle.GetRow<TRowTableType>(TEXT(""));
+	const TRowTableType* Data = InRowHandle.GetRow<TRowTableType>(TEXT(""));
 
 	if (!Data)
 	{
@@ -105,6 +105,10 @@ void AA_WSItem::SetData(const FDataTableRowHandle& InRowHandle)
 	}
 
 	if (Data->StaticMesh) MeshComponent->SetStaticMesh(Data->StaticMesh);
+	if (Data->CollisionShape)
+	{
+		InitializeCollisionComponent(Data->CollisionShape);
+	}
 	
 	// todo: Icon, ItemName 등 정보 추가
 }

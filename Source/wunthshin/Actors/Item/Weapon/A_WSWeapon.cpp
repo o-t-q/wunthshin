@@ -5,7 +5,7 @@
 
 #include "Engine/DataTable.h"
 #include "wunthshin/Components/Weapon/C_WSWeapon.h"
-
+#include "wunthshin/Data/ItemTableRow.h"
 
 AA_WSWeapon::AA_WSWeapon(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -13,9 +13,9 @@ AA_WSWeapon::AA_WSWeapon(const FObjectInitializer& ObjectInitializer)
 	WeaponComponent = CreateDefaultSubobject<UC_WSWeapon>(TEXT("Weapon"));
 }
 
-void AA_WSWeapon::SetData(const FDataTableRowHandle& InRowHandle)
+void AA_WSWeapon::ApplyAsset(const FDataTableRowHandle& InRowHandle)
 {
-	Super::SetData(InRowHandle);
+	Super::ApplyAsset(InRowHandle);
 
 	if (InRowHandle.IsNull())
 	{

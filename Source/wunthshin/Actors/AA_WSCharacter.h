@@ -6,6 +6,8 @@
 #include "wunthshin/Interfaces/Taker/Taker.h"
 #include "Logging/LogMacros.h"
 
+#include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
+
 #include "AA_WSCharacter.generated.h"
 
 class AA_WSWeapon;
@@ -26,7 +28,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOffWalk);
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game, Blueprintable)
-class AA_WSCharacter : public ACharacter, public I_WSTaker
+class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFetcher
 {
 	GENERATED_BODY()
 	
@@ -81,19 +83,20 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	UChildActorComponent* RightHandWeapon;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
+	FName AssetName;
+
 public:
 	FFastRun OnFastRun;
 	FUnFastRun OffFastRun;
 	FOnWalk OnWalk;
 	FOffWalk OffWalk;
-
 	
-public:
-
 	static const FName RightHandWeaponSocketName;
 	
 	AA_WSCharacter();
 
+	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
 
 protected:
 
@@ -111,8 +114,6 @@ protected:
 
 	void GoOnWalk(const FInputActionValue& Value);
 	void GoOffWalk(const FInputActionValue& Value);
-	
-
 
 	void FindAndTake();
 
@@ -124,6 +125,9 @@ protected:
 
 	// To add mapping context
 	virtual void BeginPlay();
+
+	// 에셋 갱신
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 public:
 	/** Returns CameraBoom subobject **/
