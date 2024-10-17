@@ -40,6 +40,7 @@ void UC_WSInventory::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 
 void UC_WSInventory::AddItem(AA_WSItem* InItem, int Count)
 {
+	// todo: 물체 자체를 저장하지 않고 메타데이터만 저장
 	for (auto item : Items)
 	{
 		if (item->GetFName() == InItem->GetFName())
