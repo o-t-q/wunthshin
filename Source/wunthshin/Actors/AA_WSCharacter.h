@@ -8,6 +8,7 @@
 
 #include "AA_WSCharacter.generated.h"
 
+class AA_WSWeapon;
 class USpringArmComponent;
 class UCameraComponent;
 class UInputMappingContext;
@@ -22,7 +23,7 @@ UCLASS(config = Game, Blueprintable)
 class AA_WSCharacter : public ACharacter, public I_WSTaker
 {
 	GENERATED_BODY()
-
+	
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
@@ -59,9 +60,13 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UCharacterStatsComponent* CharacterStatsComponent;
 
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UChildActorComponent* RightHandWeapon;
 
 public:
+
+	static const FName RightHandWeaponSocketName;
+	
 	AA_WSCharacter();
 
 

@@ -9,16 +9,20 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Components/StaticMeshComponent.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Components/Inventory/C_WSInventory.h"
 #include "Engine/OverlapResult.h"
 #include "Item/A_WSItem.h"
+#include "Item/Weapon/A_WSWeapon.h"
 #include "wunthshin/Components/CharacterStats/CharacterStatsComponent.h" 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
 // AwunthshinCharacter
+
+const FName AA_WSCharacter::RightHandWeaponSocketName = TEXT("WeaponProp02");
 
 AA_WSCharacter::AA_WSCharacter()
 {
@@ -62,12 +66,22 @@ AA_WSCharacter::AA_WSCharacter()
     // Create CharacterStats
     CharacterStatsComponent = CreateDefaultSubobject<UCharacterStatsComponent>(TEXT("CharacterStatsComponent"));
 
+    RightHandWeapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("RightHandWeapon"));
 }
 
 void AA_WSCharacter::BeginPlay()
 {
     // Call the base class  
     Super::BeginPlay();
+
+    // 무기를 소환하는 차일드 액터 컴포넌트가 매시에 제대로 부착되었는지 확인
+    ensure(
+        RightHandWeapon->AttachToComponent
+        (
+            GetMesh(),
+            FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+            RightHandWeaponSocketName
+        ));
 }
 
 bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
@@ -83,6 +97,22 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
     AA_WSItem* Item = Cast<AA_WSItem>(InTakenComponent->GetOwner());
     ensure(Item);
     UE_LOG(LogTemplateCharacter, Log, TEXT("Pick up item: %s"), *Item->GetName());
+
+    if (const AA_WSWeapon* WeaponCast = Cast<AA_WSWeapon>(Item);
+        WeaponCast && !RightHandWeapon->GetChildActor())
+    {
+        // todo: 동적으로 변경될떄의 대응
+        // 테스트용으로 블루프린트 클래스를 사용하기 때문에 빈 클래스를 쓰게 될 경우
+        // 대상의 아이템 및 무기의 이름에 따라 에셋을 다시 설정해줘야 함
+        RightHandWeapon->SetChildActorClass(WeaponCast->GetClass());
+
+        // 손에 있는 무기를 주울 수 없도록 pick up component를 비활성화
+        RightHandWeapon->GetChildActor()->GetComponentByClass<UC_WSPickUp>()->SetActive(false, false);
+
+        // 충돌 반응 비활성화, overlap으로 반응하는 아이템 프로필로 설정
+        RightHandWeapon->GetChildActor()->GetComponentByClass<UShapeComponent>()->SetCollisionProfileName("ItemEquipped");
+    }
+    
     Inventory->AddItem(Item);
     return true;
 }
@@ -183,6 +213,12 @@ void AA_WSCharacter::FindAndTake()
     FCollisionQueryParams QueryParams(NAME_None, false, this);
     QueryParams.AddIgnoredActors(reinterpret_cast<const TArray<AActor*>&>(Inventory->GetItems()));
 
+    // 손에 있는 무기는 줍는 대상에서 제외 
+    if (const AActor* ChildWeaponActor = RightHandWeapon->GetChildActor())
+    {
+        QueryParams.AddIgnoredActor(ChildWeaponActor);
+    }
+    
     // 반환 값은 blocking일때 참을 반환하나, overlap으로 trace channel을 쓰기 때문에 무시함
     GetWorld()->OverlapMultiByChannel
     (
