@@ -9,3 +9,10 @@ UItemSubsystem::UItemSubsystem()
 	check(Table.Object);
 	DataTable = Table.Object;
 }
+
+UItemEditorSubsystem::UItemEditorSubsystem()
+{
+	static ConstructorHelpers::FObjectFinder<UDataTable> Table(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_ItemTable.DT_ItemTable'"));
+	check(Table.Object);
+	DataTable = Table.Object;
+}

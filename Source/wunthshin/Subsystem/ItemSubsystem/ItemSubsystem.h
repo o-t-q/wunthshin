@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+
+#include "wunthshin/Subsystem/TableQueryEditorSubsystem.h"
 #include "wunthshin/Subsystem/TableQueryGameInstanceSubsystem.h"
 #include "ItemSubsystem.generated.h"
 
@@ -17,5 +19,15 @@ class WUNTHSHIN_API UItemSubsystem : public UTableQueryGameInstanceSubsystem
 	
 public:
 	UItemSubsystem();
+
+};
+
+UCLASS()
+class WUNTHSHIN_API UItemEditorSubsystem : public UTableQueryEditorSubsystem
+{
+	GENERATED_BODY()
+	
+public:
+	UItemEditorSubsystem();
 
 };

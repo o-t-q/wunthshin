@@ -9,3 +9,10 @@ UWeaponSubsystem::UWeaponSubsystem()
 	check(Table.Object);
 	DataTable = Table.Object;
 }
+
+UWeaponEditorSubsystem::UWeaponEditorSubsystem()
+{
+	static ConstructorHelpers::FObjectFinder<UDataTable> Table(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_WeaponTable.DT_WeaponTable'"));
+	check(Table.Object);
+	DataTable = Table.Object;
+}
