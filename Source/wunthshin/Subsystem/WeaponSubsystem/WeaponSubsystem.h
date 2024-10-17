@@ -4,21 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "ItemSubsystem.generated.h"
+#include "wunthshin/Subsystem/TableQueryGameInstanceSubsystem.h"
+#include "WeaponSubsystem.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class WUNTHSHIN_API UItemSubsystem : public UGameInstanceSubsystem
+class WUNTHSHIN_API UWeaponSubsystem : public UTableQueryGameInstanceSubsystem
 {
 	GENERATED_BODY()
 	
 public:
-	UItemSubsystem();
+	UWeaponSubsystem();
 
-	FDataTableRowHandle FindItem(const FName& InKey);
-
-protected:
-	UDataTable* ItemDataTable;
 };
