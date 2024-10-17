@@ -41,7 +41,8 @@ void AA_WSItem::InitializeCollisionLazy() const
 }
 
 // Sets default values
-AA_WSItem::AA_WSItem()
+AA_WSItem::AA_WSItem(const FObjectInitializer& ObjectInitializer) :
+	Super(ObjectInitializer)
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -93,10 +94,15 @@ void AA_WSItem::InitializeCollisionComponent(TSubclassOf<UShapeComponent> InClas
 void AA_WSItem::SetData(const FDataTableRowHandle& InRowHandle)
 {
 	DataTableRowHandle = InRowHandle;
+	
 	if (DataTableRowHandle.IsNull()) return;
 
-	FItemTableRow* Data = DataTableRowHandle.GetRow<FItemTableRow>(TEXT("Item"));
-	if (!Data) { ensure(false); return; }
+	TRowTableType* Data = DataTableRowHandle.GetRow<TRowTableType>(TEXT(""));
+
+	if (!Data)
+	{
+		return;
+	}
 
 	if (Data->StaticMesh) MeshComponent->SetStaticMesh(Data->StaticMesh);
 	

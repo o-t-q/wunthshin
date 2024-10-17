@@ -52,15 +52,17 @@ class WUNTHSHIN_API AA_WSItem : public AActor
 	// 아이템 정보를 불러오기 위한 핸들
 	UPROPERTY(EditAnywhere, meta = (RowType = "/Script/WUNTHSHIN.ItemTableRow"))
 	FDataTableRowHandle DataTableRowHandle;
-
+	
 	// 충돌체 동적 생성 후 호출
 	void InitializeCollisionLazy() const;
 	
 public:
+	// 데이터 테이블의 타입, 다른 데이터 테이블을 쓸 경우 해당 타입을 재정의.
+	using TRowTableType = FItemTableRow;
 	static const FName CollisionComponentName;
 	
 	// Sets default values for this actor's properties
-	AA_WSItem();
+	AA_WSItem(const FObjectInitializer& ObjectInitializer);
 
 	// 
 	virtual void OnConstruction(const FTransform& Transform) override;
