@@ -1,4 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -14,11 +13,12 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 class UC_WSInventory;
+class UCharacterStatsComponent;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
-UCLASS(config=Game, Blueprintable)
+UCLASS(config = Game, Blueprintable)
 class AA_WSCharacter : public ACharacter, public I_WSTaker
 {
 	GENERATED_BODY()
@@ -30,7 +30,7 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
-	
+
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
@@ -52,13 +52,18 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* DropAction;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Test", meta = (AllowPrivateAccess = "true"))
 	UC_WSInventory* Inventory;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	UCharacterStatsComponent* CharacterStatsComponent;
+
+
+
 public:
 	AA_WSCharacter();
-	
+
 
 protected:
 
@@ -75,7 +80,7 @@ protected:
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
+
 	// To add mapping context
 	virtual void BeginPlay();
 
@@ -89,4 +94,3 @@ public:
 
 	virtual bool Drop(UC_WSPickUp* InTakenComponent) override;
 };
-
