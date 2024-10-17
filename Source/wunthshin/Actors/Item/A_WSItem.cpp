@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "A_WSItem.h"
@@ -45,7 +45,7 @@ AA_WSItem::AA_WSItem()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
-
+		
 	// 추상 클래스인 ShapeComponent, CollisionComponent는 nullptr로 초기화됨
 	// 다른 충돌체 모양을 호환하기 위해 유지, 상속하는 객체 또는 사용하는 객체에서 설정해야함
 	CollisionComponent = CreateDefaultSubobject<UShapeComponent>(CollisionComponentName);
@@ -61,6 +61,13 @@ AA_WSItem::AA_WSItem()
 	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	MeshComponent->SetSimulatePhysics(false);
 	MeshComponent->SetGenerateOverlapEvents(false);
+}
+
+void AA_WSItem::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	SetData(DataTableRowHandle);
 }
 
 void AA_WSItem::InitializeCollisionComponent(TSubclassOf<UShapeComponent> InClass)
@@ -81,6 +88,19 @@ void AA_WSItem::InitializeCollisionComponent(TSubclassOf<UShapeComponent> InClas
 	{
 		UE_LOG(LogTemp, Error, TEXT("Unknown error! Collision component is not initialized properly!"));
 	}
+}
+
+void AA_WSItem::SetData(const FDataTableRowHandle& InRowHandle)
+{
+	DataTableRowHandle = InRowHandle;
+	if (DataTableRowHandle.IsNull()) return;
+
+	FItemTableRow* Data = DataTableRowHandle.GetRow<FItemTableRow>(TEXT("Item"));
+	if (!Data) { ensure(false); return; }
+
+	if (Data->StaticMesh) MeshComponent->SetStaticMesh(Data->StaticMesh);
+	
+	// todo: Icon, ItemName 등 정보 추가
 }
 
 // Called when the game starts or when spawned

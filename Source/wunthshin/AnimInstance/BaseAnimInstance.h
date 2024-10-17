@@ -46,14 +46,14 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsFalling = false;
 
-	// ½ºÅ×¹Ì³ªÇÏ°í ¿¬µ¿ ÇÊ¿ä
+	// ï¿½ï¿½ï¿½×¹Ì³ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½
 	UPROPERTY(BlueprintReadOnly)
 	bool bStaminaEmpty = false;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsCliming = false;
 
-	// º®³ôÀÌ »ó´ëÀûÀÎ ³ôÀÌ?
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½?
 	UPROPERTY()
 	double WallHight = 0.0f;
 
