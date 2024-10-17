@@ -17,6 +17,23 @@ UC_WSPickUp::UC_WSPickUp()
 	// ...
 }
 
+void UC_WSPickUp::SetActive(bool bNewActive, bool bReset)
+{
+	Super::SetActive(bNewActive, bReset);
+
+	// 줍기/떨어뜨리기 핸들링을 위한 delegation 리스닝 처리
+	if (bNewActive)
+	{
+		OnPickUp.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnPickUp);
+		OnDropping.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnDropping);
+	}
+	else
+	{
+		OnPickUp.RemoveAll(this);
+		OnDropping.RemoveAll(this);
+	}
+}
+
 // Called when the game starts
 void UC_WSPickUp::BeginPlay()
 {
@@ -46,6 +63,7 @@ void UC_WSPickUp::HandleOnPickUp(TScriptInterface<I_WSTaker> InTriggeredActor)
 			bTaken = true;
 
 			// 물체를 시야에서 숨기고, 충돌 처리를 끔
+			// todo: 물체를 숨기지말고 삭제시키기
 			GetOwner()->SetActorEnableCollision(false);
 			GetOwner()->SetActorHiddenInGame(true);
 		}

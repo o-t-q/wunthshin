@@ -36,6 +36,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool IsTaken() const { return bTaken; }
 
+	virtual void SetActive(bool bNewActive, bool bReset) override;
+	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
