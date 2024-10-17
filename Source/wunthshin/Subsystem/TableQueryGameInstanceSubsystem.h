@@ -23,7 +23,7 @@ public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	
-	FDataTableRowHandle FindItem(const FName& InKey);
+	FDataTableRowHandle FindItem(const FName& InKey) const;
 	
 };
 

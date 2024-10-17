@@ -10,7 +10,7 @@ void UTableQueryGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Coll
 	ensure(DataTable);
 }
 
-FDataTableRowHandle UTableQueryGameInstanceSubsystem::FindItem(const FName& InKey)
+FDataTableRowHandle UTableQueryGameInstanceSubsystem::FindItem(const FName& InKey) const
 {
 	FDataTableRowHandle RowHandle;
 #if WITH_EDITOR
