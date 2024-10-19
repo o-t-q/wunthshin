@@ -26,6 +26,9 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UShapeComponent> CollisionShape;
 
+	UPROPERTY(EditAnywhere)
+	FTransform CollisionOffset;
+
 	UPROPERTY()
 	bool bBox;
 
@@ -45,7 +48,7 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 	float CapsuleRadius;
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "bCapsule", EditConditionHides))
-	float CapsuleLength;
+	float CapsuleHeight;
 
 	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName) override;
 };
