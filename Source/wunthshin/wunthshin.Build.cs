@@ -14,6 +14,7 @@ public class wunthshin : ModuleRules
 		{
 			PrivateDependencyModuleNames.AddRange(new string[]
 			{
+				"UnrealEd",
 				"EditorSubsystem"
 			});
 		}
