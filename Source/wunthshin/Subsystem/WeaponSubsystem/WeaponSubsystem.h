@@ -5,8 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 
-#include "wunthshin/Subsystem/TableQueryEditorSubsystem.h"
-#include "wunthshin/Subsystem/TableQueryGameInstanceSubsystem.h"
+#include "wunthshin/Subsystem/TableQuerySubsystem.h"
 #include "WeaponSubsystem.generated.h"
 
 /**
