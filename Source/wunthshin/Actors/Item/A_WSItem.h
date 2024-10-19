@@ -39,10 +39,11 @@ class WUNTHSHIN_API AA_WSItem : public AActor, public IDataTableFetcher
 	
 	// 충돌체 동적 생성 후 호출
 	void InitializeCollisionLazy() const;
+
+	// 매시의 Bound에 따라 업데이트
+	void FitCollisionToMesh() const;
 	
 public:
-	// 데이터 테이블의 타입, 다른 데이터 테이블을 쓸 경우 해당 타입을 재정의.
-	using TRowTableType = FItemTableRow;
 	static const FName CollisionComponentName;
 	
 	// Sets default values for this actor's properties
@@ -55,11 +56,20 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void InitializeCollisionComponent(TSubclassOf<UShapeComponent> InClass);
 
+	virtual UScriptStruct* GetTableType() const override;
+
 	// 아이템 데이터 세팅
 	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
 
+	FORCEINLINE UStaticMeshComponent* GetMesh() const { return MeshComponent; }
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual FName GetAssetName() const { return AssetName; }
+
+	// 충돌체 업데이트 (상속 클래스가 다른 테이블을 사용하고 Item의 데이터 테이블에서 충돌 적용이 필요한 경우)
+	void UpdateCollisionFromDataTable(const FItemTableRow* Data);
 
 };
