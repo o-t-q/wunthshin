@@ -78,6 +78,11 @@ AA_WSCharacter::AA_WSCharacter()
 
 }
 
+UScriptStruct* AA_WSCharacter::GetTableType() const
+{
+    return FCharacterTableRow::StaticStruct();
+}
+
 void AA_WSCharacter::ApplyAsset(const FDataTableRowHandle& InRowHandle)
 {
     if (InRowHandle.IsNull()) return;
@@ -120,8 +125,7 @@ void AA_WSCharacter::BeginPlay()
 void AA_WSCharacter::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
-
-    FetchAsset<FCharacterTableRow>(this, AssetName);
+    FetchAsset(this, AssetName);
 }
 
 bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
@@ -354,9 +358,18 @@ void AA_WSCharacter::CheckItemAndDrop()
     if (!Inventory->GetItems().IsEmpty())
     {
         // 인벤토리의 첫번째 아이템을 버린다
-        const AA_WSItem* Item = Inventory->GetItems().Top();
-        const UC_WSPickUp* PickUpComponent = Item->GetComponentByClass<UC_WSPickUp>();
-        PickUpComponent->OnDropping.Broadcast(this);
+        for (const AA_WSItem* Item : Inventory->GetItems())
+        {
+            if (Item->IsA<AA_WSWeapon>())
+            {
+                // 무기는 버릴 수 없음
+                continue;
+            }
+
+            const UC_WSPickUp* PickUpComponent = Item->GetComponentByClass<UC_WSPickUp>();
+            PickUpComponent->OnDropping.Broadcast(this);
+            break;
+        }
     }
     else
     {

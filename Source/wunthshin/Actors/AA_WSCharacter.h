@@ -96,6 +96,8 @@ public:
 	
 	AA_WSCharacter();
 
+	virtual UScriptStruct* GetTableType() const override;
+
 	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
 
 protected:
