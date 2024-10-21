@@ -78,6 +78,22 @@ AA_WSCharacter::AA_WSCharacter()
 
 }
 
+void AA_WSCharacter::HandleStaminaDepleted()
+{
+    // protected UnFastRun을 CharacterStatsComponent에서 호출하기 위함.
+    UnFastRun(FInputActionValue());
+}
+
+void AA_WSCharacter::K2_FastRun()
+{
+    FastRun(FInputActionValue());
+}
+
+void AA_WSCharacter::K2_UnFastRun()
+{
+    UnFastRun(FInputActionValue());
+}
+
 UScriptStruct* AA_WSCharacter::GetTableType() const
 {
     return FCharacterTableRow::StaticStruct();
@@ -276,15 +292,21 @@ void AA_WSCharacter::UnOnCrouch(const FInputActionValue& Value)
 
 void AA_WSCharacter::FastRun(const FInputActionValue& Value)
 {
-	
-	OnFastRun.Broadcast();
-	GetCharacterMovement()->MaxWalkSpeed = 1000;
+    bIsFastRunning = true;
+    OnFastRun.Broadcast();
+    GetCharacterMovement()->MaxWalkSpeed = 1000;
+
+    // 스태미나 업데이트
+    CharacterStatsComponent->UpdateStamina(GetWorld()->GetDeltaSeconds(), true);
 }
 
 void AA_WSCharacter::UnFastRun(const FInputActionValue& Value)
 {
-	OffFastRun.Broadcast();
-	GetCharacterMovement()->MaxWalkSpeed = 500;
+    bIsFastRunning = false;
+    OffFastRun.Broadcast();
+    GetCharacterMovement()->MaxWalkSpeed = 500;
+
+    CharacterStatsComponent->UpdateStamina(GetWorld()->GetDeltaSeconds(), false);
 }
 
 void AA_WSCharacter::GoOnWalk(const FInputActionValue& Value)

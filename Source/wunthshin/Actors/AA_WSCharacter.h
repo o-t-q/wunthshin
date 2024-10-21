@@ -80,6 +80,9 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UCharacterStatsComponent* CharacterStatsComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	bool bIsFastRunning;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	UChildActorComponent* RightHandWeapon;
 
@@ -91,10 +94,27 @@ public:
 	FUnFastRun OffFastRun;
 	FOnWalk OnWalk;
 	FOffWalk OffWalk;
-	
+	FTimerHandle FastRunCooldownTimer;
+
+public:
 	static const FName RightHandWeaponSocketName;
 	
 	AA_WSCharacter();
+
+	// 스태미나가 0일 때 호출하는 공개 메서드
+	void HandleStaminaDepleted();
+
+	// FastRun을 호출하는 공개 메서드
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	void K2_FastRun();
+
+	// UnFastRun을 호출하는 공개 메서드
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	void K2_UnFastRun();
+
+	// FastRun 상태를 반환하는 함수
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	bool IsFastRunning() const { return bIsFastRunning; }
 
 	virtual UScriptStruct* GetTableType() const override;
 

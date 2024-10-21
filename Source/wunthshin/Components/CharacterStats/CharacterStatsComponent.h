@@ -25,6 +25,15 @@ class WUNTHSHIN_API UCharacterStatsComponent : public UActorComponent
 {
     GENERATED_BODY()
 
+private:
+    // 스태미나 회복 속도
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+    float StaminaRecoveryRate;
+
+    // 스태미나 감소 속도
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+    float StaminaDepletionRate;
+
 public:
     // 생성자
     UCharacterStatsComponent();
@@ -44,4 +53,9 @@ public:
     // 스탯 초기화 함수
     UFUNCTION(BlueprintCallable, Category = "Stats")
     void InitializeStats();
+
+    // 스태미나 업데이트 함수
+    void UpdateStamina(float DeltaTime, bool bIsFastRunning);
+
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 };
