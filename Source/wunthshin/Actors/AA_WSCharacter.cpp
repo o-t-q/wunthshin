@@ -21,6 +21,7 @@
 #include "wunthshin/Components/CharacterStats/CharacterStatsComponent.h" 
 #include "wunthshin/Data/CharacterTableRow.h"
 #include "InputMappingContext.h"
+#include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -161,18 +162,12 @@ void AA_WSCharacter::OnConstruction(const FTransform& Transform)
 
 bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
 {
-    // 이미 아이템을 소유하고 있는 경우
-    //if (Item)
-    //{
-    //   // todo: 테스트 용도, 손이 바빠도 인벤토리에 넣을 수 있음
-    //   return false;
-    //}
-
     // 아이템을 저장
     AA_WSItem* Item = Cast<AA_WSItem>(InTakenComponent->GetOwner());
     ensure(Item);
     UE_LOG(LogTemplateCharacter, Log, TEXT("Pick up item: %s"), *Item->GetName());
 
+    // 손이 비어있고, 무기를 잡으려 할때
     if (const AA_WSWeapon* WeaponCast = Cast<AA_WSWeapon>(Item);
         WeaponCast && !RightHandWeapon->GetChildActor())
     {
@@ -180,6 +175,16 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
         // 테스트용으로 블루프린트 클래스를 사용하기 때문에 빈 클래스를 쓰게 될 경우
         // 대상의 아이템 및 무기의 이름에 따라 에셋을 다시 설정해줘야 함
         RightHandWeapon->SetChildActorClass(WeaponCast->GetClass());
+        
+        // 런타임 에셋 설정을 위해 Deferred spawn이 필요함
+        RightHandWeapon->CreateChildActor([Item](AActor* InActor) 
+            {
+                AA_WSItem* GeneratedItem = Cast<AA_WSItem>(InActor);
+                // 생성에 사용된 클래스가 Item 상속 클래스가 아닌경우
+                check(GeneratedItem);
+
+                GeneratedItem->SetAssetName(Item->GetAssetName());
+            });
 
         // 손에 있는 무기를 주울 수 없도록 pick up component를 비활성화
         RightHandWeapon->GetChildActor()->GetComponentByClass<UC_WSPickUp>()->SetActive(false, false);
@@ -188,23 +193,9 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
         RightHandWeapon->GetChildActor()->GetComponentByClass<UShapeComponent>()->SetCollisionProfileName("ItemEquipped");
     }
     
+    // 인벤토리로 무기 또는 아이템 저장
     Inventory->AddItem(Item);
     return true;
-}
-
-bool AA_WSCharacter::Drop(UC_WSPickUp* InTakenComponent)
-{
-    AA_WSItem* Item = Cast<AA_WSItem>(InTakenComponent->GetOwner());
-    ensure(Item);
-
-    if (Item)
-    {
-        UE_LOG(LogTemplateCharacter, Log, TEXT("Drop item: %s"), *Item->GetName());
-        Inventory->RemoveItem(Item);
-        return true;
-    }
-
-    return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -389,16 +380,36 @@ void AA_WSCharacter::CheckItemAndDrop()
     if (!Inventory->GetItems().IsEmpty())
     {
         // 인벤토리의 첫번째 아이템을 버린다
-        for (const AA_WSItem* Item : Inventory->GetItems())
+        for (const auto& [Metadata, _] : Inventory->GetItems())
         {
-            if (Item->IsA<AA_WSWeapon>())
-            {
-                // 무기는 버릴 수 없음
+            // 무기는 버릴 수 없음
+            if (Metadata->IsItem<EItemType::Weapon>())
+            {             
                 continue;
             }
 
-            const UC_WSPickUp* PickUpComponent = Item->GetComponentByClass<UC_WSPickUp>();
-            PickUpComponent->OnDropping.Broadcast(this);
+            AA_WSItem* NewItem = GetWorld()->SpawnActorDeferred<AA_WSItem>
+                (
+                    AA_WSItem::StaticClass(),
+                    FTransform::Identity,
+                    nullptr,
+                    nullptr,
+                    ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+                );
+
+            FVector Origin, Extents, Forward;
+            GetActorBounds(true, Origin, Extents);
+            Forward = GetActorForwardVector();
+            
+            const FRotator ToForwardRotator = Forward.Rotation();
+            const FVector XYGap{ Extents.X + 1.f, Extents.Y + 1.f, 0.f };
+            const FVector RotatedExtent = ToForwardRotator.RotateVector(XYGap);
+
+            FTransform ItemTransform{ FQuat::Identity, GetActorLocation() + RotatedExtent, FVector::OneVector };
+
+            NewItem->SetAssetName(Metadata->GetAssetName());
+            NewItem->FinishSpawning(ItemTransform, false);
+            Inventory->RemoveItem(NewItem, 1);
             break;
         }
     }
