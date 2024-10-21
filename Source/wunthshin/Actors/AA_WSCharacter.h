@@ -138,6 +138,8 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 	virtual bool Take(UC_WSPickUp* InTakenComponent) override;
-
 	virtual bool Drop(UC_WSPickUp* InTakenComponent) override;
+
+	// 사용할 에셋의 이름
+	void SetAssetName(const FName& InAssetName) { AssetName = InAssetName; }
 };

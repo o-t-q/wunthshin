@@ -20,8 +20,16 @@
 #include "Item/Weapon/A_WSWeapon.h"
 #include "wunthshin/Components/CharacterStats/CharacterStatsComponent.h" 
 #include "wunthshin/Data/CharacterTableRow.h"
+#include "InputMappingContext.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
+
+#define ADD_INPUT_ACTION(VariableName, Path)                                                    \
+    static ConstructorHelpers::FObjectFinder<UInputAction> IA_##VariableName(TEXT(Path));       \
+    if ((IA_##VariableName).Succeeded())                                                         \
+    {                                                                                           \
+        VariableName = (IA_##VariableName).Object;                                              \
+    }
 
 //////////////////////////////////////////////////////////////////////////
 // AwunthshinCharacter
@@ -30,10 +38,33 @@ const FName AA_WSCharacter::RightHandWeaponSocketName = TEXT("WeaponProp02");
 
 AA_WSCharacter::AA_WSCharacter()
 {
+    {
+        static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC_Default(TEXT("/Script/EnhancedInput.InputMappingContext'/Game/ThirdPerson/Input/IMC_Default.IMC_Default'"));
+        
+        if (IMC_Default.Succeeded()) 
+        {
+            DefaultMappingContext = IMC_Default.Object;
+        }
+
+        ADD_INPUT_ACTION(JumpAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Jump.IA_Jump'");
+        ADD_INPUT_ACTION(MoveAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Move.IA_Move'");
+        ADD_INPUT_ACTION(CrouchAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Crouch.IA_Crouch'");
+        ADD_INPUT_ACTION(FastRunAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_FastRun.IA_FastRun'");
+        ADD_INPUT_ACTION(WalkAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Walk.IA_Walk'");
+        ADD_INPUT_ACTION(LookAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Look.IA_Look'");
+        ADD_INPUT_ACTION(PickUpAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_PickUp.IA_PickUp'");
+        ADD_INPUT_ACTION(DropAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Drop.IA_Drop'");
+    }
+
+
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+
+    // 매시를 캡슐 콜리전 원점으로 옮김
+    GetMesh()->SetRelativeLocation({ 0.f, 0.f, -96.f });
+    GetMesh()->SetRelativeRotation({ 0.f, 270.f, 0.f });
 
     // Don't rotate when the controller rotates. Let that just affect the camera.
     bUseControllerRotationPitch = false;
