@@ -11,6 +11,7 @@
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Data/ItemTableRow.h"
 #include "wunthshin/Data/CharacterTableRow.h"
+#include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
 
 class USphereComponent;
 const FName AA_WSItem::CollisionComponentName = TEXT("Collision");
@@ -135,8 +136,18 @@ void AA_WSItem::ApplyAsset(const FDataTableRowHandle& InRowHandle)
 	if (Data->StaticMesh) MeshComponent->SetStaticMesh(Data->StaticMesh);
 
 	UpdateCollisionFromDataTable(Data);
+
+	if (Data->GlobalItemMetadataPointer) 
+	{
+		ItemMetadata = Data->GlobalItemMetadataPointer;
+	}
 	
 	// todo: Icon, ItemName 등 정보 추가
+}
+
+const USG_WSItemMetadata* AA_WSItem::GetItemMetadata() const
+{
+	return ItemMetadata;
 }
 
 // Called when the game starts or when spawned
