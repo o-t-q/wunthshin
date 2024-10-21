@@ -47,5 +47,10 @@ void AA_WSWeapon::ApplyAsset(const FDataTableRowHandle& InRowHandle)
 		UpdateCollisionFromDataTable(TableRow);
 	}
 	
+	if (TableRow->GlobalItemMetadataPointer) 
+	{
+		ItemMetadata = TableRow->GlobalItemMetadataPointer;
+	}
+
 	DefaultAttackMontage = TableRow->DefaultAttackMontage;
 }
