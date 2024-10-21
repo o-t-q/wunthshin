@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -28,10 +28,6 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnPickUp OnPickUp;
 
-	// 해당 물체를 떨어뜨리려하는 경우 해당 Delegate를 Broadcast
-	UPROPERTY(BlueprintAssignable)
-	FOnDropping OnDropping;
-
 	// 물체의 소유권자가 있는지 확인
 	UFUNCTION(BlueprintCallable)
 	bool IsTaken() const { return bTaken; }
@@ -44,8 +40,4 @@ protected:
 
 	UFUNCTION()
 	void HandleOnPickUp(TScriptInterface<I_WSTaker> InTriggeredActor);
-
-	UFUNCTION()
-	void HandleOnDropping(TScriptInterface<I_WSTaker> InTriggeringActor);
-	
 };
