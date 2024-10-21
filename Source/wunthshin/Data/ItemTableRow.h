@@ -4,14 +4,16 @@
 
 #include "ItemTableRow.generated.h"
 
+class USG_WSItemMetadata;
+
 USTRUCT()
 struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 {
 	GENERATED_BODY()
 
 	// ItemType(소모, 장비, 기타 등)
-	/*UPROPERTY(EditAnywhere)
-	EItemType ItemType;*/
+	UPROPERTY(EditAnywhere)
+	EItemType ItemType;
 
 	// ItemName을 Key값으로 사용
 	UPROPERTY(EditAnywhere)
@@ -28,6 +30,9 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere)
 	FTransform CollisionOffset;
+
+	UPROPERTY()
+	USG_WSItemMetadata* GlobalItemMetadataPointer;
 
 	UPROPERTY()
 	bool bBox;
@@ -67,4 +72,5 @@ struct WUNTHSHIN_API FWeaponTableRow : public FItemTableRow
 	UPROPERTY(EditAnywhere)
 	UAnimMontage* DefaultAttackMontage;
 	
+	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName) override;
 };

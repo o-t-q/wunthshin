@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -27,7 +27,4 @@ public:
 	// 물체가 주어짐을 당했을 때 줍는 대상의 callback
 	virtual bool Take(UC_WSPickUp* InTakenComponent) = 0;
 
-	// 물체를 떨어트리려는 대상의 callback
-	virtual bool Drop(UC_WSPickUp* InTakenComponent) = 0;
-	
 };

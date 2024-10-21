@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "C_WSPickUp.h"
@@ -25,12 +25,10 @@ void UC_WSPickUp::SetActive(bool bNewActive, bool bReset)
 	if (bNewActive)
 	{
 		OnPickUp.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnPickUp);
-		OnDropping.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnDropping);
 	}
 	else
 	{
 		OnPickUp.RemoveAll(this);
-		OnDropping.RemoveAll(this);
 	}
 }
 
@@ -42,7 +40,6 @@ void UC_WSPickUp::BeginPlay()
 	// ...
 	bTaken = false;
 	OnPickUp.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnPickUp);
-	OnDropping.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnDropping);
 }
 
 void UC_WSPickUp::HandleOnPickUp(TScriptInterface<I_WSTaker> InTriggeredActor)
@@ -62,49 +59,12 @@ void UC_WSPickUp::HandleOnPickUp(TScriptInterface<I_WSTaker> InTriggeredActor)
 		{
 			bTaken = true;
 
-			// 물체를 시야에서 숨기고, 충돌 처리를 끔
-			// todo: 물체를 숨기지말고 삭제시키기
-			GetOwner()->SetActorEnableCollision(false);
-			GetOwner()->SetActorHiddenInGame(true);
+			// 주워진 물체를 파괴함
+			GetOwner()->Destroy();
 		}
 		else
 		{
 			UE_LOG(LogPickUpComponent, Log, TEXT("IWS_Taker::Take returns false"));
-		}
-	}
-}
-
-void UC_WSPickUp::HandleOnDropping(TScriptInterface<I_WSTaker> InTriggeringActor)
-{
-	if (!bTaken)
-	{
-		UE_LOG(LogPickUpComponent, Log, TEXT("Object is not taken by anyone"));
-		return;
-	}
-
-	if (InTriggeringActor)
-	{
-		if (InTriggeringActor->Drop(this))
-		{
-			bTaken = false;
-
-			// 떨어뜨리는 객체의 위치 근방으로 이동시킴
-			if (const AActor* ActorCheck = Cast<AActor>(InTriggeringActor.GetInterface()))
-			{
-				FVector Origin, Extents;
-				GetOwner()->GetActorBounds(true, Origin, Extents);
-
-				const FVector XYGap{Extents.X + 1.f, Extents.Y + 1.f, 0.f};
-				GetOwner()->SetActorLocation(ActorCheck->GetActorLocation() + XYGap);
-			}
-
-			// 물체를 다시 보여줌
-			GetOwner()->SetActorEnableCollision(true);
-			GetOwner()->SetActorHiddenInGame(false);
-		}
-		else
-		{
-			UE_LOG(LogPickUpComponent, Log, TEXT("IWS_Taker::Drop return false"))
 		}
 	}
 }

@@ -4,6 +4,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 
+#include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
+
 void FItemTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName)
 {
 	FTableRowBase::OnDataTableChanged(InDataTable, InRowName);
@@ -30,4 +32,16 @@ void FItemTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FNam
 	{
 		ensureAlwaysMsgf(false, TEXT("Unknown collision shape type"));
 	}
+
+	GlobalItemMetadataPointer = NewObject<USG_WSItemMetadata>();
+	GlobalItemMetadataPointer->AssetName = ItemName;
+	GlobalItemMetadataPointer->ItemType = ItemType;
+}
+
+void FWeaponTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName)
+{
+	// 무기 타입을 강제
+	ItemType = EItemType::Weapon;
+
+	Super::OnDataTableChanged(InDataTable, InRowName);
 }

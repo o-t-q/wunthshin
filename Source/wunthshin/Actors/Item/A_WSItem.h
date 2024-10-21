@@ -11,6 +11,7 @@
 
 struct FItemTableRow;
 class UC_WSPickUp;
+class USG_WSItemMetadata;
 
 UCLASS()
 class WUNTHSHIN_API AA_WSItem : public AActor, public IDataTableFetcher
@@ -36,7 +37,7 @@ class WUNTHSHIN_API AA_WSItem : public AActor, public IDataTableFetcher
 	// 아이템 정보를 불러오기 위한 핸들
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
 	FName AssetName;
-	
+
 	// 충돌체 동적 생성 후 호출
 	void InitializeCollisionLazy() const;
 
@@ -62,12 +63,19 @@ public:
 	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
 
 	FORCEINLINE UStaticMeshComponent* GetMesh() const { return MeshComponent; }
+
+	void SetAssetName(const FName& InAssetName) { AssetName = InAssetName; }
+	FName GetAssetName() const { return AssetName; }
 	
+	const USG_WSItemMetadata* GetItemMetadata() const;
+
 protected:
+	// 아이템의 메타데이터 (테이블에서 생성한 정적변수, Destroy 하면 안됨!)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Metadata")
+	const USG_WSItemMetadata* ItemMetadata;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	virtual FName GetAssetName() const { return AssetName; }
 
 	// 충돌체 업데이트 (상속 클래스가 다른 테이블을 사용하고 Item의 데이터 테이블에서 충돌 적용이 필요한 경우)
 	void UpdateCollisionFromDataTable(const FItemTableRow* Data);

@@ -38,34 +38,85 @@ void UC_WSInventory::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	// ...
 }
 
-void UC_WSInventory::AddItem(AA_WSItem* InItem, int Count)
+FInventoryPair* UC_WSInventory::FindItem(const USG_WSItemMetadata* InMetadata)
 {
-	// todo: 물체 자체를 저장하지 않고 메타데이터만 저장
-	for (auto item : Items)
-	{
-		if (item->GetFName() == InItem->GetFName())
+	return Items.FindByPredicate([&InMetadata](const FInventoryPair& InEntry)
 		{
-			// todo : 소모품은 카운트 증가
-			UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
-			return;
-		}
-	}
-
-	// 장비 아이템 추가
-	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
-	Items.Emplace(InItem);
+			return InEntry.Metadata == InMetadata;
+		});
 }
 
-void UC_WSInventory::RemoveItem(AA_WSItem* InItem, int Count)
+void UC_WSInventory::AddItem(AA_WSItem* InItem, int InCount)
+{
+	// 타입 캐스팅 안전
+	if (InCount < 0) 
+	{
+		return;
+	}
+
+	const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata();
+	// Item metadata가 생성되지 않았음
+	check(ItemMetadata);
+
+	// 동일한 아이템이 이미 존재하는 경우
+	if (FInventoryPair* Iterator = FindItem(ItemMetadata); Iterator)
+	{
+		UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
+		// todo: 오버플로우 방지
+		Iterator->Count += InCount;
+		return;
+	}
+
+	// 동일한 아이템이 없으므로 추가
+	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
+	Items.Emplace(InItem->GetItemMetadata());
+}
+
+void UC_WSInventory::RemoveItem(AA_WSItem* InItem, int InCount)
 {
 	if (Items.IsEmpty())
 	{
 		return;
 	}
 
-	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::RemoveItem"));
-	Items.Remove(InItem);
-	Items.Shrink();
+	// 타입 캐스팅 안전
+	if (InCount < 0) 
+	{
+		return;
+	}
+
+	const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata();
+	check(ItemMetadata);
+
+	if (FInventoryPair* Iterator = FindItem(ItemMetadata); Iterator)
+	{
+		// 못 찾은 경우
+		if (Iterator == nullptr) 
+		{
+			return;
+		}
+
+		// 버리고자 하는 값이 더 큼
+		if (Iterator->Count < (uint32)InCount) 
+		{
+			return;
+		}
+
+		UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::RemoveItem"));
+
+		// 아이템을 버림
+		// todo: 오버플로우, 언더플로우 방지
+		Iterator->Count -= (uint32)InCount;
+
+		// 아이템을 모두 버렸을 경우 Items에서 삭제
+		if (Iterator->Count == 0UL)
+		{
+			Items.RemoveAll([&Iterator](const FInventoryPair& InPair)
+				{
+					return Iterator->Metadata == InPair.Metadata;
+				});
+		}
+	}
 }
 
 void UC_WSInventory::UseItem(AA_WSItem* InItem, int Count)
