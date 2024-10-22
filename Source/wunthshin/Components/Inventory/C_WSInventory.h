@@ -12,7 +12,7 @@ class AA_WSItem;
 DECLARE_LOG_CATEGORY_EXTERN(LogInventory, Log, All);
 
 USTRUCT()
-struct FInventoryPair : public FArchive
+struct FInventoryPair
 {
 	GENERATED_BODY()
 
