@@ -21,6 +21,7 @@
 #include "wunthshin/Components/CharacterStats/CharacterStatsComponent.h" 
 #include "wunthshin/Data/CharacterTableRow.h"
 #include "InputMappingContext.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -190,7 +191,7 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
         RightHandWeapon->GetChildActor()->GetComponentByClass<UC_WSPickUp>()->SetActive(false, false);
 
         // 충돌 반응 비활성화, overlap으로 반응하는 아이템 프로필로 설정
-        RightHandWeapon->GetChildActor()->GetComponentByClass<UShapeComponent>()->SetCollisionProfileName("ItemEquipped");
+        RightHandWeapon->GetChildActor()->GetComponentByClass<UMeshComponent>()->SetCollisionProfileName("ItemEquipped");
     }
     
     // 인벤토리로 무기 또는 아이템 저장
@@ -408,6 +409,9 @@ void AA_WSCharacter::CheckItemAndDrop()
             FTransform ItemTransform{ FQuat::Identity, GetActorLocation() + RotatedExtent, FVector::OneVector };
 
             NewItem->SetAssetName(Metadata->GetAssetName());
+            NewItem->GetComponentByClass<UProjectileMovementComponent>()->SetVelocityInLocalSpace(Forward);
+            NewItem->GetComponentByClass<UProjectileMovementComponent>()->InitialSpeed = 150.f;
+            NewItem->GetComponentByClass<UProjectileMovementComponent>()->bSimulationEnabled = true;
             NewItem->FinishSpawning(ItemTransform, false);
             Inventory->RemoveItem(NewItem, 1);
             break;
