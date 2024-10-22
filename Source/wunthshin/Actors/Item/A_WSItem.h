@@ -9,6 +9,7 @@
 
 #include "A_WSItem.generated.h"
 
+class UProjectileMovementComponent;
 struct FItemTableRow;
 class UC_WSPickUp;
 class USG_WSItemMetadata;
@@ -17,14 +18,6 @@ UCLASS()
 class WUNTHSHIN_API AA_WSItem : public AActor, public IDataTableFetcher
 {
 	GENERATED_BODY()
-
-	// 물체 오프셋 설정을 위한 더미 루트 컴포넌트
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Pivot", meta=(AllowPrivateAccess = "true"))
-	USceneComponent* RootSceneComponent;
-
-	// 매시
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh", meta=(AllowPrivateAccess = "true"))
-	UStaticMeshComponent* MeshComponent;
 
 	// 매시 충돌체를 대체하는 충돌체
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Collision", meta=(AllowPrivateAccess = "true"))
@@ -73,6 +66,14 @@ protected:
 	// 아이템의 메타데이터 (테이블에서 생성한 정적변수, Destroy 하면 안됨!)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Metadata")
 	const USG_WSItemMetadata* ItemMetadata;
+	
+	// 매시
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh")
+	UStaticMeshComponent* MeshComponent;
+
+	// 아이템 물리충돌
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Collision")
+	UProjectileMovementComponent* ItemPhysics;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

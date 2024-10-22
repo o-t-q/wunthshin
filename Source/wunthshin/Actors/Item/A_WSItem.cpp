@@ -7,10 +7,10 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/ShapeComponent.h"
 #include "Components/SphereComponent.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Data/ItemTableRow.h"
-#include "wunthshin/Data/CharacterTableRow.h"
 #include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
 
 class USphereComponent;
@@ -20,28 +20,13 @@ void AA_WSItem::InitializeCollisionLazy() const
 {
 	if (CollisionComponent)
 	{
-		// 충돌체가 루트에 부착되지 않았다면,
-		if (CollisionComponent->GetAttachParent() != RootSceneComponent)
-		{
-			// SetupAttachment는 생성자에서 호출가능
-			if (const FUObjectThreadContext& Context = FUObjectThreadContext::Get();
-				Context.IsInConstructor)
-			{
-				CollisionComponent->SetupAttachment(RootSceneComponent);
-			}
-			else
-			{
-				CollisionComponent->AttachToComponent
-				(
-					RootSceneComponent,
-					FAttachmentTransformRules::SnapToTargetNotIncludingScale
-				);
-			}
-		}
-
+		// 투사체 컴포넌트에 의해 물리처리
+		ItemPhysics->SetUpdatedComponent(CollisionComponent);
 		// 충돌 설정
 		CollisionComponent->SetCollisionProfileName("ItemProfile");
 		CollisionComponent->SetGenerateOverlapEvents(true);
+		// 부모 컴포넌트가 있는 상태로 simulate하면 바로 부모로부터 detach됨
+		CollisionComponent->SetSimulatePhysics(!CollisionComponent->GetAttachParent());
 	}
 }
 
@@ -54,15 +39,19 @@ AA_WSItem::AA_WSItem(const FObjectInitializer& ObjectInitializer) :
 		
 	// 추상 클래스인 ShapeComponent, CollisionComponent는 nullptr로 초기화됨
 	// 다른 충돌체 모양을 호환하기 위해 유지, 상속하는 객체 또는 사용하는 객체에서 설정해야함
-	CollisionComponent = CreateDefaultSubobject<UShapeComponent>(CollisionComponentName);
+	CollisionComponent = CreateOptionalDefaultSubobject<UShapeComponent>(CollisionComponentName);
 	
-	RootSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	PickUpComponent = CreateDefaultSubobject<UC_WSPickUp>(TEXT("PickUp"));
+	ItemPhysics = CreateOptionalDefaultSubobject<UProjectileMovementComponent>(TEXT("ItemPhysics"));
 
-	SetRootComponent(RootSceneComponent);
-	MeshComponent->SetupAttachment(RootSceneComponent);
-
+	if (ItemPhysics)
+	{
+		ItemPhysics->bInterpMovement = true;
+		ItemPhysics->bInterpRotation = true;
+		ItemPhysics->bSimulationEnabled = false;
+	}
+	
 	// Mesh 충돌 대신 CollisionComponent를 사용
 	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	MeshComponent->SetSimulatePhysics(false);
@@ -78,20 +67,40 @@ void AA_WSItem::OnConstruction(const FTransform& Transform)
 void AA_WSItem::InitializeCollisionComponent(TSubclassOf<UShapeComponent> InClass)
 {
 	// 새로운 충돌체로의 교환
-	if (CollisionComponent)
+	if (!CollisionComponent || (InClass != CollisionComponent->GetClass()))
 	{
-		CollisionComponent->DestroyComponent();
-	}
-	
-	CollisionComponent = NewObject<UShapeComponent>(this, InClass, CollisionComponentName);
-	if (CollisionComponent)
-	{
-		CollisionComponent->RegisterComponent();
-		InitializeCollisionLazy();
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Unknown error! Collision component is not initialized properly!"));
+		USceneComponent* PreviousAttachParent = GetRootComponent()->GetAttachParent();
+		FTransform PreviousTransform = GetRootComponent()->GetComponentTransform();
+		
+		if (CollisionComponent)
+		{
+			CollisionComponent->DestroyComponent();
+		}
+
+		CollisionComponent = NewObject<UShapeComponent>(this, InClass, CollisionComponentName);
+		if (CollisionComponent)
+		{
+			SetRootComponent(CollisionComponent);
+			if (PreviousAttachParent)
+			{
+				CollisionComponent->SetupAttachment(PreviousAttachParent);
+			}
+			CollisionComponent->RegisterComponent();
+
+			MeshComponent->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+			MeshComponent->AttachToComponent
+			(
+				CollisionComponent, 
+				FAttachmentTransformRules::KeepRelativeTransform
+			);
+
+			CollisionComponent->SetWorldTransform(PreviousTransform);
+			InitializeCollisionLazy();
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("Unknown error! Collision component is not initialized properly!"));
+		}
 	}
 }
 
@@ -114,10 +123,10 @@ void AA_WSItem::UpdateCollisionFromDataTable(const FItemTableRow* Data)
 			FitCollisionToMesh();
 		}
 
+		FTransform Offset = Data->MeshOffset;
 		// 충돌체의 원점을 물체의 중간으로 옮김
-		FTransform Offset = Data->CollisionOffset;
-		Offset.SetTranslation({0.f, 0.f, MeshComponent->Bounds.BoxExtent.Z});
-		CollisionComponent->SetRelativeTransform(Offset);
+		Offset.SetTranslation({0.f, 0.f, -MeshComponent->Bounds.BoxExtent.Z});
+		MeshComponent->SetRelativeTransform(Offset);
 	}
 }
 
