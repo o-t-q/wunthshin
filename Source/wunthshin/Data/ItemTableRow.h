@@ -29,7 +29,7 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 	TSubclassOf<UShapeComponent> CollisionShape;
 
 	UPROPERTY(EditAnywhere)
-	FTransform CollisionOffset;
+	FTransform MeshOffset;
 
 	UPROPERTY()
 	USG_WSItemMetadata* GlobalItemMetadataPointer;
