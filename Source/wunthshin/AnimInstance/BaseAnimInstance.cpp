@@ -21,18 +21,9 @@ void UBaseAnimInstance::NativeInitializeAnimation()
 	MovementComponent = Pawn->GetMovementComponent();
 	check(MovementComponent);
 	
-
-	
-
 	//CharateromponentRef = GetMove
 	
 	CharaterComponentRef = Cast<AA_WSCharacter>(Pawn);
-	CharaterComponentRef->OnFastRun.AddDynamic(this, &ThisClass::CanFastRun);
-	CharaterComponentRef->OffFastRun.AddDynamic(this, &ThisClass::OffFastRun);
-	CharaterComponentRef->OnWalk.AddDynamic(this, &ThisClass::OnWalkMove);
-	CharaterComponentRef->OffWalk.AddDynamic(this, &ThisClass::OffWalkMove);
-	CharaterComponentRef->Glide.AddDynamic(this, &ThisClass::CanGlide);
-	
 }
 
 void UBaseAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
@@ -42,87 +33,19 @@ void UBaseAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	if (!MovementComponent) { return; }
 
-	RunSpeed = UKismetMathLibrary::VSizeXY(MovementComponent->Velocity);
-	RunSpeed = RunSpeed * 1.7f;
+	const FVector& Velocity = CharaterComponentRef->GetMovementComponent()->Velocity;
+	const double MaxSpeed = CharaterComponentRef->GetMovementComponent()->GetMaxSpeed();
 
-	bShoudRun = !FMath::IsNearlyZero(RunSpeed);
-	//bShoudWalk = !FMath::IsNearlyZero(WalkSpeed);
+	// 닷 프로덕트 -> 앞 우의 길이 -> 앱솔루트 (+ 음수영역인 뒤, 좌를 접음)
+	const double Horizontal = FMath::Abs(Velocity.Dot(FVector::ForwardVector + FVector::RightVector));
+	const double Vertical = FMath::Abs(Velocity.Dot(FVector::UpVector));
 
-
+	HorizontalSpeed = FMath::Clamp(Horizontal / MaxSpeed, 0.f, 1.f);
+	VerticalSpeed = FMath::Clamp(Vertical / MaxSpeed, 0.f, 1.f);
+	bShoudFastRun = CharaterComponentRef->IsFastRunning();
+	bShoudWalk = CharaterComponentRef->IsWalking();
 	bIsCrouch = MovementComponent->IsCrouching();
 	bIsFalling = MovementComponent->IsFalling();
-}
-
-
-
-
-void UBaseAnimInstance::CanFastRun()
-{
-	if (!bShoudFastRun&& !bShoudWalk)
-	{
-		bShoudFastRun = true;
-	}
-}
-
-void UBaseAnimInstance::OffFastRun()
-{
-	if (bShoudFastRun)
-	{
-		bShoudFastRun = false;
-	}
-}
-
-void UBaseAnimInstance::OnWalkMove()
-{
-	if (!bShoudWalk&& !bShoudFastRun)
-	{
-		bShoudWalk = true;
-	}
-	else if (bShoudWalk)
-	{
-		bShoudWalk = false;
-	}
-}
-
-void UBaseAnimInstance::OffWalkMove()
-{
-	if (bShoudWalk)
-	{
-		bShoudWalk = false;
-	}
-}
-
-void UBaseAnimInstance::CanGlide()
-{
-	if (bIsGlide)
-	{
-		bIsGlide = !bIsGlide;
-	}
-	else
-	{
-		bIsGlide = !bIsGlide;
-	}
-}
-bool UBaseAnimInstance::GetGanClide()
-{
-	return bIsGlide;
-}
-bool UBaseAnimInstance::GetIsCrouch()
-{
-	return bIsCrouch;
-}
-bool UBaseAnimInstance::GetbCanFastRun()
-{
-	return bShoudFastRun;
-}
-bool UBaseAnimInstance::GetbFastRun()
-{
-	return bShoudFastRun;
-}
-
-bool UBaseAnimInstance::GetbWalk()
-{
-	return bShoudWalk;
 }
 
 

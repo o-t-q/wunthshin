@@ -25,19 +25,13 @@ protected:
 	class UPawnMovementComponent* MovementComponent;
 
 	UPROPERTY(BlueprintReadOnly)
-	double WalkSpeed = 0.0f;
+	double HorizontalSpeed = 0.0f;
 
 	UPROPERTY(BlueprintReadOnly)
-	double RunSpeed = 0.0f;
-
-	UPROPERTY(BlueprintReadOnly)
-	double FastRunSpeed = 0.0f;
+	double VerticalSpeed = 0.f;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bShoudWalk = false;
-
-	UPROPERTY(BlueprintReadOnly)
-	bool bShoudRun = false;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bShoudFastRun = false;
@@ -50,14 +44,10 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsGlide = false;
-	// ���׹̳��ϰ� ���� �ʿ�
-	UPROPERTY(BlueprintReadOnly)
-	bool bStaminaEmpty = false;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bIsCliming = false;
 
-	// ������ ������� ����?
 	UPROPERTY()
 	double WallHight = 0.0f;
 
@@ -74,36 +64,6 @@ protected:
 	AA_WSCharacter* CharaterComponentRef;
 
 public:
-	UFUNCTION()
-	void CanFastRun();
-
-	UFUNCTION()
-	void OffFastRun();
-
-	UFUNCTION()
-	void OnWalkMove();
-
-	UFUNCTION()
-	void OffWalkMove();
-	
-	UFUNCTION()
-	bool GetbFastRun();
-
-	UFUNCTION()
-	bool GetbWalk();
-
-	UFUNCTION()
-	void CanGlide();
-
-	UFUNCTION()
-	bool GetGanClide();
-
-	UFUNCTION()
-	bool GetIsCrouch();
-
-	UFUNCTION()
-	bool GetbCanFastRun();
-
 	//void SetRootMotionMode();
 
 	
