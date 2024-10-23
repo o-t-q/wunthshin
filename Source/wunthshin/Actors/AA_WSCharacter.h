@@ -102,15 +102,15 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bCanGlide = false;
 
-	// 빠르게 달리는 키와 대립되는 키가 눌려있는가?
+	// 빠르게 달리는 키가 눌려있는가?
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsFastRunningPressing;
 
-	// 걷는 키와 대립되는 키가 눌려있는가?
+	// 걷는 키가 눌려있는가?
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsWalkingPressing;
 
-	// 앉기 키와 대립되는 키가 눌려있는가?
+	// 앉기 키가 눌려있는가?
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsCrouchPressing;
 
@@ -146,6 +146,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	bool IsWalking() const { return bIsWalking; }
+
+	// 커스텀 숙이기 가능 여부 함수
+	bool CanBeCrouched() const;
+
+	// 빠르게 달리기 가능 여부 함수
+	bool CanFastRun() const;
+
+	// 걷기 가능 여부 함수
+	bool CanWalk() const;
 
 	virtual UScriptStruct* GetTableType() const override;
 

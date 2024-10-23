@@ -130,6 +130,25 @@ void AA_WSCharacter::K2_UnFastRun()
     UnFastRun();
 }
 
+bool AA_WSCharacter::CanBeCrouched() const
+{
+    return !GetMovementComponent()->IsFalling() &&
+        !GetCharacterMovement()->bWantsToCrouch &&
+        !bIsFastRunning;
+}
+
+bool AA_WSCharacter::CanFastRun() const
+{
+    return !GetCharacterMovement()->bWantsToCrouch &&  // 이전 틱 + 현재 틱을 포함하여 Crouch중인 상황 (Crouch 업데이트가 lazy하게 발생함)
+        !bIsFastRunning &&
+        !bIsWalking;
+}
+
+bool AA_WSCharacter::CanWalk() const
+{
+    return !bIsWalking && !bIsFastRunning;
+}
+
 UScriptStruct* AA_WSCharacter::GetTableType() const
 {
     return FCharacterTableRow::StaticStruct();
@@ -331,9 +350,7 @@ void AA_WSCharacter::OnCrouch()
 {
     bIsCrouchPressing = true;
 
-    if (GetMovementComponent()->IsFalling() ||
-        GetCharacterMovement()->bWantsToCrouch ||
-        bIsFastRunning)
+    if (!CanBeCrouched())
     { 
         return;
     }
@@ -364,10 +381,7 @@ void AA_WSCharacter::FastRun()
 {
     bIsFastRunningPressing = true;
 
-    // 이전 틱 + 현재 틱을 포함하여 Crouch중인 상황 (Crouch 업데이트가 lazy하게 발생함)
-    if (GetCharacterMovement()->bWantsToCrouch ||
-        bIsFastRunning ||
-        bIsWalking) 
+    if (CanFastRun()) 
     {
         return;
     }
@@ -406,8 +420,7 @@ void AA_WSCharacter::GoOnWalk()
 {
     bIsWalkingPressing = true;
 
-    if (bIsWalking ||
-        bIsFastRunning)
+    if (!CanWalk())
     {
         return;
     }
