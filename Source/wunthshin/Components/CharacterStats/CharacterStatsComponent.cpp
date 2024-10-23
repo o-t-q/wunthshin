@@ -1,6 +1,8 @@
 #include "CharacterStatsComponent.h"
 #include "Engine/DataTable.h"
 #include "Logging/LogMacros.h"
+#include "GameFramework/CharacterMovementComponent.h"
+
 #include "wunthshin/Actors/AA_WSCharacter.h" 
 
 
@@ -93,6 +95,9 @@ void UCharacterStatsComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
     AA_WSCharacter* Character = Cast<AA_WSCharacter>(GetOwner());
     if (Character)
     {
-        UpdateStamina(DeltaTime, Character->IsFastRunning());
+        if (FMath::Abs(Character->GetMovementComponent()->Velocity.Dot(FVector::ForwardVector + FVector::RightVector)) > 0.f)
+        {
+            UpdateStamina(DeltaTime, Character->IsFastRunning());
+        }
     }
 }
