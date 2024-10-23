@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{E32676A7-41D5-BD12-CFA1-20AA410C358D}",
+	"EngineAssociation": "{7FA8F9A9-481E-7B57-DFC0-C4984F257399}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -20,11 +20,6 @@
 			"TargetAllowList": [
 				"Editor"
 			]
-		},
-		{
-			"Name": "RMFixTool",
-			"Enabled": true,
-			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/63784b32c0b44fe6ad5e814b52c8e75e"
 		}
 	]
 }
