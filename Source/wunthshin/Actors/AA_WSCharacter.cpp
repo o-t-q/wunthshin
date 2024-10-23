@@ -37,6 +37,7 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 // AwunthshinCharacter
 
 const FName AA_WSCharacter::RightHandWeaponSocketName = TEXT("WeaponProp02");
+const float AA_WSCharacter::WalkCoolTime = 0.2f;
 
 AA_WSCharacter::AA_WSCharacter()
 {
@@ -116,17 +117,17 @@ AA_WSCharacter::AA_WSCharacter()
 void AA_WSCharacter::HandleStaminaDepleted()
 {
     // protected UnFastRun을 CharacterStatsComponent에서 호출하기 위함.
-    UnFastRun(FInputActionValue());
+    UnFastRun();
 }
 
 void AA_WSCharacter::K2_FastRun()
 {
-    FastRun(FInputActionValue());
+    FastRun();
 }
 
 void AA_WSCharacter::K2_UnFastRun()
 {
-    UnFastRun(FInputActionValue());
+    UnFastRun();
 }
 
 UScriptStruct* AA_WSCharacter::GetTableType() const
@@ -261,16 +262,16 @@ void AA_WSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
         EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AA_WSCharacter::Move);
 
 		// Cruuch
-		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Triggered, this, &AA_WSCharacter::OnCrouch);
+		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AA_WSCharacter::OnCrouch);
 		EnhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Completed, this, &AA_WSCharacter::UnOnCrouch);
 
 		// FastRun
-		EnhancedInputComponent->BindAction(FastRunAction, ETriggerEvent::Triggered, this, &AA_WSCharacter::FastRun);
+		EnhancedInputComponent->BindAction(FastRunAction, ETriggerEvent::Started, this, &AA_WSCharacter::FastRun);
 		EnhancedInputComponent->BindAction(FastRunAction, ETriggerEvent::Completed, this, &AA_WSCharacter::UnFastRun);
 
 		// Walk
         EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Started, this, &AA_WSCharacter::GoOnWalk);
-        //EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Started, this, &AA_WSCharacter::GoOffWalk);
+        EnhancedInputComponent->BindAction(WalkAction, ETriggerEvent::Completed, this, &AA_WSCharacter::GoOffWalk);
 
         // ZoomWheel
         EnhancedInputComponent->BindAction(ZoomWheelAction, ETriggerEvent::Started, this, &AA_WSCharacter::ZoomWheel);
@@ -326,87 +327,117 @@ void AA_WSCharacter::Look(const FInputActionValue& Value)
     }
 }
 
-void AA_WSCharacter::OnCrouch(const FInputActionValue& Value)
+void AA_WSCharacter::OnCrouch()
 {
-    UBaseAnimInstance* BaseAnimInstance = Cast<UBaseAnimInstance>(GetMesh()->GetAnimInstance());
-	if (GetMovementComponent()->IsFalling()) { return; }
-    
-	
-    if (BaseAnimInstance->GetbCanFastRun())
-    {
+    bIsCrouchPressing = true;
+
+    if (GetMovementComponent()->IsFalling() ||
+        GetCharacterMovement()->bWantsToCrouch ||
+        bIsFastRunning)
+    { 
         return;
     }
+
     Crouch();
 }
 
-void AA_WSCharacter::UnOnCrouch(const FInputActionValue& Value)
+void AA_WSCharacter::UnOnCrouch()
 {
-	UnCrouch();
+    bIsCrouchPressing = false;
+
+    // 지금 당장 숙이고 있는가?
+    if (!GetMovementComponent()->IsCrouching()) 
+    {
+        return;
+    }
+
+    UnCrouch();
+
+    // 상충되는 빠르게 달리기 키가 눌려있다면 빠르게 달리기로 상태 변환
+    if (bIsFastRunningPressing) 
+    {
+        FastRun();
+    }
 }
 
-void AA_WSCharacter::FastRun(const FInputActionValue& Value)
+void AA_WSCharacter::FastRun()
 {
+    bIsFastRunningPressing = true;
+
+    // 이전 틱 + 현재 틱을 포함하여 Crouch중인 상황 (Crouch 업데이트가 lazy하게 발생함)
+    if (GetCharacterMovement()->bWantsToCrouch ||
+        bIsFastRunning ||
+        bIsWalking) 
+    {
+        return;
+    }
+
     bIsFastRunning = true;
 	OnFastRun.Broadcast();
-    UBaseAnimInstance* BaseAnimInstance = Cast<UBaseAnimInstance>(GetMesh()->GetAnimInstance());
-    if (BaseAnimInstance->GetbFastRun() && !BaseAnimInstance->GetbWalk())
-    {
-        if (!BaseAnimInstance->GetIsCrouch())
-        {
-            GetCharacterMovement()->MaxWalkSpeed = 1000;
-        }
-        
-    }
-
-    // 스태미나 업데이트
-    CharacterStatsComponent->UpdateStamina(GetWorld()->GetDeltaSeconds(), true);
+    GetCharacterMovement()->MaxWalkSpeed = 1000;
 }
 
-void AA_WSCharacter::UnFastRun(const FInputActionValue& Value)
+void AA_WSCharacter::UnFastRun()
 {
+    bIsFastRunningPressing = false;
+
+    if (!bIsFastRunning) 
+    {
+        return;
+    }
+
     bIsFastRunning = false;
 	OffFastRun.Broadcast();
-    UBaseAnimInstance* BaseAnimInstance = Cast<UBaseAnimInstance>(GetMesh()->GetAnimInstance());
-    if (!BaseAnimInstance->GetbFastRun() && !BaseAnimInstance->GetbWalk())
+    GetCharacterMovement()->MaxWalkSpeed = 500;
+
+    if (bIsWalkingPressing) 
     {
-        GetCharacterMovement()->MaxWalkSpeed = 500;
+        // 상충되는 걷기 키가 눌려있다면 걷기로 상태 변환
+        GoOnWalk();
     }
-      CharacterStatsComponent->UpdateStamina(GetWorld()->GetDeltaSeconds(), false);
-
-	
-}
-
-void AA_WSCharacter::GoOnWalk(const FInputActionValue& Value)
-{
-    if (bCanWalk)
+    else if (bIsCrouchPressing) 
     {
-        OnWalk.Broadcast();
-        UBaseAnimInstance* BaseAnimInstance = Cast<UBaseAnimInstance>(GetMesh()->GetAnimInstance());
-        if (BaseAnimInstance->GetbWalk() && !bWalkActionClick && !BaseAnimInstance->GetbFastRun())
-        {
-            bWalkActionClick = !bWalkActionClick;
-            GetCharacterMovement()->MaxWalkSpeed = 200;
-            bCanWalk = false;
-            GetWorldTimerManager().SetTimer(WalkCoolTimer, this, &ThisClass::WalkCollTimeChange, WalkCoolTime, false);
-        }
-        else if (!BaseAnimInstance->GetbFastRun() && bWalkActionClick)
-        {
-            bWalkActionClick = !bWalkActionClick;
-            GetCharacterMovement()->MaxWalkSpeed = 500;
-            bCanWalk = false;
-            GetWorldTimerManager().SetTimer(WalkCoolTimer, this, &ThisClass::WalkCollTimeChange, WalkCoolTime, false);
-        }
+        // 상충되는 숙이기 키가 눌려 있다면 숙이기로 상태 변환
+        OnCrouch();
     }
-	
-	
 }
 
-void AA_WSCharacter::WalkCollTimeChange()
+void AA_WSCharacter::GoOnWalk()
 {
-    bCanWalk = true;
+    bIsWalkingPressing = true;
+
+    if (bIsWalking ||
+        bIsFastRunning)
+    {
+        return;
+    }
+
+    OnWalk.Broadcast();
+    bIsWalking = true;
+    GetCharacterMovement()->MaxWalkSpeed = 200;
 }
 
-void AA_WSCharacter::OnJump(const FInputActionValue& Value)
+void AA_WSCharacter::GoOffWalk() 
+{
+    bIsWalkingPressing = false;
+ 
+    if (!bIsWalking) 
+    {
+        return;
+    }
+
+    OffWalk.Broadcast();
+    bIsWalking = false;
+    GetCharacterMovement()->MaxWalkSpeed = 500;
+
+    // 상충되는 빠르게 달리기가 눌려있다면 빠르게 달리기로 상태변환
+    if (bIsFastRunningPressing) 
+    {
+        FastRun();
+    }
+}
+
+void AA_WSCharacter::OnJump()
 {
     UCharacterMovementComponent* CharacterComponent = GetCharacterMovement();
     if (!bCanGlide && !CharacterComponent->IsFalling())
@@ -415,7 +446,6 @@ void AA_WSCharacter::OnJump(const FInputActionValue& Value)
     }
     else if (CharacterComponent->IsFalling())
     {
-
         if (CanGlide())
         {
             bCanGlide = !bCanGlide;
@@ -429,7 +459,7 @@ void AA_WSCharacter::OnJump(const FInputActionValue& Value)
     }
 }
 
-void AA_WSCharacter::StopOnJump(const FInputActionValue& Value)
+void AA_WSCharacter::StopOnJump()
 {
     StopJumping();
 }
@@ -441,7 +471,6 @@ void AA_WSCharacter::ZoomWheel(const FInputActionValue& Value)
     const float ActionValue = Value.Get<float>();
     if (FMath::IsNearlyZero(ActionValue)) { return; }
     SpringArm->TargetArmLength = FMath::Clamp(SpringArm->TargetArmLength + (ActionValue*50), 50.f, 500.f);
-    
 }
 
 

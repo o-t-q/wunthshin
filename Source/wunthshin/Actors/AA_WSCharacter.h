@@ -71,19 +71,6 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ZoomWheelAction;
 
-
-
-	UPROPERTY()
-	bool bWalkActionClick = false;
-	UPROPERTY()
-	bool bCanWalk = true;
-	UPROPERTY()
-	float WalkCoolTime = 0.2f;
-
-	bool bCanGlide = false;
-	
-	
-
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
@@ -94,20 +81,38 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* DropAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Test", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UC_WSInventory* Inventory;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UCharacterStatsComponent* CharacterStatsComponent;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	bool bIsFastRunning;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	UChildActorComponent* RightHandWeapon;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
 	FName AssetName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bIsFastRunning;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bIsWalking;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bCanGlide = false;
+
+	// 빠르게 달리는 키와 대립되는 키가 눌려있는가?
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bIsFastRunningPressing;
+
+	// 걷는 키와 대립되는 키가 눌려있는가?
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bIsWalkingPressing;
+
+	// 앉기 키와 대립되는 키가 눌려있는가?
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bIsCrouchPressing;
 
 public:
 	//딜리게이트
@@ -117,12 +122,10 @@ public:
 	FOffWalk OffWalk;
 	FTimerHandle FastRunCooldownTimer;
 	FGlide Glide;
-
-protected:
-	FTimerHandle WalkCoolTimer;
 	
 public:
 	static const FName RightHandWeaponSocketName;
+	static const float WalkCoolTime;
 	
 	AA_WSCharacter();
 
@@ -141,6 +144,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	bool IsFastRunning() const { return bIsFastRunning; }
 
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	bool IsWalking() const { return bIsWalking; }
+
 	virtual UScriptStruct* GetTableType() const override;
 
 	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
@@ -153,17 +159,17 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	void OnCrouch(const FInputActionValue& Value);
-	void UnOnCrouch(const FInputActionValue& Value);
+	void OnCrouch();
+	void UnOnCrouch();
 
-	void FastRun(const FInputActionValue& Value);
-	void UnFastRun(const FInputActionValue& Value);
+	void FastRun();
+	void UnFastRun();
 
-	void GoOnWalk(const FInputActionValue& Value);
-	void WalkCollTimeChange();
+	void GoOnWalk();
+	void GoOffWalk();
 
-	void OnJump(const FInputActionValue& Value);
-	void StopOnJump(const FInputActionValue& Value);
+	void OnJump();
+	void StopOnJump();
 
 	void ZoomWheel(const FInputActionValue& Value);
 
