@@ -7,9 +7,11 @@
 #include "Logging/LogMacros.h"
 
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
+#include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
 
 #include "AA_WSCharacter.generated.h"
 
+class UC_WSShield;
 class AA_WSWeapon;
 class USpringArmComponent;
 class UCameraComponent;
@@ -31,7 +33,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGlide);
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game, Blueprintable)
-class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFetcher
+class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFetcher, public IElementTracked
 {
 	GENERATED_BODY()
 	
@@ -83,6 +85,9 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UC_WSInventory* Inventory;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	UC_WSShield* Shield;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UCharacterStatsComponent* CharacterStatsComponent;
