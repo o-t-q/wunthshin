@@ -12,16 +12,16 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "wunthshin/AnimInstance/BaseAnimInstance.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Components/Inventory/C_WSInventory.h"
 #include "Engine/OverlapResult.h"
 #include "Item/A_WSItem.h"
 #include "Item/Weapon/A_WSWeapon.h"
 #include "wunthshin/Components/CharacterStats/CharacterStatsComponent.h" 
-#include "wunthshin/Data/CharacterTableRow.h"
 #include "InputMappingContext.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "wunthshin/Enums.h"
+#include "wunthshin/Data/CharacterTableRow/CharacterTableRow.h"
 #include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
