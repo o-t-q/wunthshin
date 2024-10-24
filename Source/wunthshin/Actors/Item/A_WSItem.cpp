@@ -12,6 +12,7 @@
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Data/ItemTableRow/ItemTableRow.h"
 #include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
+#include "wunthshin/Subsystem/Utility.h"
 
 class USphereComponent;
 const FName AA_WSItem::CollisionComponentName = TEXT("Collision");
@@ -146,10 +147,7 @@ void AA_WSItem::ApplyAsset(const FDataTableRowHandle& InRowHandle)
 
 	UpdateCollisionFromDataTable(Data);
 
-	if (Data->GlobalItemMetadataPointer) 
-	{
-		ItemMetadata = Data->GlobalItemMetadataPointer;
-	}
+	ItemMetadata = FItemSubsystemUtility::GetMetadata<UItemSubsystem, UItemEditorSubsystem, USG_WSItemMetadata>(GetWorld(), Data->ItemName);
 	
 	// todo: Icon, ItemName 등 정보 추가
 }
