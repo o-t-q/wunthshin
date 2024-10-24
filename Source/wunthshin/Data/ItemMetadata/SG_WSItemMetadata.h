@@ -16,7 +16,7 @@ class WUNTHSHIN_API USG_WSItemMetadata : public USaveGame
 {
 	GENERATED_BODY()
 
-	friend struct FItemTableRow;
+	friend struct FItemSubsystemUtility;
 
 	UPROPERTY()
 	EItemType ItemType;
