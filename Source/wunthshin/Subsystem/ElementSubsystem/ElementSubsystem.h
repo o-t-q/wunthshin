@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "wunthshin/Data/ElementRowHandle/ElementRowHandle.h"
 #include "wunthshin/Subsystem/TableQuerySubsystem.h"
 #include "ElementSubsystem.generated.h"
 
@@ -11,11 +13,11 @@ class UO_WSElementReactor;
 DECLARE_LOG_CATEGORY_EXTERN(LogElementSubsystem, Log, All);
 
 USTRUCT()
-struct FElementReactionPair 
+struct FElementReactionPair
 {
 	GENERATED_BODY()
 
-	FDataTableRowHandle Elements[2];
+	FElementRowHandle Elements[2];
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<AActor*> Instigators;
@@ -32,18 +34,19 @@ struct FElementTrackingContext
 	FTimerHandle ExpiredHandle;
 };
 
-uint32 GetTypeHash(const FDataTableRowHandle& InDataTableHandle);
+uint32 GetTypeHash(const FElementRowHandle& InDataTableHandle);
 
 USTRUCT()
 struct FElementTrackingMap
 {
 	GENERATED_BODY()
 
+private:
 	UPROPERTY(VisibleAnywhere)
-	TMap<FDataTableRowHandle, FElementTrackingContext> Elements;
+	TMap<FElementRowHandle, FElementTrackingContext> Elements;
 
 public:
-	void Add(UWorld* InWorldContext, AActor* InInstigator, const FDataTableRowHandle& InElementRow, const float InExpired = 1.f) 
+	void Add(UWorld* InWorldContext, AActor* InInstigator, const FElementRowHandle& InElementRow, const float InExpired = 1.f) 
 	{
 		if (!IsValid(InWorldContext))
 		{
@@ -77,7 +80,7 @@ public:
 		Elements[InElementRow].Instigator = InInstigator;
 	}
 
-	void Remove(UWorld* InWorldContext, const FDataTableRowHandle InElementRow, const bool bTimer = false) 
+	void Remove(UWorld* InWorldContext, const FElementRowHandle InElementRow, const bool bTimer = false) 
 	{
 		if (!IsValid(InWorldContext)) 
 		{
@@ -96,8 +99,16 @@ public:
 			return;
 		}
 
+		FElementTrackingContext Context = Elements[InElementRow];
+		
+		UE_LOG(LogElementSubsystem, Log, TEXT("Element %s by %s is removed"), *InElementRow.Handle.RowName.ToString(), *Context.Instigator->GetName())
+		if (bTimer)
+		{
+			UE_LOG(LogElementSubsystem, Log, TEXT("Timer expired for element %s"), *InElementRow.Handle.RowName.ToString());
+		}
+
 		// 시간에 의해 초기화되는 것이 아니라면 타이머 중단
-		if (FTimerHandle& TimerHandle = Elements[InElementRow].ExpiredHandle;
+		if (FTimerHandle& TimerHandle = Context.ExpiredHandle;
 			TimerHandle.IsValid()) 
 		{
 			InWorldContext->GetTimerManager().ClearTimer(TimerHandle);
@@ -120,6 +131,7 @@ public:
 
 		FElementReactionPair OutPair;
 		char Count = 0;
+		OutPair.Instigators.SetNum(2);
 
 		// 맵의 순차접근을 통해 pair에 부여
 		// todo: 들어온 순서대로가 보장되지 않을 수 있음
@@ -153,16 +165,18 @@ class WUNTHSHIN_API UElementSubsystem : public UTableQueryGameInstanceSubsystem
 	TMap<TSubclassOf<UO_WSElementReactor>, UO_WSElementReactor*> PreinstantiatedReactors;
 
 	UPROPERTY(VisibleAnywhere, Category = "Stack", meta = (AllowPrivateAccess = "true"))
-	TMap<AActor*, FElementTrackingMap> TrackingObjects;
+	TMap<UObject*, FElementTrackingMap> TrackingObjects;
 
 public:
 	UElementSubsystem();
 
+	static FElementRowHandle GetElementHandle(const UWorld* InWorld, const FName& ElementName);
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-	void ApplyElement(AActor* InTarget, AActor* InInstigator, const FDataTableRowHandle& InElementRow);
+	void ApplyElement(AActor* InTarget, AActor* InInstigator, const FElementRowHandle& InElementRow);
 
-	UO_WSElementReactor* GetReactor(const FDataTableRowHandle& InLeft, const FDataTableRowHandle& InRight);
+	UO_WSElementReactor* GetReactor(const FElementRowHandle& InLeft, const FElementRowHandle& InRight) const;
 
 	UO_WSElementReactor* GetReactor(TSubclassOf<UO_WSElementReactor> InReactorType) const;
 };

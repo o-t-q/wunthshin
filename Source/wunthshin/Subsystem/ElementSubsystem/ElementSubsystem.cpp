@@ -4,10 +4,11 @@
 #include "wunthshin/Subsystem/ElementSubsystem/ElementSubsystem.h"
 #include "wunthshin/Data/ElementTableRow/ElementTableRow.h"
 #include "wunthshin/Data/Elements/O_WSElementReactor.h"
+#include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
 
 DEFINE_LOG_CATEGORY(LogElementSubsystem);
 
-uint32 GetTypeHash(const FDataTableRowHandle& InDataTableHandle)
+uint32 GetTypeHash(const FElementRowHandle& InDataTableHandle)
 {
 	return CityHash32(reinterpret_cast<const char*>(&InDataTableHandle), sizeof(InDataTableHandle));
 }
@@ -17,6 +18,14 @@ UElementSubsystem::UElementSubsystem()
 	static ConstructorHelpers::FObjectFinder<UDataTable> Table(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_ElementTable.DT_ElementTable'"));
 	check(Table.Object);
 	DataTable = Table.Object;
+}
+
+FElementRowHandle UElementSubsystem::GetElementHandle(const UWorld* InWorld, const FName& ElementName)
+{
+	const FDataTableRowHandle DataTableRowHandle = InWorld->GetGameInstance()->GetSubsystem<UElementSubsystem>()->FindItem(ElementName);
+	ensure(!DataTableRowHandle.IsNull());
+	
+	return FElementRowHandle(DataTableRowHandle);
 }
 
 void UElementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -43,18 +52,31 @@ void UElementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	}
 }
 
-void UElementSubsystem::ApplyElement(AActor* InTarget, AActor* InInstigator, const FDataTableRowHandle& InElementRow)
+void UElementSubsystem::ApplyElement(AActor* InTarget, AActor* InInstigator, const FElementRowHandle& InElementRow)
 {
+	UE_LOG(LogElementSubsystem, Log, TEXT("Applying the element %s to %s by %s"), *InElementRow.Handle.RowName.ToString(), *InTarget->GetName(), *InInstigator->GetName());
 	if (TrackingObjects.Contains(InTarget)) 
 	{
 		FElementTrackingMap& Map = TrackingObjects[InTarget];
-		Map.Add(InTarget->GetWorld(), InInstigator, InElementRow);
+		Map.Add(InInstigator->GetWorld(), InInstigator, InElementRow);
+
+		if (IElementTracked* Interface = Cast<IElementTracked>(InTarget))
+		{
+			Interface->OnElementApplied.Broadcast(InElementRow);	
+		}
 
 		if (Map.IsFull()) 
 		{
 			const FElementReactionPair& Pair = Map.ExtractElement();
 			UO_WSElementReactor* Reactor = GetReactor(Pair.Elements[0], Pair.Elements[1]);
 
+			if (!Reactor)
+			{
+				// 매칭되는 요소의 반응이 없는 경우
+				ensure(false);
+				return;
+			}
+			
 			if (Pair.Instigators.Num() != 2) 
 			{
 				// element를 적용한 대상이 두명이 아닌 경우 
@@ -64,6 +86,7 @@ void UElementSubsystem::ApplyElement(AActor* InTarget, AActor* InInstigator, con
 			}
 			
 			AActor* OtherInstigator = Pair.Instigators[0] == InInstigator ? Pair.Instigators[1] : Pair.Instigators[0];
+			UE_LOG(LogElementSubsystem, Log, TEXT("%s effect triggered by %s and %s!"), *Reactor->GetName(), *InInstigator->GetName(), *OtherInstigator->GetName());
 			Reactor->React(InInstigator, OtherInstigator, InTarget);
 
 			// 지금까지 추적하던 원소 상태 초기화
@@ -74,15 +97,15 @@ void UElementSubsystem::ApplyElement(AActor* InTarget, AActor* InInstigator, con
 	{
 		// 처음 부여된 상태이면 효과가 발생할 수 없음 (2개의 다른 조합으로 효과 발생)
 		FElementTrackingMap& NewMap = TrackingObjects.Add(InTarget);
-		NewMap.Add(InTarget->GetWorld(), InInstigator, InElementRow);
+		NewMap.Add(InInstigator->GetWorld(), InInstigator, InElementRow);
 	}
 }
 
-UO_WSElementReactor* UElementSubsystem::GetReactor(const FDataTableRowHandle& InLeft, const FDataTableRowHandle& InRight)
+UO_WSElementReactor* UElementSubsystem::GetReactor(const FElementRowHandle& InLeft, const FElementRowHandle& InRight) const
 {
-	const FElementTableRow* LeftElement = InLeft.GetRow<FElementTableRow>(TEXT(""));
+	const FElementTableRow* LeftElement = InLeft.Handle.GetRow<FElementTableRow>(TEXT(""));
 	const FElementReaction* LRReaction = LeftElement->Reactions.FindByPredicate([&InRight](const FElementReaction& InReaction) {
-		return InReaction.OtherElement == InRight;
+		return InReaction.OtherElement == InRight.Handle;
 		});
 
 	// 찾고자하는 좌우 반응 효과가 없는 경우
