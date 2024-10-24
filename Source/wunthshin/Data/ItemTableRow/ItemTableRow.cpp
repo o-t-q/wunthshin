@@ -37,11 +37,6 @@ void FItemTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FNam
         	}
 	}
 #endif
-
-	// todo: ItemSubsystem으로 옮기기
-	GlobalItemMetadataPointer = NewObject<USG_WSItemMetadata>();
-	GlobalItemMetadataPointer->AssetName = ItemName;
-	GlobalItemMetadataPointer->ItemType = ItemType;
 }
 
 void FWeaponTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName)

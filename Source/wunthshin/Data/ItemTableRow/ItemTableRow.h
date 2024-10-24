@@ -32,9 +32,6 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 	FTransform MeshOffset;
 
 	UPROPERTY()
-	USG_WSItemMetadata* GlobalItemMetadataPointer;
-
-	UPROPERTY()
 	bool bBox;
 
 	UPROPERTY()
