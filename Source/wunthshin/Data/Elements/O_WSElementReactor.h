@@ -14,6 +14,7 @@ class WUNTHSHIN_API UO_WSElementReactor : public UObject
 {
 	GENERATED_BODY()
 
+public:
 	/**
 	 * @brief 원소 작용이 발생했을때 호출되는 함수
 	 * @param InReactionInstigator 작용하기 전 마지막에 짝이 되는 원소를 제공한 대상
