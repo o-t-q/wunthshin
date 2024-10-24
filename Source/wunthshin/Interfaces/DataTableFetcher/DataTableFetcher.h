@@ -11,8 +11,8 @@
 
 #include "Editor/UnrealEd/Public/Editor.h"
 
-#include "wunthshin/Data/CharacterTableRow.h"
-#include "wunthshin/Data/ItemTableRow.h"
+#include "wunthshin/Data/CharacterTableRow/CharacterTableRow.h"
+#include "wunthshin/Data/ItemTableRow/ItemTableRow.h"
 
 #include "DataTableFetcher.generated.h"
 

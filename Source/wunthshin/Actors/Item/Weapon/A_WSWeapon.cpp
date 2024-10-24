@@ -8,7 +8,7 @@
 #include "Engine/DataTable.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "wunthshin/Components/Weapon/C_WSWeapon.h"
-#include "wunthshin/Data/ItemTableRow.h"
+#include "wunthshin/Data/ItemTableRow/ItemTableRow.h"
 
 AA_WSWeapon::AA_WSWeapon(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.DoNotCreateDefaultSubobject("CollisionComponent") // 무기를 손잡이에서 잡기위해 매시 원점 사용

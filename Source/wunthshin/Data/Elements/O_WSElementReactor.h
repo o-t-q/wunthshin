@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "O_ElementReactor.generated.h"
+#include "O_WSElementReactor.generated.h"
 
 /**
  * 
  */
 UCLASS(BlueprintType, Blueprintable)
-class WUNTHSHIN_API UO_ElementReactor : public UObject
+class WUNTHSHIN_API UO_WSElementReactor : public UObject
 {
 	GENERATED_BODY()
 

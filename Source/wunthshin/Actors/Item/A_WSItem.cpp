@@ -10,7 +10,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
-#include "wunthshin/Data/ItemTableRow.h"
+#include "wunthshin/Data/ItemTableRow/ItemTableRow.h"
 #include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
 
 class USphereComponent;

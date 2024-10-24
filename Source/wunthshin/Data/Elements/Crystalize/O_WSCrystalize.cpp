@@ -2,3 +2,7 @@
 
 
 #include "O_WSCrystalize.h"
+
+void UO_WSCrystalize::React(AActor* InReactionInstigator, AActor* InReactionAssist, AActor* InReactionOrigin)
+{
+}
