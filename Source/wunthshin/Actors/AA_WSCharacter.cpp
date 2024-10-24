@@ -392,7 +392,7 @@ void AA_WSCharacter::FastRun()
 {
     bIsFastRunningPressing = true;
 
-    if (CanFastRun()) 
+    if (!CanFastRun()) 
     {
         return;
     }
