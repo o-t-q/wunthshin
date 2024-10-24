@@ -13,4 +13,6 @@ UCLASS()
 class WUNTHSHIN_API UO_WSCrystalize : public UO_WSElementReactor
 {
 	GENERATED_BODY()
+
+	virtual void React(AActor* InReactionInstigator, AActor* InReactionAssist, AActor* InReactionOrigin);
 };
