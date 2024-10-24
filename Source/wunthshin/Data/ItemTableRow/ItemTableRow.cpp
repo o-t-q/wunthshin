@@ -10,29 +10,35 @@ void FItemTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FNam
 {
 	FTableRowBase::OnDataTableChanged(InDataTable, InRowName);
 
-	if (CollisionShape == UBoxComponent::StaticClass())
+#ifdef WITH_EDITOR
+	if (GIsRunning)
 	{
-		bBox = true;
-		bSphere = false;
-		bCapsule = false;
+		if (CollisionShape == UBoxComponent::StaticClass())
+        	{
+        		bBox = true;
+        		bSphere = false;
+        		bCapsule = false;
+        	}
+        	else if (CollisionShape == USphereComponent::StaticClass())
+        	{
+        		bBox = false;
+        		bSphere = true;
+        		bCapsule = false;
+        	}
+        	else if (CollisionShape == UCapsuleComponent::StaticClass())
+        	{
+        		bBox = false;
+        		bSphere = false;
+        		bCapsule = true;
+        	}
+        	else
+        	{
+        		ensureAlwaysMsgf(false, TEXT("Unknown collision shape type"));
+        	}
 	}
-	else if (CollisionShape == USphereComponent::StaticClass())
-	{
-		bBox = false;
-		bSphere = true;
-		bCapsule = false;
-	}
-	else if (CollisionShape == UCapsuleComponent::StaticClass())
-	{
-		bBox = false;
-		bSphere = false;
-		bCapsule = true;
-	}
-	else
-	{
-		ensureAlwaysMsgf(false, TEXT("Unknown collision shape type"));
-	}
+#endif
 
+	// todo: ItemSubsystem으로 옮기기
 	GlobalItemMetadataPointer = NewObject<USG_WSItemMetadata>();
 	GlobalItemMetadataPointer->AssetName = ItemName;
 	GlobalItemMetadataPointer->ItemType = ItemType;

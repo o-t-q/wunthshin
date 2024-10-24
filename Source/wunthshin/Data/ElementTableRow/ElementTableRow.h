@@ -10,7 +10,7 @@ struct WUNTHSHIN_API FElementReaction
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly, meta=(RowType="ElementTableRow"))
+	UPROPERTY(EditDefaultsOnly, meta=(RowType="/Script/wunthshin.ElementTableRow"))
 	FDataTableRowHandle OtherElement;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -30,5 +30,7 @@ struct WUNTHSHIN_API FElementTableRow : public FTableRowBase
 	UPROPERTY(EditDefaultsOnly)
 	TArray<FElementReaction> Reactions;
 
-	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName);
+#ifdef WITH_EDITOR
+	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName) override;
+#endif
 };
