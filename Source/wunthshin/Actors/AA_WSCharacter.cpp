@@ -132,7 +132,7 @@ void AA_WSCharacter::K2_UnFastRun()
 
 bool AA_WSCharacter::CanBeCrouched() const
 {
-    return !GetMovementComponent()->IsFalling() &&
+    return GetMovementComponent()->IsFalling() &&
         !GetCharacterMovement()->bWantsToCrouch &&
         !bIsFastRunning;
 }
