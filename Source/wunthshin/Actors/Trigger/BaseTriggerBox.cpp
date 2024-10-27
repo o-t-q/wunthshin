@@ -18,11 +18,27 @@ ABaseTriggerBox::ABaseTriggerBox()
 
     ActiveCollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnActivate);
     ActiveCollisionComponent->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnDeactivate);
+
+    // TriggerMesh 초기화
+    TriggerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TriggerMesh"));
+    TriggerMesh->SetupAttachment(RootComponent); // RootComponent에 붙임
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("StaticMesh'/Game/Path/To/Your/StaticMesh.StaticMesh'")); // 실제 경로로 수정
+    if (MeshAsset.Succeeded())
+    {
+        TriggerMesh->SetStaticMesh(MeshAsset.Object);
+        TriggerMesh->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // 원하는 위치로 조정
+        TriggerMesh->SetWorldScale3D(FVector(1.f)); // 스케일 조정
+    }
 }
 
 void ABaseTriggerBox::BeginPlay()
 {
     Super::BeginPlay();
+    //mesh야 제발 보여라 얍!
+    if (TriggerMesh)
+    {
+        TriggerMesh->SetVisibility(true);
+    }
 }
 
 void ABaseTriggerBox::OnActivate(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -48,31 +64,38 @@ void ABaseTriggerBox::OnDeactivate(UPrimitiveComponent* OverlappedComponent, AAc
 
         if (AA_WSCharacter* A_WSCharacter = Cast<AA_WSCharacter>(OtherActor))
         {
-            // GetController를 APlayerController로 캐스팅
             APlayerController* PlayerController = Cast<APlayerController>(A_WSCharacter->GetController());
             if (PlayerController)
             {
-                // 마우스 커서 비활성화 및 게임 모드로 복귀
                 FInputModeGameOnly InputMode;
                 PlayerController->SetInputMode(InputMode);
                 PlayerController->bShowMouseCursor = false;
-
-                // 캐릭터의 입력 재활성화
                 A_WSCharacter->EnableInput(PlayerController);
             }
         }
     }
 }
 
-
 void ABaseTriggerBox::ShowPortalUI(AA_WSCharacter* A_WSCharacter)
 {
-    if (PortalUIClass) // PortalUIClass가 nullptr이 아닐 때
+    if (PortalUIClass && !PortalUI) // PortalUIClass가 nullptr이 아닐 때
     {
         PortalUI = CreateWidget<UUserWidget>(GetWorld(), PortalUIClass); // UPortalUI가 아닌 UUserWidget으로 변경
         if (PortalUI)
         {
             PortalUI->AddToViewport();
+
+            // 버튼 클릭 이벤트 바인딩
+            UButton* YesButton = Cast<UButton>(PortalUI->GetWidgetFromName(TEXT("YesButton")));
+            UButton* NoButton = Cast<UButton>(PortalUI->GetWidgetFromName(TEXT("NoButton")));
+            if (YesButton)
+            {
+                YesButton->OnClicked.AddDynamic(this, &ABaseTriggerBox::OnYesClicked);
+            }
+            if (NoButton)
+            {
+                NoButton->OnClicked.AddDynamic(this, &ABaseTriggerBox::OnNoClicked);
+            }
 
             // 마우스 커서 표시 및 입력 모드 설정
             APlayerController* PlayerController = Cast<APlayerController>(A_WSCharacter->GetController());
@@ -90,10 +113,10 @@ void ABaseTriggerBox::ShowPortalUI(AA_WSCharacter* A_WSCharacter)
     }
 }
 
-
 void ABaseTriggerBox::OnYesClicked()
 {
-    UGameplayStatics::OpenLevel(GetWorld(), FName("YourLevelName")); // 이동할 레벨 이름으로 변경
+    // "Dungeon" 레벨로 이동
+    UGameplayStatics::OpenLevel(GetWorld(), FName("Dungeon"));
 
     // 입력 모드 복구
     APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
@@ -103,12 +126,6 @@ void ABaseTriggerBox::OnYesClicked()
         PlayerController->SetInputMode(InputMode);
         PlayerController->bShowMouseCursor = false; // 마우스 커서 숨김
     }
-
-    /*  //캐릭터 움직임 활성화
-     if (AA_WSCharacter* A_WSCharacter = cast<AA_WSCharacter>(getowningplayerpawn()))
-     {
-         a_wscharacter->getcharactermovement()->setmovementmode(emovementmode::move_walking);
-     }*/
 }
 
 void ABaseTriggerBox::OnNoClicked()
