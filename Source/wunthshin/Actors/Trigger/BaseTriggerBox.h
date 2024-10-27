@@ -23,11 +23,13 @@ private:
 
     UFUNCTION()
     void OnDeactivate(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-    
+
     UFUNCTION(BlueprintCallable, Category = "UI")
     void ShowPortalUI(AA_WSCharacter* A_WSCharacter);
+
     UFUNCTION(BlueprintCallable, Category = "UI")
     void OnYesClicked();
+
     UFUNCTION(BlueprintCallable, Category = "UI")
     void OnNoClicked();
 
@@ -40,4 +42,8 @@ protected:
 
     UPROPERTY(VisibleAnywhere)
     UBoxComponent* ActiveCollisionComponent;
+
+    // 추가: StaticMeshComponent 추가
+    UPROPERTY(VisibleAnywhere, Category = "Mesh")
+    UStaticMeshComponent* TriggerMesh; // 매쉬 컴포넌트
 };

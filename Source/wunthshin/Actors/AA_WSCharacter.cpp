@@ -132,14 +132,14 @@ void AA_WSCharacter::K2_UnFastRun()
 
 bool AA_WSCharacter::CanBeCrouched() const
 {
-    return GetMovementComponent()->IsFalling() &&
+    return !GetMovementComponent()->IsFalling() &&
         !GetCharacterMovement()->bWantsToCrouch &&
         !bIsFastRunning;
 }
 
 bool AA_WSCharacter::CanFastRun() const
 {
-    return !GetCharacterMovement()->bWantsToCrouch &&  // 이전 틱 + 현재 틱을 포함하여 Crouch중인 상황 (Crouch 업데이트가 lazy하게 발생함)
+    return GetCharacterMovement()->bWantsToCrouch &&  // 이전 틱 + 현재 틱을 포함하여 Crouch중인 상황 (Crouch 업데이트가 lazy하게 발생함)
         !bIsFastRunning &&
         !bIsWalking;
 }
