@@ -33,6 +33,8 @@ private:
     UFUNCTION(BlueprintCallable, Category = "UI")
     void OnNoClicked();
 
+    bool bIsUIVisible;
+
 protected:
     UPROPERTY(EditAnywhere, Category = "UI")
     TSubclassOf<UUserWidget> PortalUIClass;
@@ -43,7 +45,6 @@ protected:
     UPROPERTY(VisibleAnywhere)
     UBoxComponent* ActiveCollisionComponent;
 
-    // 추가: StaticMeshComponent 추가
-    UPROPERTY(VisibleAnywhere, Category = "Mesh")
-    UStaticMeshComponent* TriggerMesh; // 매쉬 컴포넌트
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level")
+    FSoftObjectPath SelectedLevel;  
 };

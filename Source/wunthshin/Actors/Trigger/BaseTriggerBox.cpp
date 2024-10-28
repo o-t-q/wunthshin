@@ -18,27 +18,11 @@ ABaseTriggerBox::ABaseTriggerBox()
 
     ActiveCollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnActivate);
     ActiveCollisionComponent->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnDeactivate);
-
-    // TriggerMesh 초기화
-    TriggerMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TriggerMesh"));
-    TriggerMesh->SetupAttachment(RootComponent); // RootComponent에 붙임
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("StaticMesh'/Game/Path/To/Your/StaticMesh.StaticMesh'")); // 실제 경로로 수정
-    if (MeshAsset.Succeeded())
-    {
-        TriggerMesh->SetStaticMesh(MeshAsset.Object);
-        TriggerMesh->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // 원하는 위치로 조정
-        TriggerMesh->SetWorldScale3D(FVector(1.f)); // 스케일 조정
-    }
 }
 
 void ABaseTriggerBox::BeginPlay()
 {
     Super::BeginPlay();
-    //mesh야 제발 보여라 얍!
-    if (TriggerMesh)
-    {
-        TriggerMesh->SetVisibility(true);
-    }
 }
 
 void ABaseTriggerBox::OnActivate(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -59,18 +43,20 @@ void ABaseTriggerBox::OnDeactivate(UPrimitiveComponent* OverlappedComponent, AAc
 {
     if (PortalUI)
     {
-        PortalUI->RemoveFromParent();
-        PortalUI = nullptr;
-
-        if (AA_WSCharacter* A_WSCharacter = Cast<AA_WSCharacter>(OtherActor))
+        // UI가 보일 때만 제거
+        if (bIsUIVisible)
         {
-            APlayerController* PlayerController = Cast<APlayerController>(A_WSCharacter->GetController());
+            PortalUI->RemoveFromParent();
+            PortalUI = nullptr;
+            bIsUIVisible = false; // UI가 사라짐
+
+            // 플레이어 입력 활성화 코드...
+            APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
             if (PlayerController)
             {
                 FInputModeGameOnly InputMode;
                 PlayerController->SetInputMode(InputMode);
-                PlayerController->bShowMouseCursor = false;
-                A_WSCharacter->EnableInput(PlayerController);
+                PlayerController->bShowMouseCursor = false; // 마우스 커서 숨김
             }
         }
     }
@@ -115,8 +101,20 @@ void ABaseTriggerBox::ShowPortalUI(AA_WSCharacter* A_WSCharacter)
 
 void ABaseTriggerBox::OnYesClicked()
 {
-    // "Dungeon" 레벨로 이동
-    UGameplayStatics::OpenLevel(GetWorld(), FName("Dungeon"));
+
+      // 선택한 레벨이 있는 경우 열기
+    if (!SelectedLevel.IsNull())
+    {
+        UGameplayStatics::OpenLevel(GetWorld(), *SelectedLevel.GetAssetName());
+    }
+
+    // UI 비활성화
+    if (PortalUI)
+    {
+        PortalUI->RemoveFromParent();
+        PortalUI = nullptr;
+        bIsUIVisible = false; // UI가 사라짐
+    }
 
     // 입력 모드 복구
     APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
@@ -134,6 +132,7 @@ void ABaseTriggerBox::OnNoClicked()
     {
         PortalUI->RemoveFromParent();
         PortalUI = nullptr;
+        bIsUIVisible = false;
 
         // 플레이어 컨트롤러 가져오기
         APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
