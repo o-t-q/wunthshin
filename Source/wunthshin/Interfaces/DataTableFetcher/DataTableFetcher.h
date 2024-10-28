@@ -47,16 +47,18 @@ public:
 		ensureAlwaysMsgf(World, TEXT("Invalid World!"));
 
 #ifdef WITH_EDITOR
-		if (World->IsEditorWorld() || !World)
+		if (World->IsEditorWorld())
 		{
 			InThisPointer->DataTableRowHandle = GetRowHandleFromEditorSubsystem(InThisPointer, InRowName, World);
 		}
-#endif
-		if (!World->IsEditorWorld())
+		else if (World->IsGameWorld())
 		{
 			InThisPointer->DataTableRowHandle = GetRowHandleFromGameInstance(InThisPointer, InRowName, World);
 		}
-		
+#else
+		InThisPointer->DataTableRowHandle = GetRowHandleFromGameInstance(InThisPointer, InRowName, World);
+#endif
+
 		ApplyAsset(InThisPointer->DataTableRowHandle);
 	}
 

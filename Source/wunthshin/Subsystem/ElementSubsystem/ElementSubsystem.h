@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "wunthshin/Data/ElementRowHandle/ElementRowHandle.h"
-#include "wunthshin/Subsystem/TableQuerySubsystem.h"
+#include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "ElementSubsystem.generated.h"
 
 class UO_WSElementReactor;
@@ -157,7 +157,7 @@ public:
  * 
  */
 UCLASS()
-class WUNTHSHIN_API UElementSubsystem : public UTableQueryGameInstanceSubsystem
+class WUNTHSHIN_API UElementSubsystem : public UGameInstanceSubsystem, public IDataTableQuery
 {
 	GENERATED_BODY()
 
@@ -166,6 +166,9 @@ class WUNTHSHIN_API UElementSubsystem : public UTableQueryGameInstanceSubsystem
 
 	UPROPERTY(VisibleAnywhere, Category = "Stack", meta = (AllowPrivateAccess = "true"))
 	TMap<UObject*, FElementTrackingMap> TrackingObjects;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
+	UDataTable* DataTable;
 
 public:
 	UElementSubsystem();

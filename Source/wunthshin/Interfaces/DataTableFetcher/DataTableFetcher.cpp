@@ -8,8 +8,8 @@ FDataTableRowHandle IDataTableFetcher::GetRowHandleFromGameInstance(
 	const UObject* InThisPointer, const FName& InRowName, const UWorld* World
 ) const
 {
-	const UTableQueryGameInstanceSubsystem* Subsystem    = nullptr;
-	const UGameInstance*                    GameInstance = World->GetGameInstance();
+	const IDataTableQuery* Subsystem    = nullptr;
+	const UGameInstance* GameInstance = World->GetGameInstance();
 
 	if (!GameInstance)
 	{
@@ -43,7 +43,7 @@ FDataTableRowHandle IDataTableFetcher::GetRowHandleFromGameInstance(
 	}
 
 	UE_LOG(LogTableFetcher, Log, TEXT("Fetching asset of %s from %s"), *InThisPointer->GetName(), *InRowName.ToString())
-	return Subsystem->FindItem(InRowName);
+	return Subsystem->GetRowHandle(TableType, InRowName);
 }
 
 // Add default functionality here for any IWSDataTableFetcher functions that are not pure virtual.
@@ -51,8 +51,7 @@ FDataTableRowHandle IDataTableFetcher::GetRowHandleFromEditorSubsystem(
 	const UObject* InThisPointer, const FName& InRowName, const UWorld* World
 ) const
 {
-	const UTableQueryEditorSubsystem* Subsystem = nullptr;
-
+	const IDataTableQuery* Subsystem = nullptr;
 	const UScriptStruct* TableType = GetTableType();
 		
 	if (TableType == FItemTableRow::StaticStruct())
@@ -79,5 +78,5 @@ FDataTableRowHandle IDataTableFetcher::GetRowHandleFromEditorSubsystem(
 	}
 
 	UE_LOG(LogTableFetcher, Log, TEXT("Fetching asset of %s from %s"), *InThisPointer->GetName(), *InRowName.ToString())
-	return Subsystem->FindItem(InRowName);
+	return Subsystem->GetRowHandle(TableType, InRowName);
 }

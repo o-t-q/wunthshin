@@ -22,7 +22,7 @@ UElementSubsystem::UElementSubsystem()
 
 FElementRowHandle UElementSubsystem::GetElementHandle(const UWorld* InWorld, const FName& ElementName)
 {
-	const FDataTableRowHandle DataTableRowHandle = InWorld->GetGameInstance()->GetSubsystem<UElementSubsystem>()->FindItem(ElementName);
+	const FDataTableRowHandle DataTableRowHandle = InWorld->GetGameInstance()->GetSubsystem<UElementSubsystem>()->GetRowHandle(FElementTableRow::StaticStruct(), ElementName);
 	ensure(!DataTableRowHandle.IsNull());
 	
 	return FElementRowHandle(DataTableRowHandle);
@@ -31,6 +31,7 @@ FElementRowHandle UElementSubsystem::GetElementHandle(const UWorld* InWorld, con
 void UElementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	ensure(DataTable);
+	DataTableMapping.Emplace(FElementTableRow::StaticStruct(), DataTable);
 
 	// reactor를 매번 사용할 때마다 instantiate하지 않고 한번 생성해서
 	// 불러와 사용하도록, 서브시스템에서 미리 생성

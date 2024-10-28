@@ -17,6 +17,7 @@ void UWeaponSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	FItemSubsystemUtility::UpdateTable<FWeaponTableRow, USG_WSItemMetadata>(DataTable, Metadata);
+	DataTableMapping.Emplace(FWeaponTableRow::StaticStruct(), DataTable);
 }
 
 USG_WSItemMetadata* UWeaponSubsystem::GetMetadata(const FName& InAssetName)
@@ -40,4 +41,6 @@ void UWeaponEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	FItemSubsystemUtility::UpdateTable<FWeaponTableRow, USG_WSItemMetadata>(DataTable, Metadata);
+
+	DataTableMapping.Emplace(FWeaponTableRow::StaticStruct(), DataTable);
 }

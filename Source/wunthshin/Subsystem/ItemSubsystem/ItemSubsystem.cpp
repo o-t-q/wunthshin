@@ -18,6 +18,7 @@ void UItemSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	FItemSubsystemUtility::UpdateTable<FItemTableRow, USG_WSItemMetadata>(DataTable, Metadata);
+	DataTableMapping.Emplace(FItemTableRow::StaticStruct(), DataTable);
 }
 
 USG_WSItemMetadata* UItemSubsystem::GetMetadata(const FName& InAssetName)
@@ -41,4 +42,5 @@ void UItemEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	FItemSubsystemUtility::UpdateTable<FItemTableRow, USG_WSItemMetadata>(DataTable, Metadata);
+	DataTableMapping.Emplace(FItemTableRow::StaticStruct(), DataTable);
 }

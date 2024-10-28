@@ -5,28 +5,44 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 
-#include "wunthshin/Subsystem/TableQuerySubsystem.h"
+#include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "CharacterSubsystem.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class WUNTHSHIN_API UCharacterSubsystem : public UTableQueryGameInstanceSubsystem
+class WUNTHSHIN_API UCharacterSubsystem : public UGameInstanceSubsystem, public IDataTableQuery
 {
 	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
+	UDataTable* AssetDataTable;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
+	UDataTable* StatDataTable;
 	
 public:
 	UCharacterSubsystem();
 
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
 };
 
 UCLASS()
-class WUNTHSHIN_API UCharacterEditorSubsystem : public UTableQueryEditorSubsystem
+class WUNTHSHIN_API UCharacterEditorSubsystem : public UEditorSubsystem, public IDataTableQuery
 {
 	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
+	UDataTable* AssetDataTable;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
+	UDataTable* StatDataTable;
 	
 public:
 	UCharacterEditorSubsystem();
+
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 };
