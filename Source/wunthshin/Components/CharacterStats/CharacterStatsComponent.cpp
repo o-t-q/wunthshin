@@ -5,24 +5,11 @@
 
 #include "wunthshin/Actors/AA_WSCharacter.h" 
 
+DEFINE_LOG_CATEGORY(LogCharacterStatsComponent);
 
 UCharacterStatsComponent::UCharacterStatsComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
-    // 데이터 테이블 초기화
-    CharacterStatsTable = nullptr;
-
-    // 데이터 테이블을 에디터에서 설정할 수 있도록 초기화
-    static ConstructorHelpers::FObjectFinder<UDataTable> DataTableAsset(TEXT("DataTable'/Game/DataTable/DT_CharacterStatsTable.DT_CharacterStatsTable'"));
-    if (DataTableAsset.Succeeded())
-    {
-        CharacterStatsTable = DataTableAsset.Object;
-        UE_LOG(LogTemp, Warning, TEXT("DataTable loaded successfully: %s"), *CharacterStatsTable->GetName());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to load DataTable!"));
-    }
 
     // 스태미나 회복 및 감소 속도 초기화
     StaminaRecoveryRate = 5.0f; // 초당 회복량
@@ -36,27 +23,79 @@ void UCharacterStatsComponent::BeginPlay()
     InitializeStats(); // 스탯 초기화
 }
 
+void UCharacterStatsComponent::DecreaseHP(const float InValue)
+{
+    if (InValue < 0)
+    {
+        // 입력은 양수로 (오버/언더플로우 체크를 위해)
+        ensureAlways(false);
+        IncreaseHP(FMath::Abs(InValue));
+        return;
+    }
+
+    if (FMath::Abs(std::numeric_limits<float>::min() + CurrentStats.HP) < InValue)
+    {
+        UE_LOG(LogCharacterStatsComponent, Warning, TEXT("%s: Underflow! assuming HP as 0"), *GetOwner()->GetName());
+        CurrentStats.HP = 0;
+        return;
+    }
+
+    CurrentStats.HP = FMath::Clamp(CurrentStats.HP - InValue, 0, CurrentStats.MaxHP);
+}
+
+void UCharacterStatsComponent::IncreaseHP(const float InValue)
+{
+    if (InValue < 0)
+    {
+        // 입력은 양수로 (오버/언더플로우 체크를 위해)
+        ensureAlways(false);
+        DecreaseHP(FMath::Abs(InValue));
+        return;
+    }
+
+    if (std::numeric_limits<float>::max() - CurrentStats.HP < InValue)
+    {
+        UE_LOG(LogCharacterStatsComponent, Warning, TEXT("%s: Overflow! assuming HP as MaxHP"), *GetOwner()->GetName());
+        CurrentStats.HP = CurrentStats.MaxHP;
+        return;
+    }
+
+    CurrentStats.HP = FMath::Clamp(CurrentStats.HP + InValue, 0, CurrentStats.MaxHP);
+}
+
 void UCharacterStatsComponent::InitializeStats()
 {
-    if (CharacterStatsTable)
-    {
-        // "Player" 항목의 스탯을 찾는다
-        FCharacterStats* Stats = CharacterStatsTable->FindRow<FCharacterStats>(TEXT("Player"), TEXT("Stats"));
+    // "Player" 항목의 스탯을 찾는다
+    FCharacterStats* Stats = nullptr;
 
-        if (Stats)
-        {
-            CurrentStats.MaxHP = Stats->MaxHP;
-            CurrentStats.Stamina = Stats->Stamina;
-            UE_LOG(LogTemp, Warning, TEXT("MaxHP: %f, Stamina: %f"), CurrentStats.MaxHP, CurrentStats.Stamina);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Row not found in CharacterStatsTable!"));
-        }
+#ifdef WITH_EDITOR
+    if (GetWorld()->IsEditorWorld())
+    {
+        Stats = GEditor->GetEditorSubsystem<UCharacterEditorSubsystem>()->GetRowValue<FCharacterStats>(TEXT("Player"));
+    }
+    else if (GetWorld()->IsGameWorld())
+    {
+        Stats = GetWorld()->GetGameInstance()->GetSubsystem<UCharacterSubsystem>()->GetRowValue<FCharacterStats>(TEXT("Player"));
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("CharacterStatsTable is null!"));
+        // 지원하지 않는 월드
+        check(Stats);
+    }
+#else
+        Stats = GetWorld()->GetGameInstance()->GetSubsystem<UCharacterSubsystem>()->GetRowValue<FCharacterStats>(TEXT("Player"));
+#endif
+
+    if (Stats)
+    {
+        CurrentStats.HP = Stats->MaxHP;
+        CurrentStats.MaxHP = Stats->MaxHP;
+        CurrentStats.Stamina = Stats->Stamina;
+        UE_LOG(LogTemp, Warning, TEXT("MaxHP: %f, Stamina: %f"), CurrentStats.MaxHP, CurrentStats.Stamina);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Row not found in CharacterStatsTable!"));
     }
 }
 
