@@ -10,6 +10,7 @@
 #include "wunthshin/Components/Weapon/C_WSWeapon.h"
 #include "wunthshin/Data/ItemTableRow/ItemTableRow.h"
 #include "wunthshin/Subsystem/Utility.h"
+#include "Components/WidgetComponent.h"
 
 AA_WSWeapon::AA_WSWeapon(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.DoNotCreateDefaultSubobject("CollisionComponent") // 무기를 손잡이에서 잡기위해 매시 원점 사용
@@ -21,6 +22,8 @@ AA_WSWeapon::AA_WSWeapon(const FObjectInitializer& ObjectInitializer)
 	GetMesh()->SetCollisionProfileName("ItemProfile");
 	GetMesh()->SetSimulatePhysics(false);
 	GetMesh()->SetGenerateOverlapEvents(true);
+
+	GetItemNotifyWidget()->SetupAttachment(GetMesh());
 }
 
 UScriptStruct* AA_WSWeapon::GetTableType() const

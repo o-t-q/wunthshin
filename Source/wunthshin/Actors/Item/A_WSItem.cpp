@@ -13,6 +13,8 @@
 #include "wunthshin/Data/ItemTableRow/ItemTableRow.h"
 #include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Subsystem/Utility.h"
+#include "wunthshin/Widgets/ItemNotify/WG_WSItemNotify.h"
+#include "Components/WidgetComponent.h"
 
 class USphereComponent;
 const FName AA_WSItem::CollisionComponentName = TEXT("Collision");
@@ -57,6 +59,20 @@ AA_WSItem::AA_WSItem(const FObjectInitializer& ObjectInitializer) :
 	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	MeshComponent->SetSimulatePhysics(false);
 	MeshComponent->SetGenerateOverlapEvents(false);
+
+	// Item notify widget
+	ItemNotifyWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("ItemNotifyWidget"));
+	ItemNotifyWidget->SetWidgetSpace(EWidgetSpace::World);
+	ItemNotifyWidget->SetComponentTickEnabled(true);
+	ItemNotifyWidget->SetDrawSize(FVector2D{ 500.f, 45.f });
+	ItemNotifyWidget->SetAbsolute(false, true, true);
+	ItemNotifyWidget->SetCastShadow(false);
+
+	if (static ConstructorHelpers::FClassFinder<UUserWidget> DefaultItemNotifyWidgetClass(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/ThirdPerson/Blueprints/Widgets/BP_WG_WSItemNotify.BP_WG_WSItemNotify_C'"));
+		DefaultItemNotifyWidgetClass.Succeeded())
+	{
+		ItemNotifyWidget->SetWidgetClass(DefaultItemNotifyWidgetClass.Class);
+	}
 }
 
 void AA_WSItem::OnConstruction(const FTransform& Transform)
@@ -92,6 +108,11 @@ void AA_WSItem::InitializeCollisionComponent(TSubclassOf<UShapeComponent> InClas
 			MeshComponent->AttachToComponent
 			(
 				CollisionComponent, 
+				FAttachmentTransformRules::KeepRelativeTransform
+			);
+			ItemNotifyWidget->AttachToComponent
+			(
+				CollisionComponent,
 				FAttachmentTransformRules::KeepRelativeTransform
 			);
 
@@ -161,6 +182,13 @@ const USG_WSItemMetadata* AA_WSItem::GetItemMetadata() const
 void AA_WSItem::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ItemNotifyWidget->InitWidget();
+
+	if (UWG_WSItemNotify* ItemWidget = Cast<UWG_WSItemNotify>(ItemNotifyWidget->GetWidget()))
+	{
+		ItemWidget->SetParentItem(this);
+	}
 
 	// note: 동적으로 설정한 충돌체의 초기화를 해야함 (블루프린트 또는 상속 클래스에서)
 }

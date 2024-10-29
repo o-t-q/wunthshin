@@ -13,6 +13,7 @@ class UProjectileMovementComponent;
 struct FItemTableRow;
 class UC_WSPickUp;
 class USG_WSItemMetadata;
+class UWidgetComponent;
 
 UCLASS()
 class WUNTHSHIN_API AA_WSItem : public AActor, public IDataTableFetcher
@@ -26,6 +27,10 @@ class WUNTHSHIN_API AA_WSItem : public AActor, public IDataTableFetcher
 	// 줍기/버리기 상호작용을 위한 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "PickUp", meta=(AllowPrivateAccess = "true"))
 	UC_WSPickUp* PickUpComponent;
+
+	// 아이템을 표시해주는 위젯
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
+	UWidgetComponent* ItemNotifyWidget;
 
 	// 아이템 정보를 불러오기 위한 핸들
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
@@ -56,6 +61,9 @@ public:
 	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
 
 	FORCEINLINE UStaticMeshComponent* GetMesh() const { return MeshComponent; }
+
+	// 아이템을 주울 수 있다는 알림을 띄우는 위젯을 관리하는 컴포넌트
+	FORCEINLINE UWidgetComponent* GetItemNotifyWidget() const { return ItemNotifyWidget; }
 
 	void SetAssetName(const FName& InAssetName) { AssetName = InAssetName; }
 	FName GetAssetName() const { return AssetName; }
