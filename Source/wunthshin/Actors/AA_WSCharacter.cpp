@@ -25,6 +25,8 @@
 #include "wunthshin/Data/CharacterTableRow/CharacterTableRow.h"
 #include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Subsystem/ElementSubsystem/ElementSubsystem.h"
+#include "Components/WidgetComponent.h"
+#include "wunthshin/Subsystem/WorldCharacterSubsystem/WorldCharacterSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -115,7 +117,7 @@ AA_WSCharacter::AA_WSCharacter()
     Shield->SetupAttachment(GetMesh());
     
     RightHandWeapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("RightHandWeapon"));
-	
+
 	CameraBoom->bEnableCameraLag = true;
 }
 
@@ -527,39 +529,13 @@ bool AA_WSCharacter::CanGlide()
 
 void AA_WSCharacter::FindAndTake()
 {
-    TArray<FOverlapResult> OverlapResults;
-    FCollisionQueryParams QueryParams(NAME_None, false, this);
-    QueryParams.AddIgnoredActors(reinterpret_cast<const TArray<AActor*>&>(Inventory->GetItems()));
-
-    // 손에 있는 무기는 줍는 대상에서 제외 
-    if (const AActor* ChildWeaponActor = RightHandWeapon->GetChildActor())
-    {
-        QueryParams.AddIgnoredActor(ChildWeaponActor);
-    }
-    
-    // 반환 값은 blocking일때 참을 반환하나, overlap으로 trace channel을 쓰기 때문에 무시함
-    GetWorld()->OverlapMultiByChannel
-    (
-        OverlapResults,
-        GetActorLocation(),
-        FQuat::Identity,
-        ECC_GameTraceChannel2,
-        FCollisionShape::MakeSphere(100.f)
-    );
+    TArray<AActor*> OverlapResults = GetWorld()->GetSubsystem<UWorldCharacterSubsystem>()->GetNearestItems();
 
     if (!OverlapResults.IsEmpty())
     {
-        // Overlap된 물체들을 거리 순서대로 정렬한다
-        OverlapResults.Sort
-        ([this](const FOverlapResult& Left, const FOverlapResult& Right)
-            {
-                return FVector::Distance(Left.GetActor()->GetActorLocation(), GetActorLocation()) >
-                    FVector::Distance(Right.GetActor()->GetActorLocation(), GetActorLocation());
-            });
-
-        for (FOverlapResult OverlapResult : OverlapResults)
+        for (AActor* OverlapActor : OverlapResults)
         {
-            const UC_WSPickUp* PickUpComponent = OverlapResult.GetActor()->GetComponentByClass<UC_WSPickUp>();
+            const UC_WSPickUp* PickUpComponent = OverlapActor->GetComponentByClass<UC_WSPickUp>();
             // Item trace channel에 pick up component가 없는 물체가 발견된 경우
             ensureAlwaysMsgf(PickUpComponent, TEXT("Item does not have the pick up component!"));
 

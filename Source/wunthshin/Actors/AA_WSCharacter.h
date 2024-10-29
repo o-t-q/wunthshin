@@ -210,6 +210,9 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	// 오른손 무기
+	FORCEINLINE class UChildActorComponent* GetRightHandWeapon() const { return RightHandWeapon; }
+
 
 	virtual bool Take(UC_WSPickUp* InTakenComponent) override;
 	
