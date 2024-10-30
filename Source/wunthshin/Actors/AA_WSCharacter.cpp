@@ -280,16 +280,19 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
     // 인벤토리로 무기 또는 아이템 저장
     Inventory->AddItem(Item);
 
-    if (!Item->IsA<AA_WSWeapon>()) 
+    // todo/test: 아이템 효과 테스트, 이후에 삭제 필요함
     {
-        int32 Index = Inventory->FindItemIndex(Item->GetItemMetadata());
-
-        if (Index != INDEX_NONE)
+        if (!Item->IsA<AA_WSWeapon>()) 
         {
-            Inventory->UseItem(Index, this);
+            int32 Index = Inventory->FindItemIndex(Item->GetItemMetadata());
+
+            if (Index != INDEX_NONE)
+            {
+                Inventory->UseItem(Index, this);
+            }
         }
     }
-
+    
     return true;
 }
 
