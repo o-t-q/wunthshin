@@ -14,6 +14,8 @@ struct WUNTHSHIN_API FEffectRowHandle
 	FDataTableRowHandle Handle;
 
 public:
+	FEffectRowHandle() : Handle() {}
+
 	explicit FEffectRowHandle(const FDataTableRowHandle& InHandle) : Handle(InHandle) {}
 };
 
