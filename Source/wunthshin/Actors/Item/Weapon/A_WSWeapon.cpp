@@ -31,6 +31,18 @@ UScriptStruct* AA_WSWeapon::GetTableType() const
 	return FWeaponTableRow::StaticStruct();
 }
 
+UClass* AA_WSWeapon::GetSubsystemType() const
+{
+	return UWeaponSubsystem::StaticClass();
+}
+
+#ifdef WITH_EDITOR
+UClass* AA_WSWeapon::GetEditorSubsystemType() const
+{
+	return UWeaponEditorSubsystem::StaticClass();
+}
+#endif
+
 void AA_WSWeapon::ApplyAsset(const FDataTableRowHandle& InRowHandle)
 {
 	// Item 데이터 테이블과 무기 데이터 테이블은 따로 있기 때문에
@@ -55,8 +67,8 @@ void AA_WSWeapon::ApplyAsset(const FDataTableRowHandle& InRowHandle)
 
 	// todo: 속성 창에서 숨기기
 	// Collision Shape은 무시
-	
-	ItemMetadata = FItemSubsystemUtility::GetMetadata<UWeaponSubsystem, UWeaponEditorSubsystem, USG_WSItemMetadata>(GetWorld(), TableRow->ItemName);
+
+	ItemMetadata = FItemSubsystemUtility::GetMetadata<USG_WSItemMetadata>(GetWorld(), this, TableRow->ItemName);
 	
 	DefaultAttackMontage = TableRow->DefaultAttackMontage;
 }

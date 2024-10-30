@@ -186,6 +186,18 @@ void AA_WSCharacter::ApplyAsset(const FDataTableRowHandle& InRowHandle)
     }
 }
 
+UClass* AA_WSCharacter::GetSubsystemType() const
+{
+    return UCharacterSubsystem::StaticClass();
+}
+
+#ifdef WITH_EDITOR
+UClass* AA_WSCharacter::GetEditorSubsystemType() const
+{
+    return UCharacterEditorSubsystem::StaticClass();
+}
+#endif
+
 void AA_WSCharacter::BeginPlay()
 {
     // Call the base class  

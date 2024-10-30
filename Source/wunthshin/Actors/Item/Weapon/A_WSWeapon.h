@@ -29,6 +29,11 @@ public:
 	AA_WSWeapon(const FObjectInitializer& ObjectInitializer);
 	
 	virtual UScriptStruct* GetTableType() const override;
+
+	virtual UClass* GetSubsystemType() const override;
+#ifdef WITH_EDITOR
+	virtual UClass* GetEditorSubsystemType() const override;
+#endif
 	
 	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
 

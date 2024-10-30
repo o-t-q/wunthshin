@@ -165,6 +165,11 @@ public:
 
 	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
 
+	virtual UClass* GetSubsystemType() const override;
+#ifdef WITH_EDITOR
+	virtual UClass* GetEditorSubsystemType() const override;
+#endif
+
 protected:
 
 	/** Called for movement input */

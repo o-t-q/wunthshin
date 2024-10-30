@@ -170,10 +170,22 @@ void AA_WSItem::ApplyAsset(const FDataTableRowHandle& InRowHandle)
 
 	UpdateCollisionFromDataTable(Data);
 
-	ItemMetadata = FItemSubsystemUtility::GetMetadata<UItemSubsystem, UItemEditorSubsystem, USG_WSItemMetadata>(GetWorld(), Data->ItemName);
+	ItemMetadata = FItemSubsystemUtility::GetMetadata<USG_WSItemMetadata>(GetWorld(), this, Data->ItemName);
 	
 	// todo: Icon, ItemName 등 정보 추가
 }
+
+UClass* AA_WSItem::GetSubsystemType() const
+{
+	return UItemSubsystem::StaticClass();
+}
+
+#ifdef WITH_EDITOR
+UClass* AA_WSItem::GetEditorSubsystemType() const
+{
+	return UItemEditorSubsystem::StaticClass();
+}
+#endif
 
 const USG_WSItemMetadata* AA_WSItem::GetItemMetadata() const
 {

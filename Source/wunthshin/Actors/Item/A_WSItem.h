@@ -67,11 +67,16 @@ public:
 
 	void SetAssetName(const FName& InAssetName) { AssetName = InAssetName; }
 	FName GetAssetName() const { return AssetName; }
+
+	virtual UClass* GetSubsystemType() const override;
+#ifdef WITH_EDITOR
+	virtual UClass* GetEditorSubsystemType() const override;
+#endif
 	
 	const USG_WSItemMetadata* GetItemMetadata() const;
 
 protected:
-	// 아이템의 메타데이터 (테이블에서 생성한 정적변수, Destroy 하면 안됨!)
+	// 아이템의 메타데이터 (GameInstance 및 Editor Subsystem에서 관리, Destroy 하면 안됨!)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Metadata")
 	const USG_WSItemMetadata* ItemMetadata;
 	
