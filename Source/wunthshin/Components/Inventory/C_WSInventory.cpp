@@ -133,6 +133,18 @@ void UC_WSInventory::UseItem(uint32 Index, AActor* InTarget, int Count)
 {
 	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::UseItem"));
 
+	// OOB
+	if (Items.Num() < Count)
+	{
+		return;
+	}
+
+	// 사용 횟수가 소유하고 있는 아이템 수보다 많은 경우
+	if (Items[Index].Count < Count)
+	{
+		return;
+	}
+	
 	if (UWorldStatusSubsystem* WorldStatus = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
 	{
 		for (int i = 0; i < Count; ++i) 
