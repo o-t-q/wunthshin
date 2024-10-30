@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 
-#include "wunthshin/Data/ElementRowHandle/ElementRowHandle.h"
+#include "wunthshin/Data/Elements/ElementRowHandle/ElementRowHandle.h"
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "ElementSubsystem.generated.h"
 

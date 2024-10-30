@@ -2,7 +2,7 @@
 
 
 #include "wunthshin/Subsystem/ElementSubsystem/ElementSubsystem.h"
-#include "wunthshin/Data/ElementTableRow/ElementTableRow.h"
+#include "wunthshin/Data/Elements/ElementTableRow/ElementTableRow.h"
 #include "wunthshin/Data/Elements/O_WSElementReactor.h"
 #include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
 

@@ -3,7 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include <vector>
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "GenericPlatform/GenericPlatformMisc.h"
 
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "wunthshin/Interfaces/ItemMetadataGetter/ItemMetadataGetter.h"
@@ -24,7 +26,7 @@ class WUNTHSHIN_API UItemSubsystem : public UGameInstanceSubsystem, public IItem
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
 	UDataTable* DataTable;
-	
+
 public:
 	UItemSubsystem();
 	
@@ -37,6 +39,7 @@ class WUNTHSHIN_API UItemEditorSubsystem : public UEditorSubsystem, public IItem
 {
 	GENERATED_BODY()
 
+	// 아이템 고유 메타데이터
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta=(AllowPrivateAccess = "true"))
 	TMap<FName, USG_WSItemMetadata*> Metadata;
 	

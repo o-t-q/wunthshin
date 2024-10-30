@@ -23,10 +23,10 @@
 #include "wunthshin/Enums.h"
 #include "wunthshin/Components/Shield/C_WSShield.h"
 #include "wunthshin/Data/CharacterTableRow/CharacterTableRow.h"
-#include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
+#include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Subsystem/ElementSubsystem/ElementSubsystem.h"
 #include "Components/WidgetComponent.h"
-#include "wunthshin/Subsystem/WorldCharacterSubsystem/WorldCharacterSubsystem.h"
+#include "wunthshin/Subsystem/WorldStatusSubsystem/WorldStatusSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -267,6 +267,17 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
     
     // 인벤토리로 무기 또는 아이템 저장
     Inventory->AddItem(Item);
+
+    if (!Item->IsA<AA_WSWeapon>()) 
+    {
+        int32 Index = Inventory->FindItemIndex(Item->GetItemMetadata());
+
+        if (Index != INDEX_NONE)
+        {
+            Inventory->UseItem(Index, this);
+        }
+    }
+
     return true;
 }
 
@@ -532,7 +543,7 @@ bool AA_WSCharacter::CanGlide()
 
 void AA_WSCharacter::FindAndTake()
 {
-    TArray<AActor*> OverlapResults = GetWorld()->GetSubsystem<UWorldCharacterSubsystem>()->GetNearestItems();
+    TArray<AActor*> OverlapResults = GetWorld()->GetSubsystem<UWorldStatusSubsystem>()->GetNearestItems();
 
     if (!OverlapResults.IsEmpty())
     {

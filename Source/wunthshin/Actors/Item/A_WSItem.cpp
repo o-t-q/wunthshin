@@ -10,8 +10,8 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
-#include "wunthshin/Data/ItemTableRow/ItemTableRow.h"
-#include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
+#include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
+#include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Subsystem/Utility.h"
 #include "wunthshin/Widgets/ItemNotify/WG_WSItemNotify.h"
 #include "Components/WidgetComponent.h"

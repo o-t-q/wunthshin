@@ -51,6 +51,8 @@ public:
 	// Sets default values for this component's properties
 	UC_WSInventory();
 
+	int32 FindItemIndex(const USG_WSItemMetadata* InMetadata) const;
+
 	const TArray<FInventoryPair>& GetItems() const { return Items; }
 
 protected:
@@ -64,6 +66,6 @@ public:
 public:
 	void AddItem(AA_WSItem* InItem, int InCount = 1);	// 아이템 추가
 	void RemoveItem(AA_WSItem* InItem, int InCount = 1); // 아이템 빼기
-	void UseItem(AA_WSItem* InItem, int InCount = 1);	// 아이템 사용
+	void UseItem(uint32 Index, AActor* InTarget, int InCount = 1);	// 아이템 사용
 
 };

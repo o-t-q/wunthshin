@@ -4,12 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
+#include "wunthshin/Data/Effects/EffectTableRow/EffectTableRow.h"
+
 #include "SG_WSItemMetadata.generated.h"
 
+class UO_WSBaseEffect;
 enum class EItemType : uint8;
 
 /**
- * 
+ * 런타임에서 아이템의 간략한 정보를 담는 객체
  */
 UCLASS()
 class WUNTHSHIN_API USG_WSItemMetadata : public USaveGame
@@ -24,7 +27,23 @@ class WUNTHSHIN_API USG_WSItemMetadata : public USaveGame
 	UPROPERTY(VisibleAnywhere)
 	FName AssetName;
 
+	UPROPERTY(VisibleAnywhere)
+	UTexture2D* ItemIcon;
+
+	UPROPERTY(VisibleAnywhere)
+	FName ItemDescription;
+
+	UPROPERTY(VisibleAnywhere)
+	FEffectRowHandle ItemEffect;
+
+	UPROPERTY(VisibleAnywhere)
+	FEffectParameter ItemParameter;
+
 public:
+	const UO_WSBaseEffect* GetItemEffect() const;
+
+	const FEffectParameter& GetItemParameter() const;
+
 	FName GetAssetName() const { return AssetName; }
 
 	template <EItemType ItemT>

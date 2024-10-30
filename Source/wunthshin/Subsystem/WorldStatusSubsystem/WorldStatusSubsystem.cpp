@@ -1,14 +1,16 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "WorldCharacterSubsystem.h"
+#include "WorldStatusSubsystem.h"
 
 #include "wunthshin/Actors/Item/A_WSItem.h"
+#include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
+#include "wunthshin/Data/Effects/O_WSBaseEffect.h"
 #include "wunthshin/Actors/AA_WSCharacter.h"
 #include "Engine/OverlapResult.h"
 #include "Components/WidgetComponent.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 
-void UWorldCharacterSubsystem::Tick(float InDeltaTime)
+void UWorldStatusSubsystem::Tick(float InDeltaTime)
 {
     ItemsNearbyCharacter.Empty();
 
@@ -63,4 +65,69 @@ void UWorldCharacterSubsystem::Tick(float InDeltaTime)
             }
 		}
 	}
+
+    for (FItemTicket& Ticket : ItemQueue) 
+    {
+        FItemTicket::ExecuteAndAdjustLifetime(Ticket);
+
+        if (Ticket.IsValid()) 
+        {
+            FTimerDelegate Delegate;
+            FTimerManagerTimerParameters Params;
+            Params.bLoop = false;
+            Params.FirstDelay = 0.f;
+            Params.bMaxOncePerFrame = false;
+
+            Delegate.BindUObject(this, &UWorldStatusSubsystem::PushItem, Ticket);
+
+            GetWorld()->GetTimerManager().SetTimer
+            (
+                Ticket.GetTimerHandle(),
+                Delegate,
+                Ticket.Rate,
+                Params
+            );
+        }
+    }
+
+    ItemQueue.Empty();
+}
+
+void UWorldStatusSubsystem::PushItem(const USG_WSItemMetadata* InItem, AActor* InInstigator, AActor* InTarget)
+{
+    if (InItem && InInstigator && InTarget) 
+    {
+        FItemTicket ItemTicket;
+        ItemTicket.Item = InItem;
+        ItemTicket.Instigator = InInstigator;
+        ItemTicket.Target = InTarget;
+        PushItem(ItemTicket);
+    }
+}
+
+void UWorldStatusSubsystem::PushItem(FItemTicket InItemTicket)
+{
+    ItemQueue.Push(InItemTicket);
+}
+
+void FItemTicket::ExecuteAndAdjustLifetime(FItemTicket& InTicket)
+{
+    const UO_WSBaseEffect* Effect = InTicket.Item->GetItemEffect();
+    const FEffectParameter& ItemParams = InTicket.Item->GetItemParameter();
+
+    // 아이템의 최종 시전 횟수 초기화 (아이템에 지정된 시간이 있을 경우)
+    if (ItemParams.Duration != 0.f && InTicket.MaxExecuteCount == 0)
+    {
+        InTicket.MaxExecuteCount = ItemParams.Duration * ItemParams.PerTime;
+    }
+
+    // 아이템 효과 호출
+    Effect->Effect(ItemParams, InTicket.Instigator, InTicket.Target);
+    InTicket.ExecuteCount++;
+
+    // 아이템 효과 만료시
+    if (InTicket.ExecuteCount < InTicket.MaxExecuteCount)
+    {
+        InTicket.bDisposed = true;
+    }
 }

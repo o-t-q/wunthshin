@@ -21,5 +21,5 @@ public:
 	 * @param InReactionAssist 가장 첫번째로 짝이 되는 원소를 적용한 대상
 	 * @param InReactionOrigin 작용의 대상이 된 대상
 	 */
-	virtual void React(AActor* InReactionInstigator, AActor* InReactionAssist, AActor* InReactionOrigin) {}
+	virtual void React(AActor* InReactionInstigator, AActor* InReactionAssist, AActor* InReactionOrigin) {};
 };

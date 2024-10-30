@@ -3,8 +3,8 @@
 
 #include "ItemSubsystem.h"
 
-#include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
-#include "wunthshin/Data/ItemTableRow/ItemTableRow.h"
+#include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
+#include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
 #include "wunthshin/Subsystem/Utility.h"
 
 UItemSubsystem::UItemSubsystem()
@@ -17,18 +17,18 @@ UItemSubsystem::UItemSubsystem()
 void UItemSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	FItemSubsystemUtility::UpdateTable<FItemTableRow, USG_WSItemMetadata>(DataTable, Metadata);
+	FItemSubsystemUtility::UpdateTable<FItemTableRow>(DataTable, Metadata);
 	DataTableMapping.Emplace(FItemTableRow::StaticStruct(), DataTable);
 }
 
 USG_WSItemMetadata* UItemSubsystem::GetMetadata(const FName& InAssetName)
 {
-	return FItemSubsystemUtility::GetMetadataTemplate<USG_WSItemMetadata>(Metadata, InAssetName);
+	return FItemSubsystemUtility::GetMetadataTemplate(Metadata, InAssetName);
 }
 
 USG_WSItemMetadata* UItemEditorSubsystem::GetMetadata(const FName& InAssetName)
 {
-	return FItemSubsystemUtility::GetMetadataTemplate<USG_WSItemMetadata>(Metadata, InAssetName);
+	return FItemSubsystemUtility::GetMetadataTemplate(Metadata, InAssetName);
 }
 
 UItemEditorSubsystem::UItemEditorSubsystem()
@@ -41,6 +41,6 @@ UItemEditorSubsystem::UItemEditorSubsystem()
 void UItemEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	FItemSubsystemUtility::UpdateTable<FItemTableRow, USG_WSItemMetadata>(DataTable, Metadata);
+	FItemSubsystemUtility::UpdateTable<FItemTableRow>(DataTable, Metadata);
 	DataTableMapping.Emplace(FItemTableRow::StaticStruct(), DataTable);
 }

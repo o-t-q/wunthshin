@@ -3,9 +3,19 @@
 
 #include "C_WSInventory.h"
 
+#include "wunthshin/Subsystem/WorldStatusSubsystem/WorldStatusSubsystem.h"
 #include "wunthshin/Actors/Item/A_WSItem.h"
 
 DEFINE_LOG_CATEGORY(LogInventory);
+
+int32 UC_WSInventory::FindItemIndex(const USG_WSItemMetadata* InMetadata) const
+{
+	return Items.IndexOfByPredicate(
+		[&InMetadata](const FInventoryPair& InPair)
+		{
+			return InPair.Metadata == InMetadata;
+		});
+}
 
 // Sets default values for this component's properties
 UC_WSInventory::UC_WSInventory()
@@ -119,8 +129,23 @@ void UC_WSInventory::RemoveItem(AA_WSItem* InItem, int InCount)
 	}
 }
 
-void UC_WSInventory::UseItem(AA_WSItem* InItem, int Count)
+void UC_WSInventory::UseItem(uint32 Index, AActor* InTarget, int Count)
 {
 	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::UseItem"));
+
+	if (UWorldStatusSubsystem* WorldStatus = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+	{
+		for (int i = 0; i < Count; ++i) 
+		{
+			WorldStatus->PushItem(Items[Index].Metadata, GetOwner(), InTarget);
+		}
+
+		Items[Index].Count -= Count;
+
+		if (Items[Index].Count <= 0)
+		{
+			Items.RemoveAt(Index);
+		}
+	}
 }
 

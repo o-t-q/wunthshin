@@ -4,7 +4,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 
-#include "wunthshin/Data/ItemMetadata/SG_WSItemMetadata.h"
+#include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 
 void FItemTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName)
 {
@@ -14,27 +14,27 @@ void FItemTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FNam
 	if (GIsRunning)
 	{
 		if (CollisionShape == UBoxComponent::StaticClass())
-        	{
-        		bBox = true;
-        		bSphere = false;
-        		bCapsule = false;
-        	}
-        	else if (CollisionShape == USphereComponent::StaticClass())
-        	{
-        		bBox = false;
-        		bSphere = true;
-        		bCapsule = false;
-        	}
-        	else if (CollisionShape == UCapsuleComponent::StaticClass())
-        	{
-        		bBox = false;
-        		bSphere = false;
-        		bCapsule = true;
-        	}
-        	else
-        	{
-        		ensureAlwaysMsgf(false, TEXT("Unknown collision shape type"));
-        	}
+        {
+        	bBox = true;
+        	bSphere = false;
+        	bCapsule = false;
+        }
+        else if (CollisionShape == USphereComponent::StaticClass())
+        {
+        	bBox = false;
+        	bSphere = true;
+        	bCapsule = false;
+        }
+        else if (CollisionShape == UCapsuleComponent::StaticClass())
+        {
+        	bBox = false;
+        	bSphere = false;
+        	bCapsule = true;
+        }
+        else
+        {
+        	ensureAlwaysMsgf(false, TEXT("Unknown collision shape type"));
+        }
 	}
 #endif
 }

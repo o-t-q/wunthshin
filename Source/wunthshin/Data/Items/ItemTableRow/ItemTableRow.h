@@ -1,10 +1,9 @@
 #pragma once
 
 #include "wunthshin/Enums.h"
+#include "wunthshin/Data/Effects/EffectTableRow/EffectTableRow.h"
 
 #include "ItemTableRow.generated.h"
-
-class USG_WSItemMetadata;
 
 USTRUCT()
 struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
@@ -18,6 +17,9 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 	// ItemName을 Key값으로 사용
 	UPROPERTY(EditAnywhere)
 	FName ItemName;
+
+	UPROPERTY(EditAnywhere)
+	FName ItemDescription;
 
 	UPROPERTY(EditAnywhere)
 	UTexture2D* ItemIcon;
@@ -51,6 +53,13 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "bCapsule", EditConditionHides))
 	float CapsuleHeight;
+
+	UPROPERTY(EditAnywhere, meta=(RowType="/Script/wunthshin.EffectTableRow"))
+	FDataTableRowHandle ItemEffect;
+
+	// 아이템 효과에 매개변수로 주어질 값
+	UPROPERTY(EditAnywhere)
+	FEffectParameter ItemParameter;
 
 	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName) override;
 };

@@ -3,7 +3,8 @@
 
 #include "WeaponSubsystem.h"
 
-#include "wunthshin/Data/ItemTableRow/ItemTableRow.h"
+#include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
+#include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Subsystem/Utility.h"
 
 UWeaponSubsystem::UWeaponSubsystem()
@@ -16,18 +17,18 @@ UWeaponSubsystem::UWeaponSubsystem()
 void UWeaponSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	FItemSubsystemUtility::UpdateTable<FWeaponTableRow, USG_WSItemMetadata>(DataTable, Metadata);
+	FItemSubsystemUtility::UpdateTable<FWeaponTableRow>(DataTable, Metadata);
 	DataTableMapping.Emplace(FWeaponTableRow::StaticStruct(), DataTable);
 }
 
 USG_WSItemMetadata* UWeaponSubsystem::GetMetadata(const FName& InAssetName)
 {
-	return FItemSubsystemUtility::GetMetadataTemplate<USG_WSItemMetadata>(Metadata, InAssetName);
+	return FItemSubsystemUtility::GetMetadataTemplate(Metadata, InAssetName);
 }
 
 USG_WSItemMetadata* UWeaponEditorSubsystem::GetMetadata(const FName& InAssetName)
 {
-	return FItemSubsystemUtility::GetMetadataTemplate<USG_WSItemMetadata>(Metadata, InAssetName);
+	return FItemSubsystemUtility::GetMetadataTemplate(Metadata, InAssetName);
 }
 
 UWeaponEditorSubsystem::UWeaponEditorSubsystem()
@@ -40,7 +41,7 @@ UWeaponEditorSubsystem::UWeaponEditorSubsystem()
 void UWeaponEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
-	FItemSubsystemUtility::UpdateTable<FWeaponTableRow, USG_WSItemMetadata>(DataTable, Metadata);
+	FItemSubsystemUtility::UpdateTable<FWeaponTableRow>(DataTable, Metadata);
 
 	DataTableMapping.Emplace(FWeaponTableRow::StaticStruct(), DataTable);
 }

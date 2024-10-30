@@ -1,11 +1,13 @@
-﻿#pragma once
-
-class USG_WSItemMetadata;
+#pragma once
 
 struct FItemSubsystemUtility
 {
-	template <typename TableT, typename MetadataT>
-	static void UpdateTable(UDataTable* InDataTable, TMap<FName, MetadataT*>& OutMetadataMap)
+	template <typename TableT, typename MetadatT>
+	static void UpdateTable
+	(
+		UDataTable* InDataTable, 
+		TMap<FName, MetadatT*>& OutMetadataMap
+	)
 	{
 		check(InDataTable);
 
@@ -15,9 +17,13 @@ struct FItemSubsystemUtility
 		for (const TableT* Row : Rows)
 		{
 			OutMetadataMap.Add(Row->ItemName);
-			OutMetadataMap[Row->ItemName] = NewObject<MetadataT>();
+			OutMetadataMap[Row->ItemName] = NewObject<MetadatT>();
 			OutMetadataMap[Row->ItemName]->AssetName = Row->ItemName;
 			OutMetadataMap[Row->ItemName]->ItemType = Row->ItemType;
+			OutMetadataMap[Row->ItemName]->ItemIcon = Row->ItemIcon;
+			OutMetadataMap[Row->ItemName]->ItemDescription = Row->ItemDescription;
+			OutMetadataMap[Row->ItemName]->ItemEffect = FEffectRowHandle(Row->ItemEffect);
+			OutMetadataMap[Row->ItemName]->ItemParameter = Row->ItemParameter;
 		}
 	}
 

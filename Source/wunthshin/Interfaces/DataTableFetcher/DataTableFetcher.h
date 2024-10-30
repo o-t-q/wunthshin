@@ -12,7 +12,7 @@
 #include "Editor/UnrealEd/Public/Editor.h"
 
 #include "wunthshin/Data/CharacterTableRow/CharacterTableRow.h"
-#include "wunthshin/Data/ItemTableRow/ItemTableRow.h"
+#include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
 
 #include "DataTableFetcher.generated.h"
 
@@ -62,16 +62,17 @@ public:
 		ApplyAsset(InThisPointer->DataTableRowHandle);
 	}
 
+	// 상속된 클래스가 주로 사용할 테이블 row 타입
 	virtual UScriptStruct* GetTableType() const = 0;
 
-protected:
 	// 에셋의 데이터 테이블 핸들 getter
 	FORCEINLINE FDataTableRowHandle GetDataTableHandle() const
 	{
 		ensureAlwaysMsgf(!DataTableRowHandle.IsNull(), TEXT("Data table might not be fetched before"));
 		return DataTableRowHandle;
 	}
-	
+
+protected:
 	// 조회한 데이터 테이블의 데이터를 상속받은 클래스에서 사용
 	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) = 0;
 	

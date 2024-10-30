@@ -8,7 +8,7 @@
 #include "Engine/DataTable.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "wunthshin/Components/Weapon/C_WSWeapon.h"
-#include "wunthshin/Data/ItemTableRow/ItemTableRow.h"
+#include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
 #include "wunthshin/Subsystem/Utility.h"
 #include "Components/WidgetComponent.h"
 
