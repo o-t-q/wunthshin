@@ -204,6 +204,15 @@ void AA_WSItem::BeginPlay()
 		ItemWidget->SetParentItem(this);
 	}
 
+#ifdef WITH_EDITOR
+	// 블루프린트 객체가 리컴파일하기 전까지 데이터 테이블이 수정된 사항이 반영되지 않음
+	// 블루프린트에서 설정된 에디터 메타데이터를 강제로 갱신
+	if (!GetClass()->IsNative() && GetWorld()->IsGameWorld())
+	{
+		FetchAsset(this, AssetName);
+	}
+#endif
+
 	// note: 동적으로 설정한 충돌체의 초기화를 해야함 (블루프린트 또는 상속 클래스에서)
 }
 
