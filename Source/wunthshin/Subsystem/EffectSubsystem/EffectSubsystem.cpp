@@ -8,7 +8,7 @@ DEFINE_LOG_CATEGORY(LogEffectSubsystem);
 
 UEffectSubsystem::UEffectSubsystem()
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> Table(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_ElementTable.DT_ElementTable'"));
+	static ConstructorHelpers::FObjectFinder<UDataTable> Table(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_EffectTable.DT_EffectTable'"));
 	check(Table.Object);
 	DataTable = Table.Object;
 }
