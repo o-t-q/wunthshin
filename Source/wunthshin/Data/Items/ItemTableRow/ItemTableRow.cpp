@@ -5,6 +5,8 @@
 #include "Components/SphereComponent.h"
 
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
+#include "wunthshin/Subsystem/ItemSubsystem/ItemSubsystem.h"
+#include "wunthshin/Subsystem/WeaponSubsystem/WeaponSubsystem.h"
 
 void FItemTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName)
 {

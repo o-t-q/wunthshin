@@ -4,7 +4,6 @@
 #include "wunthshin/Data/Effects/Heal/O_WSEffectHeal.h"
 
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
-#include "wunthshin/Subsystem/ItemSubsystem/ItemSubsystem.h"
 #include "wunthshin/Components/CharacterStats/CharacterStatsComponent.h"
 
 DEFINE_LOG_CATEGORY(LogItemEffectHeal);

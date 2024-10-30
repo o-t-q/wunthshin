@@ -14,7 +14,7 @@ class UDataTableQuery : public UInterface
 };
 
 /**
- * 
+ * 데이터 테이블을 쿼리하는 객체
  */
 class WUNTHSHIN_API IDataTableQuery
 {
@@ -36,7 +36,7 @@ public:
 
 	
 protected:
-	// 구조체 타입맵
+	// 구조체 타입맵, UPROPERTY가 없기 때문에 GC는 외부에서 처리해야함!
 	TMap<const UScriptStruct*, UDataTable*> DataTableMapping;
 	
 };
