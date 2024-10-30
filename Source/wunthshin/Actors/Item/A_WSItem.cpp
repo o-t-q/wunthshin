@@ -83,46 +83,48 @@ void AA_WSItem::OnConstruction(const FTransform& Transform)
 
 void AA_WSItem::InitializeCollisionComponent(TSubclassOf<UShapeComponent> InClass)
 {
+	USceneComponent* PreviousAttachParent = GetRootComponent()->GetAttachParent();
+	const FTransform PreviousTransform    = GetRootComponent()->GetComponentTransform();
+	
 	// 새로운 충돌체로의 교환
-	if (!CollisionComponent || (InClass != CollisionComponent->GetClass()))
+	if (!CollisionComponent || InClass != CollisionComponent->GetClass())
 	{
-		USceneComponent* PreviousAttachParent = GetRootComponent()->GetAttachParent();
-		FTransform PreviousTransform = GetRootComponent()->GetComponentTransform();
-		
 		if (CollisionComponent)
 		{
 			CollisionComponent->DestroyComponent();
 		}
 
-		CollisionComponent = NewObject<UShapeComponent>(this, InClass, CollisionComponentName);
-		if (CollisionComponent)
-		{
-			SetRootComponent(CollisionComponent);
-			if (PreviousAttachParent)
-			{
-				CollisionComponent->SetupAttachment(PreviousAttachParent);
-			}
-			CollisionComponent->RegisterComponent();
+		CollisionComponent = NewObject<UShapeComponent>(this, InClass, CollisionComponentName, RF_Public);
+	}
 
-			MeshComponent->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
-			MeshComponent->AttachToComponent
-			(
-				CollisionComponent, 
-				FAttachmentTransformRules::KeepRelativeTransform
-			);
-			ItemNotifyWidget->AttachToComponent
-			(
-				CollisionComponent,
-				FAttachmentTransformRules::KeepRelativeTransform
-			);
-
-			CollisionComponent->SetWorldTransform(PreviousTransform);
-			InitializeCollisionLazy();
-		}
-		else
+	// 기존에 충돌체가 있었거나, 새로 생성된 충돌체의 구조 재설정
+	if (CollisionComponent)
+	{
+		SetRootComponent(CollisionComponent);
+		if (PreviousAttachParent)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Unknown error! Collision component is not initialized properly!"));
+			CollisionComponent->SetupAttachment(PreviousAttachParent);
 		}
+		CollisionComponent->RegisterComponent();
+
+		MeshComponent->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+		MeshComponent->AttachToComponent
+		(
+			CollisionComponent, 
+			FAttachmentTransformRules::KeepRelativeTransform
+		);
+		ItemNotifyWidget->AttachToComponent
+		(
+			CollisionComponent,
+			FAttachmentTransformRules::KeepRelativeTransform
+		);
+
+		CollisionComponent->SetWorldTransform(PreviousTransform);
+		InitializeCollisionLazy();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Unknown error! Collision component is not initialized properly!"));
 	}
 }
 
