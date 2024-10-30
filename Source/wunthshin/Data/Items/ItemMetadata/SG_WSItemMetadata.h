@@ -40,10 +40,11 @@ class WUNTHSHIN_API USG_WSItemMetadata : public USaveGame
 	FEffectParameter ItemParameter;
 
 public:
-	const UO_WSBaseEffect* GetItemEffect() const;
+	// 아이템의 효과 처리기 getter, Metadata가 Transient으로 생성된 경우 World가 필요함
+	const UO_WSBaseEffect* GetItemEffect(const UWorld* InWorld) const;
 
 	const FEffectParameter& GetItemParameter() const;
-
+	
 	FName GetAssetName() const { return AssetName; }
 
 	template <EItemType ItemT>

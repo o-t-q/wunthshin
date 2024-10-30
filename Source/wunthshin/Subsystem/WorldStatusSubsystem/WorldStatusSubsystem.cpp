@@ -61,6 +61,7 @@ void UWorldStatusSubsystem::Tick(float InDeltaTime)
                     ItemsNearbyCharacter.Add(Result.GetActor());
                 }
 
+                // 가장 가까운 아이템의 줍기 알림을 띄움 (Visibility Hidden이 되면 위젯 Tick이 돌지 않음)
                 Cast<AA_WSItem>(GetNearestItem())->GetItemNotifyWidget()->GetWidget()->SetVisibility(ESlateVisibility::Visible);
             }
 		}
@@ -68,14 +69,14 @@ void UWorldStatusSubsystem::Tick(float InDeltaTime)
 
     for (FItemTicket& Ticket : ItemQueue) 
     {
-        FItemTicket::ExecuteAndAdjustLifetime(Ticket);
+        FItemTicket::ExecuteAndAdjustLifetime(GetWorld(), Ticket);
 
         if (Ticket.IsValid()) 
         {
             FTimerDelegate Delegate;
             FTimerManagerTimerParameters Params;
             Params.bLoop = false;
-            Params.FirstDelay = 0.f;
+            Params.FirstDelay = -1.f;
             Params.bMaxOncePerFrame = false;
 
             Delegate.BindUObject(this, &UWorldStatusSubsystem::PushItem, Ticket);
@@ -98,9 +99,20 @@ void UWorldStatusSubsystem::PushItem(const USG_WSItemMetadata* InItem, AActor* I
     if (InItem && InInstigator && InTarget) 
     {
         FItemTicket ItemTicket;
+
         ItemTicket.Item = InItem;
         ItemTicket.Instigator = InInstigator;
         ItemTicket.Target = InTarget;
+
+        const FEffectParameter& Parameter = InItem->GetItemParameter();
+        ItemTicket.Rate = Parameter.PerTime;
+
+        // 아이템의 최종 시전 횟수 초기화 (아이템에 지정된 시간이 있을 경우)
+        if (InItem->GetItemParameter().Duration != 0.f)
+        {
+            ItemTicket.MaxExecuteCount = Parameter.Duration * Parameter.PerTime;
+        }
+        
         PushItem(ItemTicket);
     }
 }
@@ -110,23 +122,18 @@ void UWorldStatusSubsystem::PushItem(FItemTicket InItemTicket)
     ItemQueue.Push(InItemTicket);
 }
 
-void FItemTicket::ExecuteAndAdjustLifetime(FItemTicket& InTicket)
+void FItemTicket::ExecuteAndAdjustLifetime(const UWorld* InWorld, FItemTicket& InTicket)
 {
-    const UO_WSBaseEffect* Effect = InTicket.Item->GetItemEffect();
+    InTicket.ExecuteCount++;
+    
+    const UO_WSBaseEffect*  Effect     = InTicket.Item->GetItemEffect(InWorld);
     const FEffectParameter& ItemParams = InTicket.Item->GetItemParameter();
-
-    // 아이템의 최종 시전 횟수 초기화 (아이템에 지정된 시간이 있을 경우)
-    if (ItemParams.Duration != 0.f && InTicket.MaxExecuteCount == 0)
-    {
-        InTicket.MaxExecuteCount = ItemParams.Duration * ItemParams.PerTime;
-    }
-
+    
     // 아이템 효과 호출
     Effect->Effect(ItemParams, InTicket.Instigator, InTicket.Target);
-    InTicket.ExecuteCount++;
-
+    
     // 아이템 효과 만료시
-    if (InTicket.ExecuteCount < InTicket.MaxExecuteCount)
+    if (InTicket.ExecuteCount >= InTicket.MaxExecuteCount)
     {
         InTicket.bDisposed = true;
     }

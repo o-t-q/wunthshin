@@ -5,9 +5,9 @@
 #include "wunthshin/Subsystem/EffectSubsystem/EffectSubsystem.h"
 #include "wunthshin/Data/Effects/EffectTableRow/EffectTableRow.h"
 
-const UO_WSBaseEffect* USG_WSItemMetadata::GetItemEffect() const
+const UO_WSBaseEffect* USG_WSItemMetadata::GetItemEffect(const UWorld* InWorld) const
 {
-    return GetWorld()->GetGameInstance()->GetSubsystem<UEffectSubsystem>()->GetEffector(ItemEffect);
+    return InWorld->GetGameInstance()->GetSubsystem<UEffectSubsystem>()->GetEffector(ItemEffect);
 }
 
 const FEffectParameter& USG_WSItemMetadata::GetItemParameter() const

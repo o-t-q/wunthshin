@@ -23,7 +23,7 @@ struct FItemTicket
 	FTimerHandle& GetTimerHandle() { return TimerHandle; }
 
 private:
-	static void ExecuteAndAdjustLifetime(FItemTicket& InTicket);
+	static void ExecuteAndAdjustLifetime(const UWorld* InWorld, FItemTicket& InTicket);
 
 	bool bDisposed = false;
 
