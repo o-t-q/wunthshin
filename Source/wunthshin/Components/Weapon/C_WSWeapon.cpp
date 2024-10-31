@@ -133,25 +133,30 @@ void UC_WSWeapon::ResetCounter()
 
 void UC_WSWeapon::BeginDestroy()
 {
-	if (APlayerController* PC = Cast<APlayerController>(OwningPawn->GetController()))
+	Super::BeginDestroy();
+
+	if (OwningPawn) 
 	{
-		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
-
-		// todo: 무기가 여러개인 경우?
-		if (Subsystem->HasMappingContext(IMC_Weapon))
+		if (APlayerController* PC = Cast<APlayerController>(OwningPawn->GetController()))
 		{
-			Subsystem->RemoveMappingContext(IMC_Weapon);
-		}
+			UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
 
-		AActor* hi = Cast<AActor>(GetOwner());
+			// todo: 무기가 여러개인 경우?
+			if (Subsystem->HasMappingContext(IMC_Weapon))
+			{
+				Subsystem->RemoveMappingContext(IMC_Weapon);
+			}
 
-		if (hi->InputComponent)
-		{
-			UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(hi->InputComponent);
-			ensure(EnhancedInputComponent);
+			AActor* hi = Cast<AActor>(GetOwner());
 
-			EnhancedInputComponent->RemoveBinding(*AttackActionBinding);
-			hi->DisableInput(PC);
+			if (hi->InputComponent)
+			{
+				UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(hi->InputComponent);
+				ensure(EnhancedInputComponent);
+
+				EnhancedInputComponent->RemoveBinding(*AttackActionBinding);
+				hi->DisableInput(PC);
+			}
 		}
 	}
 }
