@@ -8,7 +8,7 @@
 
 class I_WSTaker;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUp, TScriptInterface<I_WSTaker>, InTriggeringActor);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDropping, TScriptInterface<I_WSTaker>, InTriggeringActor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUpSuccess, TScriptInterface<I_WSTaker>, InTriggeringActor);
 DECLARE_LOG_CATEGORY_EXTERN(LogPickUpComponent, Log, All);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -28,9 +28,13 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnPickUp OnPickUp;
 
+	UPROPERTY(BlueprintAssignable)
+	FOnPickUpSuccess OnPickUpSuccess;
+
 	// 물체의 소유권자가 있는지 확인
 	UFUNCTION(BlueprintCallable)
 	bool IsTaken() const { return bTaken; }
+	void SetTaken(const TScriptInterface<I_WSTaker>& InTaker);
 
 	virtual void SetActive(bool bNewActive, bool bReset) override;
 	
