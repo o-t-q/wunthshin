@@ -59,6 +59,9 @@ public:
     UFUNCTION(BlueprintCallable)
     void IncreaseHP(const float InValue);
 
+    // 현재 체력
+    float GetHP() const { return CurrentStats.HP; }
+
     // 전체 체력과 현재 체력 비율
     UFUNCTION(BlueprintCallable)
     float GetHPRatio() const
