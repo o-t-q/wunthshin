@@ -12,7 +12,4 @@ struct WUNTHSHIN_API FNPCTableRow : public FCharacterTableRow
 	UPROPERTY(EditAnywhere)
 	bool bEnemy;
 
-	UPROPERTY(EditAnywhere, meta = (RowType = "/Script/wunthshin.CharacterStats"))
-	FDataTableRowHandle Stat;
-
 };

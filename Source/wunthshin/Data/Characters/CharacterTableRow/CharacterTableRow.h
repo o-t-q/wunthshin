@@ -18,4 +18,7 @@ struct WUNTHSHIN_API FCharacterTableRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UAnimInstance> AnimInstance;
+
+	UPROPERTY(EditAnywhere, meta=(RowType = "/Script/wunthshin.CharacterStats"))
+	FDataTableRowHandle Stats;
 };
