@@ -2,19 +2,16 @@
 
 
 #include "NPCSubsystem.h"
-
-#include "wunthshin/Components/CharacterStats/CharacterStatsComponent.h"
-#include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 #include "wunthshin/Data/NPCs/NPCTableRow/NPCTableRow.h"
 #include "wunthshin/Data/NPCs/NPCStats/NPCStats.h"
 
 UNPCSubsystem::UNPCSubsystem()
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> AssetTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterTable.DT_CharacterTable'"));
+	static ConstructorHelpers::FObjectFinder<UDataTable> AssetTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCTable.DT_NPCTable'"));
 	check(AssetTable.Object);
 	AssetDataTable = AssetTable.Object;
 	
-	static ConstructorHelpers::FObjectFinder<UDataTable> StatTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterStatsTable.DT_CharacterStatsTable'"));
+	static ConstructorHelpers::FObjectFinder<UDataTable> StatTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCStatsTable.DT_NPCStatsTable'"));
 	check(StatTable.Object);
 	StatDataTable = StatTable.Object;
 }
@@ -35,11 +32,11 @@ void UNPCEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 UNPCEditorSubsystem::UNPCEditorSubsystem()
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> AssetTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterTable.DT_CharacterTable'"));
+	static ConstructorHelpers::FObjectFinder<UDataTable> AssetTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCTable.DT_NPCTable'"));
 	check(AssetTable.Object);
 	AssetDataTable = AssetTable.Object;
 	
-	static ConstructorHelpers::FObjectFinder<UDataTable> StatTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterStatsTable.DT_CharacterStatsTable'"));
+	static ConstructorHelpers::FObjectFinder<UDataTable> StatTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCStatsTable.DT_NPCStatsTable'"));
 	check(StatTable.Object);
 	StatDataTable = StatTable.Object;
 }
