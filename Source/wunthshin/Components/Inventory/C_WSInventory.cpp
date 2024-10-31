@@ -133,6 +133,12 @@ void UC_WSInventory::UseItem(uint32 Index, AActor* InTarget, int Count)
 {
 	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::UseItem"));
 
+	// 음수 갯수 예외처리
+	if (Count < 0) 
+	{
+		return;
+	}
+
 	// OOB
 	if (Items.Num() < Count)
 	{
@@ -140,7 +146,7 @@ void UC_WSInventory::UseItem(uint32 Index, AActor* InTarget, int Count)
 	}
 
 	// 사용 횟수가 소유하고 있는 아이템 수보다 많은 경우
-	if (Items[Index].Count < Count)
+	if (Items[Index].Count < static_cast<uint32>(Count))
 	{
 		return;
 	}
