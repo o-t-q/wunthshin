@@ -4,6 +4,10 @@
 #include "wunthshin/AnimNotify/FirstAtteckAnimNotifyState.h"
 #include "FirstAtteckAnimNotifyState.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
+#include "wunthshin/Components/Weapon/C_WSWeapon.h"
+#include "Engine/DamageEvents.h"
+
 
 
 UFirstAtteckAnimNotifyState::UFirstAtteckAnimNotifyState()
@@ -14,8 +18,71 @@ void UFirstAtteckAnimNotifyState::NotifyTick(class USkeletalMeshComponent* MeshC
 {
 	Super::NotifyBegin(MeshComp, Animation, FrameDeltaTime);
 
+	// Montage가 Pawn을 대상으로 실행된다고 가정하며 (캐릭터 또는 폰)
+	APawn* Self = Cast<APawn>(MeshComp->GetOwner());
+	check(Self);
+
+	// 예외대상을 처리한 후
+	TArray<APawn*> Exclude;
+	Exclude.Add(Self); // 본인
+
+	// 폰의 자식 액터들을 가져와 (무기가 있다는 가정 하에서)
+	TArray<AActor*> ChildActors;
+	Self->GetAllChildActors(ChildActors);
+
+	for (AActor* ChildActor : ChildActors) 
+	{
+		const UC_WSWeapon* WeaponComponent = ChildActor->GetComponentByClass<UC_WSWeapon>();
+
+		// 무기 컴포넌트가 없어서 무기가 아닌걸로
+		if (!WeaponComponent) 
+		{
+			continue;
+		}
+
+		AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(WeaponComponent->GetOwner());
+		check(Weapon);
+		const UMeshComponent* WeaponMesh = WeaponComponent->GetOwner()->GetComponentByClass<UMeshComponent>();
+
+		// 무기가 Overlap event를 생성하는지 확인
+		check(WeaponMesh->GetGenerateOverlapEvents());
+
+		// 무기와 충돌한 대상들을 찾고
+		const TArray<FOverlapInfo>& OverlapInfos = WeaponMesh->GetOverlapInfos();
+
+		for (const FOverlapInfo& OverlapInfo : OverlapInfos)
+		{
+			// 제어가 가능한 대상이며 (Possessable)
+			if (APawn* HitActor = Cast<APawn>(OverlapInfo.OverlapInfo.GetActor()))
+			{
+				// 예외대상이 아닌
+				if (Exclude.Contains(HitActor))
+				{
+					continue;
+				}
+
+#ifdef WITH_EDITOR
+				DrawDebugDirectionalArrow
+				(
+					Weapon->GetWorld(), // Notify의 월드 대신 무기/액터의 월드로
+					Weapon->GetTargetLocation(HitActor),
+					HitActor->GetActorLocation(),
+					2.f,
+					FColor::Red,
+					false,
+					2.f
+				);
+#endif
+
+				// todo: 데미지의 속성을 기록하고
+				FDamageEvent DamageEvent{};
+				// 데미지를 가한다
+				HitActor->TakeDamage(WeaponComponent->GetDamage(), DamageEvent, Self->GetController(), Weapon);
+			}
+		}
+	}
 	
-	
+	/*
 	//// 이동 중 매 프레임마다 위치를 변경합니다. 지금 필요한 기능은 아님
 	//FVector NewLocation = MeshComp->GetOwner()->GetActorLocation() + FVector(0.f, 200.f * FrameDeltaTime, 0.f); // y축으로 이동
 	//MeshComp->GetOwner()->SetActorLocation(NewLocation);
@@ -46,6 +113,6 @@ void UFirstAtteckAnimNotifyState::NotifyTick(class USkeletalMeshComponent* MeshC
 	{
 		AActor* DamagedActor = HitResult.GetActor();
 		// 여기에 케릭터 스테이트의 공격력을 바탕으로 데미지를 넣으면 됨
-	}
+	}*/
 }
 
