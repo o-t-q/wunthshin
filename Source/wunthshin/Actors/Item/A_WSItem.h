@@ -58,7 +58,7 @@ public:
 	virtual UScriptStruct* GetTableType() const override;
 
 	// 아이템 데이터 세팅
-	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
+	virtual void ApplyAsset(const FTableRowBase* InRowPointer) override;
 
 	FORCEINLINE UStaticMeshComponent* GetMesh() const { return MeshComponent; }
 

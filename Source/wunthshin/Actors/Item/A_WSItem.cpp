@@ -23,8 +23,12 @@ void AA_WSItem::InitializeCollisionLazy() const
 {
 	if (CollisionComponent)
 	{
-		// 투사체 컴포넌트에 의해 물리처리
-		ItemPhysics->SetUpdatedComponent(CollisionComponent);
+		if (ItemPhysics)
+		{
+			// 투사체 컴포넌트에 의해 물리처리
+			ItemPhysics->SetUpdatedComponent(CollisionComponent);
+		}
+		
 		// 충돌 설정
 		CollisionComponent->SetCollisionProfileName("ItemProfile");
 		CollisionComponent->SetGenerateOverlapEvents(true);
@@ -78,7 +82,7 @@ AA_WSItem::AA_WSItem(const FObjectInitializer& ObjectInitializer) :
 void AA_WSItem::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	FetchAsset(this, AssetName);
+	FetchAsset(AssetName);
 }
 
 void AA_WSItem::InitializeCollisionComponent(TSubclassOf<UShapeComponent> InClass)
@@ -135,7 +139,7 @@ UScriptStruct* AA_WSItem::GetTableType() const
 
 void AA_WSItem::UpdateCollisionFromDataTable(const FItemTableRow* Data)
 {
-	if (Data->CollisionShape)
+	if (Data->bCollision)
 	{
 		InitializeCollisionComponent(Data->CollisionShape);
 
@@ -154,25 +158,18 @@ void AA_WSItem::UpdateCollisionFromDataTable(const FItemTableRow* Data)
 	}
 }
 
-void AA_WSItem::ApplyAsset(const FDataTableRowHandle& InRowHandle)
+void AA_WSItem::ApplyAsset(const FTableRowBase* InRowPointer)
 {
 	// todo: 상속 클래스의 타입을 사용하기
-	if (InRowHandle.IsNull()) return;
+	if (!InRowPointer) return;
 
-	const FItemTableRow* Data = InRowHandle.GetRow<FItemTableRow>(TEXT(""));
-
-	if (!Data)
-	{
-		return;
-	}
+	const FItemTableRow* Data = reinterpret_cast<const FItemTableRow*>(InRowPointer);
 
 	if (Data->StaticMesh) MeshComponent->SetStaticMesh(Data->StaticMesh);
 
 	UpdateCollisionFromDataTable(Data);
 
 	ItemMetadata = FItemSubsystemUtility::GetMetadata<USG_WSItemMetadata>(GetWorld(), this, Data->ItemName);
-	
-	// todo: Icon, ItemName 등 정보 추가
 }
 
 UClass* AA_WSItem::GetSubsystemType() const
@@ -209,7 +206,7 @@ void AA_WSItem::BeginPlay()
 	// 블루프린트에서 설정된 에디터 메타데이터를 강제로 갱신
 	if (!GetClass()->IsNative() && GetWorld()->IsGameWorld())
 	{
-		FetchAsset(this, AssetName);
+		FetchAsset(AssetName);
 	}
 #endif
 
