@@ -225,6 +225,15 @@ void AA_WSCharacter::OnConstruction(const FTransform& Transform)
     FetchAsset(this, AssetName);
 }
 
+float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+    // todo: Montage 한번에 데미지가 여러번 들어오는걸 막아야 함
+    CharacterStatsComponent->DecreaseHP(Damage);
+    UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
+
+    return CharacterStatsComponent->GetHP();
+}
+
 void AA_WSCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
@@ -271,7 +280,10 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
             });
 
         // 손에 있는 무기를 주울 수 없도록 pick up component를 비활성화
-        RightHandWeapon->GetChildActor()->GetComponentByClass<UC_WSPickUp>()->SetActive(false, false);
+        if (UC_WSPickUp* PickUpComponent = RightHandWeapon->GetChildActor()->GetComponentByClass<UC_WSPickUp>()) 
+        {
+            PickUpComponent->SetTaken(this);
+        }
 
         // 충돌 반응 비활성화, overlap으로 반응하는 아이템 프로필로 설정
         RightHandWeapon->GetChildActor()->GetComponentByClass<UMeshComponent>()->SetCollisionProfileName("ItemEquipped");
