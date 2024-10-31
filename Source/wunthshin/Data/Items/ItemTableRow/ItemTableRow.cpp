@@ -15,28 +15,31 @@ void FItemTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FNam
 #ifdef WITH_EDITOR
 	if (GIsRunning)
 	{
-		if (CollisionShape == UBoxComponent::StaticClass())
-        {
-        	bBox = true;
-        	bSphere = false;
-        	bCapsule = false;
-        }
-        else if (CollisionShape == USphereComponent::StaticClass())
-        {
-        	bBox = false;
-        	bSphere = true;
-        	bCapsule = false;
-        }
-        else if (CollisionShape == UCapsuleComponent::StaticClass())
-        {
-        	bBox = false;
-        	bSphere = false;
-        	bCapsule = true;
-        }
-        else
-        {
-        	ensureAlwaysMsgf(false, TEXT("Unknown collision shape type"));
-        }
+		if (bCollision)
+		{
+			if (CollisionShape == UBoxComponent::StaticClass())
+			{
+				bBox = true;
+				bSphere = false;
+				bCapsule = false;
+			}
+			else if (CollisionShape == USphereComponent::StaticClass())
+			{
+				bBox = false;
+				bSphere = true;
+				bCapsule = false;
+			}
+			else if (CollisionShape == UCapsuleComponent::StaticClass())
+			{
+				bBox = false;
+				bSphere = false;
+				bCapsule = true;
+			}
+			else
+			{
+				ensureAlwaysMsgf(false, TEXT("Unknown collision shape type"));
+			}
+		}
 	}
 #endif
 }

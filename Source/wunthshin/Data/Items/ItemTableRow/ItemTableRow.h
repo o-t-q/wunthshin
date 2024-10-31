@@ -26,8 +26,11 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere)
 	UStaticMesh* StaticMesh;
-
+	
 	UPROPERTY(EditAnywhere)
+	bool bCollision;
+	
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "bCollision", EditConditionHides))
 	TSubclassOf<UShapeComponent> CollisionShape;
 
 	UPROPERTY(EditAnywhere)
@@ -42,13 +45,13 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 	UPROPERTY()
 	bool bCapsule;
 	
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "bBox", EditConditionHides))
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "bBox && bCollision", EditConditionHides))
 	FVector BoxExtents;
 
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "bSphere", EditConditionHides))
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "bSphere && bCollision", EditConditionHides))
 	float Radius;
 
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "bCapsule", EditConditionHides))
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "bCapsule && bCollision", EditConditionHides))
 	float CapsuleRadius;
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "bCapsule", EditConditionHides))
