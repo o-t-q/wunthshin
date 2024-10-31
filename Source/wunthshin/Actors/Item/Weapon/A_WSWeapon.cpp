@@ -70,5 +70,7 @@ void AA_WSWeapon::ApplyAsset(const FDataTableRowHandle& InRowHandle)
 
 	ItemMetadata = FItemSubsystemUtility::GetMetadata<USG_WSItemMetadata>(GetWorld(), this, TableRow->ItemName);
 	
-	DefaultAttackMontage = TableRow->DefaultAttackMontage;
+	AttackMontages = TableRow->AttackMontages;
+
+	WeaponComponent->SetDamage(TableRow->Damage);
 }

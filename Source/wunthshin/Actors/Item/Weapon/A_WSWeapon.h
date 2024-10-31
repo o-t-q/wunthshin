@@ -22,7 +22,7 @@ class WUNTHSHIN_API AA_WSWeapon : public AA_WSItem
 	UC_WSWeapon* WeaponComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta=(AllowPrivateAccess = "true"))
-	UAnimMontage* DefaultAttackMontage;
+	TArray<UAnimMontage*> AttackMontages;
 	
 public:	
 	// 자식 클래스가 Weapon Component를 override할 수 있도록 ObjectInitializer 생성자로
@@ -37,9 +37,9 @@ public:
 	
 	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
 
-	// 기본 공격 모션 몽타주 getter
+	// 공격 모션 몽타주 getter
 	UFUNCTION(BlueprintCallable)
-	FORCEINLINE UAnimMontage* GetDefaultAttackMontage() const { return DefaultAttackMontage; }
+	FORCEINLINE TArray<UAnimMontage*> GetAttackMontages() const { return AttackMontages; }
 	
 	
 };
