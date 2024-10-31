@@ -4,7 +4,7 @@
 #include "wunthshin/Data/Effects/Heal/O_WSEffectHeal.h"
 
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
-#include "wunthshin/Components/CharacterStats/CharacterStatsComponent.h"
+#include "wunthshin/Components/Stats/StatsComponent.h"
 
 DEFINE_LOG_CATEGORY(LogItemEffectHeal);
 
@@ -14,7 +14,7 @@ void UO_WSEffectHeal::Effect(const FEffectParameter& InParameters, AActor* InIns
 	{
 		float Value = InParameters.FloatValues["Heal"];
 		UE_LOG(LogItemEffectHeal, Log, TEXT("Healing %s with %f amount"), *InTargetActor->GetName(), Value);
-		InTargetActor->GetComponentByClass<UCharacterStatsComponent>()->IncreaseHP(Value);
+		InTargetActor->GetComponentByClass<UStatsComponent>()->IncreaseHP(Value);
 	}
 	else 
 	{

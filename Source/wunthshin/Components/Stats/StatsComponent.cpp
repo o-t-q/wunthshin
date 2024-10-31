@@ -1,13 +1,15 @@
-#include "CharacterStatsComponent.h"
+#include "StatsComponent.h"
 #include "Engine/DataTable.h"
+
+#include "GameFramework/PawnMovementComponent.h"
+
 #include "Logging/LogMacros.h"
-#include "GameFramework/CharacterMovementComponent.h"
 
-#include "wunthshin/Actors/AA_WSCharacter.h" 
+#include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 
-DEFINE_LOG_CATEGORY(LogCharacterStatsComponent);
+DEFINE_LOG_CATEGORY(LogStatsComponent);
 
-UCharacterStatsComponent::UCharacterStatsComponent()
+UStatsComponent::UStatsComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
 
@@ -16,14 +18,12 @@ UCharacterStatsComponent::UCharacterStatsComponent()
     StaminaDepletionRate = 10.0f; // 빠르게 달릴 때 감소량
 }
 
-void UCharacterStatsComponent::BeginPlay()
+void UStatsComponent::BeginPlay()
 {
     Super::BeginPlay(); // 부모 클래스의 BeginPlay 호출
-
-    InitializeStats(); // 스탯 초기화
 }
 
-void UCharacterStatsComponent::DecreaseHP(const float InValue)
+void UStatsComponent::DecreaseHP(const float InValue)
 {
     if (InValue < 0)
     {
@@ -35,7 +35,7 @@ void UCharacterStatsComponent::DecreaseHP(const float InValue)
 
     if (FMath::Abs(std::numeric_limits<float>::min() + CurrentStats.HP) < InValue)
     {
-        UE_LOG(LogCharacterStatsComponent, Warning, TEXT("%s: Underflow! assuming HP as 0"), *GetOwner()->GetName());
+        UE_LOG(LogStatsComponent, Warning, TEXT("%s: Underflow! assuming HP as 0"), *GetOwner()->GetName());
         CurrentStats.HP = 0;
         return;
     }
@@ -43,7 +43,7 @@ void UCharacterStatsComponent::DecreaseHP(const float InValue)
     CurrentStats.HP = FMath::Clamp(CurrentStats.HP - InValue, 0, CurrentStats.MaxHP);
 }
 
-void UCharacterStatsComponent::IncreaseHP(const float InValue)
+void UStatsComponent::IncreaseHP(const float InValue)
 {
     if (InValue < 0)
     {
@@ -55,7 +55,7 @@ void UCharacterStatsComponent::IncreaseHP(const float InValue)
 
     if (std::numeric_limits<float>::max() - CurrentStats.HP < InValue)
     {
-        UE_LOG(LogCharacterStatsComponent, Warning, TEXT("%s: Overflow! assuming HP as MaxHP"), *GetOwner()->GetName());
+        UE_LOG(LogStatsComponent, Warning, TEXT("%s: Overflow! assuming HP as MaxHP"), *GetOwner()->GetName());
         CurrentStats.HP = CurrentStats.MaxHP;
         return;
     }
@@ -63,43 +63,13 @@ void UCharacterStatsComponent::IncreaseHP(const float InValue)
     CurrentStats.HP = FMath::Clamp(CurrentStats.HP + InValue, 0, CurrentStats.MaxHP);
 }
 
-void UCharacterStatsComponent::InitializeStats()
+void UStatsComponent::InitializeStats(const FCharacterStats& InInitialStats)
 {
-    // "Player" 항목의 스탯을 찾는다
-    FCharacterStats* Stats = nullptr;
-
-#ifdef WITH_EDITOR
-    if (GetWorld()->IsEditorWorld())
-    {
-        Stats = GEditor->GetEditorSubsystem<UCharacterEditorSubsystem>()->GetRowValue<FCharacterStats>(TEXT("Player"));
-    }
-    else if (GetWorld()->IsGameWorld())
-    {
-        Stats = GetWorld()->GetGameInstance()->GetSubsystem<UCharacterSubsystem>()->GetRowValue<FCharacterStats>(TEXT("Player"));
-    }
-    else
-    {
-        // 지원하지 않는 월드
-        check(Stats);
-    }
-#else
-        Stats = GetWorld()->GetGameInstance()->GetSubsystem<UCharacterSubsystem>()->GetRowValue<FCharacterStats>(TEXT("Player"));
-#endif
-
-    if (Stats)
-    {
-        CurrentStats.HP = Stats->MaxHP;
-        CurrentStats.MaxHP = Stats->MaxHP;
-        CurrentStats.Stamina = Stats->Stamina;
-        UE_LOG(LogTemp, Warning, TEXT("MaxHP: %f, Stamina: %f"), CurrentStats.MaxHP, CurrentStats.Stamina);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Row not found in CharacterStatsTable!"));
-    }
+    CurrentStats = InInitialStats;
+    CurrentStats.HP = CurrentStats.MaxHP;
 }
 
-void UCharacterStatsComponent::UpdateStamina(float DeltaTime, bool bIsFastRunning)
+void UStatsComponent::UpdateStamina(float DeltaTime, bool bIsFastRunning)
 {
     if (bIsFastRunning)
     {
@@ -126,7 +96,7 @@ void UCharacterStatsComponent::UpdateStamina(float DeltaTime, bool bIsFastRunnin
     }
 }
 
-void UCharacterStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
