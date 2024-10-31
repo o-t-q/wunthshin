@@ -14,10 +14,8 @@
 #include "InputActionValue.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Components/Inventory/C_WSInventory.h"
-#include "Engine/OverlapResult.h"
-#include "Item/A_WSItem.h"
-#include "Item/Weapon/A_WSWeapon.h"
-#include "wunthshin/Components/CharacterStats/CharacterStatsComponent.h" 
+#include "wunthshin/Actors/Item/A_WSItem.h"
+#include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
 #include "InputMappingContext.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "wunthshin/Enums.h"
@@ -25,7 +23,8 @@
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Subsystem/ElementSubsystem/ElementSubsystem.h"
-#include "Components/WidgetComponent.h"
+
+#include "wunthshin/Components/Stats/StatsComponent.h"
 #include "wunthshin/Subsystem/WorldStatusSubsystem/WorldStatusSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -111,7 +110,7 @@ AA_WSCharacter::AA_WSCharacter()
     // are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
     // Create CharacterStats
-    CharacterStatsComponent = CreateDefaultSubobject<UCharacterStatsComponent>(TEXT("CharacterStatsComponent"));
+    CharacterStatsComponent = CreateDefaultSubobject<UStatsComponent>(TEXT("CharacterStatsComponent"));
 
     // Create a shield component.
     Shield = CreateDefaultSubobject<UC_WSShield>(TEXT("ShieldComponent"));
@@ -162,19 +161,12 @@ UScriptStruct* AA_WSCharacter::GetTableType() const
     return FCharacterTableRow::StaticStruct();
 }
 
-void AA_WSCharacter::ApplyAsset(const FDataTableRowHandle& InRowHandle)
+void AA_WSCharacter::ApplyAsset(const FTableRowBase* InRowPointer)
 {
-    if (InRowHandle.IsNull()) return;
+    if (!InRowPointer) return;
 
-    const FCharacterTableRow* Data = InRowHandle.GetRow<FCharacterTableRow>(TEXT(""));
-
-    if (!Data)
-    {
-        return;
-    }
-
-    // todo: 캐릭터의 이름, 아이콘
-
+    const FCharacterTableRow* Data = reinterpret_cast<const FCharacterTableRow*>(InRowPointer);
+    
     if (Data->SkeletalMesh)
     {
         GetMesh()->SetSkeletalMesh(Data->SkeletalMesh);
@@ -183,6 +175,17 @@ void AA_WSCharacter::ApplyAsset(const FDataTableRowHandle& InRowHandle)
     if (Data->AnimInstance)
     {
         GetMesh()->SetAnimInstanceClass(Data->AnimInstance);
+    }
+
+    if (USubsystem* Subsystem = GetSubsystem())
+    {
+        const IDataTableQuery* TableQuery = Cast<IDataTableQuery>(Subsystem);
+        check(TableQuery);
+
+        if (const FCharacterStats* Stats = TableQuery->GetRowValue<FCharacterStats>(Data->Stats.RowName))
+        {
+            CharacterStatsComponent->InitializeStats(*Stats);
+        }
     }
 }
 
@@ -214,15 +217,15 @@ void AA_WSCharacter::BeginPlay()
 
     {
         // todo/test: 효과 적용이 된 경우를 테스트, 무기/몹등이 구현되고 나서 지워야 함
-        ApplyElement(this, this, UElementSubsystem::GetElementHandle(GetWorld(), "Rock"));
-        ApplyElement(this, this, UElementSubsystem::GetElementHandle(GetWorld(), "Fire"));   
+        ApplyElement(this, UElementSubsystem::GetElementHandle(GetWorld(), "Rock"));
+        ApplyElement(this, UElementSubsystem::GetElementHandle(GetWorld(), "Fire"));
     }
 }
 
 void AA_WSCharacter::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
-    FetchAsset(this, AssetName);
+    FetchAsset(AssetName);
 }
 
 float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)

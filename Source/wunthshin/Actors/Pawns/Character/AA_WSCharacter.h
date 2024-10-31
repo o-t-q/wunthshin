@@ -3,14 +3,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "wunthshin/Interfaces/Taker/Taker.h"
 #include "Logging/LogMacros.h"
 
+#include "wunthshin/Interfaces/Taker/Taker.h"
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 #include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
 
 #include "AA_WSCharacter.generated.h"
 
+class UStatsComponent;
 class UC_WSShield;
 class AA_WSWeapon;
 class USpringArmComponent;
@@ -18,7 +19,6 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 class UC_WSInventory;
-class UCharacterStatsComponent;
 struct FInputActionValue;
 
 
@@ -27,8 +27,6 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FUnFastRun);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWalk);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOffWalk);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGlide);
-
-
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -90,7 +88,7 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UC_WSShield* Shield;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	UCharacterStatsComponent* CharacterStatsComponent;
+	UStatsComponent* CharacterStatsComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	UChildActorComponent* RightHandWeapon;
@@ -163,7 +161,7 @@ public:
 
 	virtual UScriptStruct* GetTableType() const override;
 
-	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
+	virtual void ApplyAsset(const FTableRowBase* InRowPointer) override;
 
 	virtual UClass* GetSubsystemType() const override;
 #ifdef WITH_EDITOR
