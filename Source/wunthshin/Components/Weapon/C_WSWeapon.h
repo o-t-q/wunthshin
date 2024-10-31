@@ -8,6 +8,7 @@
 #include "C_WSWeapon.generated.h"
 
 class UInputMappingContext;
+struct FEnhancedInputActionEventBinding;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class WUNTHSHIN_API UC_WSWeapon : public UActorComponent
