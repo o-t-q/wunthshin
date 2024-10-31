@@ -43,32 +43,16 @@ UClass* AA_WSWeapon::GetEditorSubsystemType() const
 }
 #endif
 
-void AA_WSWeapon::ApplyAsset(const FDataTableRowHandle& InRowHandle)
+void AA_WSWeapon::ApplyAsset(const FTableRowBase* InRowPointer)
 {
-	// Item 데이터 테이블과 무기 데이터 테이블은 따로 있기 때문에
-	// 슈퍼 클래스 호출은 무시
+	Super::ApplyAsset(InRowPointer);
 	
-	if (InRowHandle.IsNull())
+	if (!InRowPointer)
 	{
 		return;
 	}
 
-	const FWeaponTableRow* TableRow = InRowHandle.GetRow<FWeaponTableRow>(TEXT(""));
-
-	if (!TableRow)
-	{
-		return;
-	}
-	
-	if (TableRow->StaticMesh)
-	{
-		GetMesh()->SetStaticMesh(TableRow->StaticMesh);
-	}
-
-	// todo: 속성 창에서 숨기기
-	// Collision Shape은 무시
-
-	ItemMetadata = FItemSubsystemUtility::GetMetadata<USG_WSItemMetadata>(GetWorld(), this, TableRow->ItemName);
+	const FWeaponTableRow* TableRow = reinterpret_cast<const FWeaponTableRow*>(InRowPointer);
 	
 	AttackMontages = TableRow->AttackMontages;
 

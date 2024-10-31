@@ -35,7 +35,7 @@ public:
 	virtual UClass* GetEditorSubsystemType() const override;
 #endif
 	
-	virtual void ApplyAsset(const FDataTableRowHandle& InRowHandle) override;
+	virtual void ApplyAsset(const FTableRowBase* InRowPointer) override;
 
 	// 공격 모션 몽타주 getter
 	UFUNCTION(BlueprintCallable)
