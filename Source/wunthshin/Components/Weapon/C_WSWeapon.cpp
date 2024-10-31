@@ -54,9 +54,7 @@ void UC_WSWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 }
 
 void UC_WSWeapon::AttackDefault()
-{
-	// todo: 몽타주 재생
-	
+{	
 	int32 Index = ContinuousAttackCount % AttackMontages.Num();
 
 	if (AttackMontages[Index]) 
