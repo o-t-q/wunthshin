@@ -76,7 +76,7 @@ struct WUNTHSHIN_API FWeaponTableRow : public FItemTableRow
 	int32 Damage;
 
 	UPROPERTY(EditAnywhere)
-	UAnimMontage* DefaultAttackMontage;
+	TArray<UAnimMontage*> AttackMontages;
 	
 	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName) override;
 };

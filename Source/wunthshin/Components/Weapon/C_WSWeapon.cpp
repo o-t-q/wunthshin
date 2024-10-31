@@ -8,6 +8,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "../../Actors/AA_WSCharacter.h"
+#include "wunthshin/Components/PickUp/C_WSPickUp.h"
+#include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
 
 
 // Sets default values for this component's properties
@@ -20,17 +22,6 @@ UC_WSWeapon::UC_WSWeapon()
 	{ TEXT("/Script/EnhancedInput.InputMappingContext'/Game/ThirdPerson/Input/IMC_SwordAtteck.IMC_SwordAtteck'") };
 	check(Asset.Object);
 	IMC_Weapon = Asset.Object;
-	static ConstructorHelpers::FObjectFinder<UAnimMontage> MTG
-	{ TEXT("/Script/Engine.AnimMontage'/Game/WawuCharacter/YinLin/AnimationSequence/MTG/MTG_SM_sword_and_shield_attack_Montage.MTG_SM_sword_and_shield_attack_Montage'") };
-	check(MTG.Object);
-	FirstWeaponAttackMontage = MTG.Object;
-
-
-
-
-
-
-	
 	
 
 	// ...
@@ -41,53 +32,16 @@ UC_WSWeapon::UC_WSWeapon()
 void UC_WSWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	OwningPawn = Cast<APawn>(GetOwner()->GetAttachParentActor());
-	
-	/*USkeletalMeshComponent* MeshComponent = OwningPawn->FindComponentByClass<USkeletalMeshComponent>();
-	if (MeshComponent)
+
+	if (UC_WSPickUp* PickUpComponent = GetOwner()->GetComponentByClass<UC_WSPickUp>()) 
 	{
-		check(false);
-		return;
+		PickUpComponent->OnPickUpSuccess.AddUniqueDynamic(this, &UC_WSWeapon::UpdateCache);
 	}
-	AActor* OwnerActor = GetOwner();
 
-
-	BasicAnimInstance = Cast<UBaseAnimInstance>(MeshComponent->GetAnimInstance());
-	check(BasicAnimInstance);
-
-
-
-	if (APlayerController* PC = Cast<APlayerController>(OwningPawn->GetController()))
+	if (AA_WSWeapon* WeaponCasting = Cast<AA_WSWeapon>(GetOwner())) 
 	{
-		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
-		if (Subsystem->HasMappingContext(IMC_Weapon))
-		{
-			Subsystem->AddMappingContext(IMC_Weapon, 0);
-		}
-		AActor* hi = Cast<AActor>(GetOwner());
-		if (!hi->InputComponent)
-		{
-			hi->EnableInput(PC);
-			UEnhancedInputComponent* EnhancedInputComponent = Cast< UEnhancedInputComponent>(hi->InputComponent);
-			ensure(EnhancedInputComponent);
-			const UInputAction* InputAction = nullptr;
-			const TArray<FEnhancedActionKeyMapping>& Mappings = IMC_Weapon->GetMappings();
-			for (auto& It : Mappings)
-			{
-				if (It.Action->GetFName() == TEXT("IA_Atteck"))
-				{
-					InputAction = It.Action.Get();
-				}
-			}
-			if (InputAction)
-			{
-				EnhancedInputComponent->BindAction(InputAction, ETriggerEvent::Started, this, &ThisClass::AttackDefault);
-			}
-			
-		}
-	}*/
-
-
+		AttackMontages = WeaponCasting->GetAttackMontages();
+	}
 
 	// ...
 	
@@ -103,48 +57,106 @@ void UC_WSWeapon::AttackDefault()
 {
 	// todo: 몽타주 재생
 	
-	if (continuous_attack_count == 0) // 1타
+	int32 Index = ContinuousAttackCount % AttackMontages.Num();
+
+	if (AttackMontages[Index]) 
 	{
-		if (FirstWeaponAttackMontage)
+		if (!BasicAnimInstance->Montage_IsPlaying(nullptr)) 
 		{
-			if (!BasicAnimInstance->Montage_IsPlaying(nullptr))
+			BasicAnimInstance->Montage_Play(AttackMontages[Index]);
+			ContinuousAttackCount++;
+		}
+	}
+
+	OwningPawn->GetWorldTimerManager().ClearTimer(ResetCounterTimerHandle);
+	OwningPawn->GetWorldTimerManager().SetTimer(ResetCounterTimerHandle, this, &UC_WSWeapon::ResetCounter, ResetTime, false);
+}
+
+void UC_WSWeapon::UpdateCache(TScriptInterface<I_WSTaker> InTaker)
+{
+	OwningPawn = Cast<APawn>(GetOwner()->GetAttachParentActor());
+	check(OwningPawn);
+	check(InTaker == OwningPawn);
+
+	USkeletalMeshComponent* MeshComponent = OwningPawn->FindComponentByClass<USkeletalMeshComponent>();
+	if (!MeshComponent)
+	{
+		check(false);
+		return;
+	}
+
+	BasicAnimInstance = Cast<UBaseAnimInstance>(MeshComponent->GetAnimInstance());
+	check(BasicAnimInstance);
+
+	SetupInputComponent();
+}
+
+void UC_WSWeapon::SetupInputComponent()
+{
+	if (APlayerController* PC = Cast<APlayerController>(OwningPawn->GetController()))
+	{
+		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
+
+		if (!Subsystem->HasMappingContext(IMC_Weapon))
+		{
+			Subsystem->AddMappingContext(IMC_Weapon, 0);
+		}
+
+		AActor* hi = Cast<AActor>(GetOwner());
+
+		if (!hi->InputComponent)
+		{
+			hi->EnableInput(PC);
+
+			UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(hi->InputComponent);
+			ensure(EnhancedInputComponent);
+
+			const UInputAction* InputAction = nullptr;
+			const TArray<FEnhancedActionKeyMapping>& Mappings = IMC_Weapon->GetMappings();
+			for (const FEnhancedActionKeyMapping& It : Mappings)
 			{
-				BasicAnimInstance->Montage_Play(FirstWeaponAttackMontage);
-				continuous_attack_count++; 
+				if (It.Action->GetFName() == TEXT("IA_Attack"))
+				{
+					InputAction = It.Action.Get();
+					AttackActionBinding = &EnhancedInputComponent->BindAction(InputAction, ETriggerEvent::Started, this, &ThisClass::AttackDefault);
+					break;
+				}
 			}
 		}
 	}
-	else if (continuous_attack_count == 1) // 2타
-	{
-		if (!BasicAnimInstance->Montage_IsPlaying(nullptr))
-		{
-			//BasicAnimInstance->Montage_Play();
-			continuous_attack_count++;
-		}
-	}
-	else if (continuous_attack_count ==2)  //3타
-	{
-		if (!BasicAnimInstance->Montage_IsPlaying(nullptr))
-		{
-			//BasicAnimInstance->Montage_Play(e);
-			continuous_attack_count= 0; // 초기화
-			OwningPawn->GetWorldTimerManager().ClearTimer(ResetCounterTimerHandle);
-		}
-	}
-	
-	OwningPawn->GetWorldTimerManager().ClearTimer(ResetCounterTimerHandle);
-	OwningPawn->GetWorldTimerManager().SetTimer(ResetCounterTimerHandle, this, &UC_WSWeapon::ResetCounter, ResetTime, false);
-
-
 }
 
 void UC_WSWeapon::ResetCounter()
 {
-	continuous_attack_count = 0;
+	ContinuousAttackCount = 0;
 	UE_LOG(LogTemp, Warning, TEXT("Attack Counter Reset"));
 
 }
 
+void UC_WSWeapon::BeginDestroy()
+{
+	if (APlayerController* PC = Cast<APlayerController>(OwningPawn->GetController()))
+	{
+		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
+
+		// todo: 무기가 여러개인 경우?
+		if (Subsystem->HasMappingContext(IMC_Weapon))
+		{
+			Subsystem->RemoveMappingContext(IMC_Weapon);
+		}
+
+		AActor* hi = Cast<AActor>(GetOwner());
+
+		if (hi->InputComponent)
+		{
+			UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(hi->InputComponent);
+			ensure(EnhancedInputComponent);
+
+			EnhancedInputComponent->RemoveBinding(*AttackActionBinding);
+			hi->DisableInput(PC);
+		}
+	}
+}
 
 void UC_WSWeapon::AttackSecondary()
 {
