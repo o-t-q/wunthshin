@@ -22,7 +22,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "wunthshin/Enums.h"
 #include "wunthshin/Components/Shield/C_WSShield.h"
-#include "wunthshin/Data/CharacterTableRow/CharacterTableRow.h"
+#include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Subsystem/ElementSubsystem/ElementSubsystem.h"
 #include "Components/WidgetComponent.h"
