@@ -1,5 +1,44 @@
-#pragma once
+﻿#pragma once
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
+
+#ifdef WITH_EDITOR
+struct FEditorSubsystemBranching
+{
+	template <typename EditorWorldType, typename GameWorldType>
+	static USubsystem* GetTemplate(const UWorld* InWorld)
+	{
+		if (InWorld->IsEditorWorld())
+		{
+			return GEditor->GetEditorSubsystem<EditorWorldType>();
+		}
+		if (InWorld->IsGameWorld())
+		{
+			return InWorld->GetGameInstance()->GetSubsystem<GameWorldType>();
+		}
+
+		return nullptr;
+	}
+
+	static USubsystem* GetReflection(const UWorld* InWorld, UClass* InEditorType, UClass* InGameWorldType)
+	{
+		if (InWorld->IsEditorWorld())
+		{
+			return GEditor->GetEditorSubsystemBase(InEditorType);
+		}
+		if (InWorld->IsGameWorld())
+		{
+			return InWorld->GetGameInstance()->GetSubsystemBase(InGameWorldType);
+		}
+
+		return nullptr;
+	}
+};
+
+#define SUBSYSTEM_EDITOR_BRANCHING_TYPE(World, SubsystemName) \
+	FEditorSubsystemBranching::GetTemplate<U##SubsystemNameEditorSubsystem, U##SubsystemNameSubsystem>(World);
+#define SUBSYSTEM_EDITOR_BRANCHING_REFLECT(World, EditorWorldType, GameWorldType) \
+	FEditorSubsystemBranching::GetReflection(World, EditorWorldType, GameWorldType);
+#endif
 
 class IDataTableFetcher;
 
@@ -51,15 +90,10 @@ struct FItemSubsystemUtility
 		MetadataT* OutValue = nullptr;
 		
 #ifdef WITH_EDITOR
-		if (InWorld->IsEditorWorld())
-		{
-			Subsystem = GEditor->GetEditorSubsystemBase(InDataTableFetcher->GetEditorSubsystemType());
-		}
+		Subsystem = SUBSYSTEM_EDITOR_BRANCHING_REFLECT(InWorld, InDataTableFetcher->GetEditorSubsystemType(), InDataTableFetcher->GetSubsystemType());
+#else
+		Subsystem = InWorld->GetGameInstance()->GetSubsystemBase(InDataTableFetcher->GetSubsystemType());
 #endif
-		if (InWorld->IsGameWorld())
-		{
-			Subsystem = InWorld->GetGameInstance()->GetSubsystemBase(InDataTableFetcher->GetSubsystemType());
-		}
 
 		check(Subsystem);
 		IItemMetadataGetter* MetadataGetter = Cast<IItemMetadataGetter>(Subsystem);
