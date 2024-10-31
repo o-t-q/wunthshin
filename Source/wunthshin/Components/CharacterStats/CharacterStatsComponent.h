@@ -3,27 +3,10 @@
 #include "Components/ActorComponent.h"
 #include "Engine/DataTable.h"
 #include "Logging/LogMacros.h"
+#include "wunthshin/Data/Characters/CharacterStats/CharacterStats.h"
 #include "CharacterStatsComponent.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCharacterStatsComponent, Log, All);
-
-// 캐릭터의 스탯을 정의하는 구조체
-USTRUCT(BlueprintType)
-struct FCharacterStats : public FTableRowBase
-{
-    GENERATED_BODY()
-
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Stats")
-    float HP;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Stats")
-    float MaxHP;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Stats")
-    float Stamina;
-
-    // 추가적인 스탯을 여기서 정의할 수 있습니다.
-};
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class WUNTHSHIN_API UCharacterStatsComponent : public UActorComponent
