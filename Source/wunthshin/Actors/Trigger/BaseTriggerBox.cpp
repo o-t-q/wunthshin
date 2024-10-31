@@ -1,9 +1,10 @@
 #include "BaseTriggerBox.h"
 #include "Components/BoxComponent.h"
 #include "Components/Button.h"
-#include "../../Actors/AA_WSCharacter.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+
+#include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 
 ABaseTriggerBox::ABaseTriggerBox()
 {

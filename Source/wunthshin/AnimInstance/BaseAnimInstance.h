@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "wunthshin/Actors/AA_WSCharacter.h"
 #include "BaseAnimInstance.generated.h"
+
+class AA_WSCharacter;
+class UPawnMovementComponent;
 
 /**
  * 
@@ -22,7 +24,7 @@ public:
 	
 protected:
 	UPROPERTY()
-	class UPawnMovementComponent* MovementComponent;
+	UPawnMovementComponent* MovementComponent;
 
 	UPROPERTY(BlueprintReadOnly)
 	double HorizontalSpeed = 0.0f;

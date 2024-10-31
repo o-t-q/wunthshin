@@ -3,7 +3,7 @@
 
 #include "CharacterSubsystem.h"
 
-#include "wunthshin/Components/CharacterStats/CharacterStatsComponent.h"
+#include "wunthshin/Data/Characters/CharacterStats/CharacterStats.h"
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 
 UCharacterSubsystem::UCharacterSubsystem()

@@ -7,7 +7,6 @@
 #include "InputActionValue.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
-#include "../../Actors/AA_WSCharacter.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
 

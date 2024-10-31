@@ -5,9 +5,10 @@
 #include "wunthshin/Actors/Item/A_WSItem.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Data/Effects/O_WSBaseEffect.h"
-#include "wunthshin/Actors/AA_WSCharacter.h"
 #include "Engine/OverlapResult.h"
 #include "Components/WidgetComponent.h"
+
+#include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 
 void UWorldStatusSubsystem::Tick(float InDeltaTime)
