@@ -73,7 +73,9 @@ void UC_WSPickUp::HandleOnPickUp(TScriptInterface<I_WSTaker> InTriggeredActor)
 	{
 		if (InTriggeredActor->Take(this))
 		{
-			SetTaken(InTriggeredActor);
+			// SetTaken을 우회하고 flag만 변경
+			// 차후 Taken Flag를 이용하는 상황에 맞추기 위함
+			bTaken = true;
 
 			// 주워진 물체를 파괴함
 			GetOwner()->Destroy();
