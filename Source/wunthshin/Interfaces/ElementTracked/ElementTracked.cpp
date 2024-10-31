@@ -7,9 +7,11 @@
 
 
 // Add default functionality here for any IMyClass functions that are not pure virtual.
-void IElementTracked::ApplyElement(AActor* InThis, AActor* InInstigator, const FElementRowHandle& InHandle)
+void IElementTracked::ApplyElement(AActor* InInstigator, const FElementRowHandle& InHandle)
 {
-	const UWorld* World = InThis->GetWorld();
+	AActor* Self = Cast<AActor>(this);
+	check(Self);
+	const UWorld* World = Self->GetWorld();
 
 	if (!World)
 	{
@@ -23,5 +25,5 @@ void IElementTracked::ApplyElement(AActor* InThis, AActor* InInstigator, const F
 		return;
 	}
 
-	Subsystem->ApplyElement(InThis, InInstigator, InHandle);
+	Subsystem->ApplyElement(Self, InInstigator, InHandle);
 }
