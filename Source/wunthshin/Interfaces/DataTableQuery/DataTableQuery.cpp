@@ -12,11 +12,10 @@ FDataTableRowHandle IDataTableQuery::GetRowHandle(const UScriptStruct* InRequest
 	
 	for (decltype(DataTableMapping)::TRangedForConstIterator It = DataTableMapping.begin(); It != DataTableMapping.end(); ++It)
 	{
-		if (It->Key == InRequestType)
+		if (It->Key == InRequestType || It->Key->IsChildOf(InRequestType))
 		{
 			FDataTableRowHandle Handle;
-			ensureAlways(DataTableMapping.Contains(InRequestType));
-			Handle.DataTable = *DataTableMapping.Find(InRequestType);
+			Handle.DataTable = It->Value;
 			Handle.RowName = InRowName;
 			return Handle;
 		}
