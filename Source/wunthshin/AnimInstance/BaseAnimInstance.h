@@ -6,7 +6,7 @@
 #include "Animation/AnimInstance.h"
 #include "BaseAnimInstance.generated.h"
 
-class AA_WSCharacter;
+class ICommonPawn;
 class UPawnMovementComponent;
 
 /**
@@ -23,7 +23,7 @@ public:
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	
 protected:
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	UPawnMovementComponent* MovementComponent;
 
 	UPROPERTY(BlueprintReadOnly)
@@ -63,7 +63,7 @@ protected:
 	bool bwallHighthHigh = false;
 
 	UPROPERTY()
-	AA_WSCharacter* CharaterComponentRef;
+	TScriptInterface<ICommonPawn> CharaterComponentRef;
 
 public:
 	//void SetRootMotionMode();

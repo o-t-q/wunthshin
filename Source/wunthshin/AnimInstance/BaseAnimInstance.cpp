@@ -3,6 +3,7 @@
 
 #include "BaseAnimInstance.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
 #include "Kismet/KismetMathLibrary.h"
 
 
@@ -23,7 +24,7 @@ void UBaseAnimInstance::NativeInitializeAnimation()
 	
 	//CharateromponentRef = GetMove
 	
-	CharaterComponentRef = Cast<AA_WSCharacter>(Pawn);
+	CharaterComponentRef = Pawn;
 }
 
 void UBaseAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
