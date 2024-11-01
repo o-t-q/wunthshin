@@ -19,6 +19,15 @@ struct WUNTHSHIN_API FCharacterTableRow : public FTableRowBase
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UAnimInstance> AnimInstance;
 
+	UPROPERTY(EditAnywhere, Category = "Collision")
+	bool bCustomCapsuleSize;
+
+	UPROPERTY(EditAnywhere, Category = "Collision", meta = (EditCondition = "bCustomCapsuleSize", EditConditionHide))
+	float Radius;
+
+	UPROPERTY(EditAnywhere, Category = "Collision", meta = (EditCondition = "bCustomCapsuleSize", EditConditionHide))
+	float HalfHeight;
+
 	UPROPERTY(EditAnywhere, meta=(RowType = "/Script/wunthshin.CharacterStats"))
 	FDataTableRowHandle Stats;
 };

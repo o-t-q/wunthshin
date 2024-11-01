@@ -10,6 +10,7 @@
 #include "wunthshin/Data/NPCs/NPCTableRow/NPCTableRow.h"
 #include "wunthshin/Subsystem/Utility.h"
 #include "wunthshin/Subsystem/NPCSubsystem/NPCSubsystem.h"
+#include "Components/CapsuleComponent.h"
 
 // Sets default values
 AA_WSNPCPawn::AA_WSNPCPawn()
@@ -17,11 +18,21 @@ AA_WSNPCPawn::AA_WSNPCPawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
+	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
 	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
 	Inventory = CreateDefaultSubobject<UC_WSInventory>(TEXT("Inventory"));
 	Shield = CreateDefaultSubobject<UC_WSShield>(TEXT("Shield"));
 	StatsComponent = CreateDefaultSubobject<UStatsComponent>(TEXT("StatsComponent"));
 	RightHandWeapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("RightHandWeapon"));
+
+	SetRootComponent(CapsuleComponent);
+	CapsuleComponent->InitCapsuleSize(42.f, 96.f);
+
+	MeshComponent->SetupAttachment(CapsuleComponent);
+	MeshComponent->SetRelativeLocation({ 0.f, 0.f, -96.f });
+	MeshComponent->SetRelativeRotation({ 0.f, 270.f, 0.f });
+
+	Shield->SetupAttachment(MeshComponent);
 }
 
 void AA_WSNPCPawn::OnConstruction(const FTransform& Transform)
@@ -44,26 +55,7 @@ void AA_WSNPCPawn::ApplyAsset(const FTableRowBase* InRowPointer)
 
 	const FNPCTableRow* TableRow = reinterpret_cast<const FNPCTableRow*>(InRowPointer);
 
-	if (TableRow->SkeletalMesh)
-	{
-		MeshComponent->SetSkeletalMesh(TableRow->SkeletalMesh);
-	}
-
-	if (TableRow->AnimInstance)
-	{
-		MeshComponent->SetAnimInstanceClass(TableRow->AnimInstance);
-	}
-
-	if (USubsystem* Subsystem = GetSubsystem())
-	{
-		const IDataTableQuery* TableQuery = Cast<IDataTableQuery>(Subsystem);
-		check(TableQuery);
-
-		if (const FNPCStats* Stats = TableQuery->GetRowValue<FNPCStats>(TableRow->Stats.RowName))
-		{
-			StatsComponent->InitializeStats(*Stats);
-		}
-	}
+	UpdatePawnFromDataTable(TableRow);
 }
 
 UClass* AA_WSNPCPawn::GetSubsystemType() const
@@ -90,5 +82,40 @@ void AA_WSNPCPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+FName AA_WSNPCPawn::GetAssetName() const
+{
+	return AssetName;
+}
+
+UCapsuleComponent* AA_WSNPCPawn::GetCapsuleComponent() const
+{
+	return CapsuleComponent;
+}
+
+USkeletalMeshComponent* AA_WSNPCPawn::GetSkeletalMeshComponent() const
+{
+	return MeshComponent;
+}
+
+UC_WSInventory* AA_WSNPCPawn::GetInventoryComponent() const
+{
+	return Inventory;
+}
+
+UC_WSShield* AA_WSNPCPawn::GetShieldComponent() const
+{
+	return Shield;
+}
+
+UStatsComponent* AA_WSNPCPawn::GetStatsComponent() const
+{
+	return StatsComponent;
+}
+
+UChildActorComponent* AA_WSNPCPawn::GetRightHandComponent() const
+{
+	return nullptr;
 }
 

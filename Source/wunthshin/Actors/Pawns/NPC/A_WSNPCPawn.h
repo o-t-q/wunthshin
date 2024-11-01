@@ -6,17 +6,22 @@
 #include "GameFramework/Pawn.h"
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 #include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
+#include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
 
 #include "A_WSNPCPawn.generated.h"
 
+class UCapsuleComponent;
 class UStatsComponent;
 class UC_WSShield;
 class UC_WSInventory;
 
 UCLASS()
-class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, public IElementTracked
+class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, public IElementTracked, public ICommonPawn
 {
 	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Collision", meta = (AllowPrivateAccess = "true"))
+	UCapsuleComponent* CapsuleComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh", meta=(AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* MeshComponent;
@@ -61,5 +66,16 @@ public:
 	
 	// 사용할 에셋의 이름
 	void SetAssetName(const FName& InAssetName) { AssetName = InAssetName; }
+
+
+	// ICommonPawn을(를) 통해 상속됨
+	FName GetAssetName() const override;
+
+	virtual UCapsuleComponent* GetCapsuleComponent() const override;
+	virtual USkeletalMeshComponent* GetSkeletalMeshComponent() const override;
+	virtual UC_WSInventory* GetInventoryComponent() const override;
+	virtual UC_WSShield* GetShieldComponent() const override;
+	virtual UStatsComponent* GetStatsComponent() const override;
+	virtual UChildActorComponent* GetRightHandComponent() const override;
 
 };

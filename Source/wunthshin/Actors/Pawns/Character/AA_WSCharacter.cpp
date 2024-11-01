@@ -167,26 +167,7 @@ void AA_WSCharacter::ApplyAsset(const FTableRowBase* InRowPointer)
 
     const FCharacterTableRow* Data = reinterpret_cast<const FCharacterTableRow*>(InRowPointer);
     
-    if (Data->SkeletalMesh)
-    {
-        GetMesh()->SetSkeletalMesh(Data->SkeletalMesh);
-    }
-
-    if (Data->AnimInstance)
-    {
-        GetMesh()->SetAnimInstanceClass(Data->AnimInstance);
-    }
-
-    if (USubsystem* Subsystem = GetSubsystem())
-    {
-        const IDataTableQuery* TableQuery = Cast<IDataTableQuery>(Subsystem);
-        check(TableQuery);
-
-        if (const FCharacterStats* Stats = TableQuery->GetRowValue<FCharacterStats>(Data->Stats.RowName))
-        {
-            CharacterStatsComponent->InitializeStats(*Stats);
-        }
-    }
+    UpdatePawnFromDataTable(Data);
 }
 
 UClass* AA_WSCharacter::GetSubsystemType() const

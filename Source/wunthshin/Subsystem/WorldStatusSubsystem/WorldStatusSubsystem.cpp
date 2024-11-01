@@ -23,7 +23,7 @@ void UWorldStatusSubsystem::Tick(float InDeltaTime)
             FCollisionQueryParams QueryParams(NAME_None, false, PlayerCharacter);
 
             // 손에 있는 무기는 주변 아이템 대상에서 제외
-            if (const AActor* ChildWeaponActor = PlayerCharacter->GetRightHandWeapon()->GetChildActor())
+            if (const AActor* ChildWeaponActor = PlayerCharacter->GetRightHandComponent()->GetChildActor())
             {
                 QueryParams.AddIgnoredActor(ChildWeaponActor);
             }

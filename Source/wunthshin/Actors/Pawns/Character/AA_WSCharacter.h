@@ -8,6 +8,7 @@
 #include "wunthshin/Interfaces/Taker/Taker.h"
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 #include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
+#include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
 
 #include "AA_WSCharacter.generated.h"
 
@@ -31,7 +32,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGlide);
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game, Blueprintable)
-class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFetcher, public IElementTracked
+class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFetcher, public IElementTracked, public ICommonPawn
 {
 	GENERATED_BODY()
 	
@@ -215,12 +216,17 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-	// 오른손 무기
-	FORCEINLINE class UChildActorComponent* GetRightHandWeapon() const { return RightHandWeapon; }
-
 
 	virtual bool Take(UC_WSPickUp* InTakenComponent) override;
 	
 	// 사용할 에셋의 이름
 	void SetAssetName(const FName& InAssetName) { AssetName = InAssetName; }
+
+	virtual FName GetAssetName() const override { return AssetName; }
+	virtual UCapsuleComponent* GetCapsuleComponent() const override { return ACharacter::GetCapsuleComponent(); }
+	virtual USkeletalMeshComponent* GetSkeletalMeshComponent() const override { return GetMesh(); }
+	virtual UC_WSInventory* GetInventoryComponent() const override { return Inventory; }
+	virtual UC_WSShield* GetShieldComponent() const override { return Shield; }
+	virtual UStatsComponent* GetStatsComponent() const override { return CharacterStatsComponent; }
+	virtual UChildActorComponent* GetRightHandComponent() const override { return RightHandWeapon; }
 };
