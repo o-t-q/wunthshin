@@ -80,10 +80,9 @@ void UStatsComponent::UpdateStamina(float DeltaTime, bool bIsFastRunning)
         if (CurrentStats.Stamina <= 0.0f)
         {
             CurrentStats.Stamina = 0.0f; // 스태미나를 0으로 클램프
-            AA_WSCharacter* Character = Cast<AA_WSCharacter>(GetOwner());
-            if (Character)
+            if (ICommonPawn* Pawn = Cast<ICommonPawn>(GetOwner()))
             {
-                Character->HandleStaminaDepleted(); // 공개 메서드 호출
+                Pawn->HandleStaminaDepleted(); // 공개 메서드 호출
             }
         }
     }
@@ -101,12 +100,12 @@ void UStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
     // 여기서 스태미나 업데이트 로직을 추가
-    AA_WSCharacter* Character = Cast<AA_WSCharacter>(GetOwner());
-    if (Character)
+    ICommonPawn* Pawn = Cast<ICommonPawn>(GetOwner());
+    if (Pawn)
     {
-        if (FMath::Abs(Character->GetMovementComponent()->Velocity.Dot(FVector::ForwardVector + FVector::RightVector)) > 0.f)
+        if (FMath::Abs(Pawn->GetMovementComponent()->Velocity.Dot(FVector::ForwardVector + FVector::RightVector)) > 0.f)
         {
-            UpdateStamina(DeltaTime, Character->IsFastRunning());
+            UpdateStamina(DeltaTime, Pawn->IsFastRunning());
         }
     }
 }

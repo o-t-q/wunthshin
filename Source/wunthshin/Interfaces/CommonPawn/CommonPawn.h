@@ -42,6 +42,14 @@ public:
 	COMPONENT_GETTER(UC_WSShield, ShieldComponent);
 	COMPONENT_GETTER(UStatsComponent, StatsComponent);
 	COMPONENT_GETTER(UChildActorComponent, RightHandComponent);
+	COMPONENT_GETTER(UPawnMovementComponent, MovementComponent);
+
+	// 빨리 달리는지 확인하는 함수
+	virtual bool IsFastRunning() const = 0;
+	// 걷고 있는지 확인하는 함수
+	virtual bool IsWalking() const = 0;
+	// 스태미나가 다 떨어지면 호출되는 함수
+	virtual void HandleStaminaDepleted() = 0;
 
 	void UpdatePawnFromDataTable(const FCharacterTableRow* InData);
 };

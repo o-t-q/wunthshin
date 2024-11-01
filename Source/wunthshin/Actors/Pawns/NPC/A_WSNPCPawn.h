@@ -40,6 +40,12 @@ class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, publi
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
 	FName AssetName;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bIsFastRunning;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bIsWalking;
 	
 public:
 	// Sets default values for this pawn's properties
@@ -77,5 +83,14 @@ public:
 	virtual UC_WSShield* GetShieldComponent() const override;
 	virtual UStatsComponent* GetStatsComponent() const override;
 	virtual UChildActorComponent* GetRightHandComponent() const override;
+	virtual UPawnMovementComponent* GetMovementComponent() const override;
+
+	virtual void HandleStaminaDepleted() override;
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	virtual bool IsFastRunning() const override { return bIsFastRunning; }
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	virtual bool IsWalking() const override { return bIsWalking; }
 
 };

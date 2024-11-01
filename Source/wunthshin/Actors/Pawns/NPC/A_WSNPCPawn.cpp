@@ -116,6 +116,16 @@ UStatsComponent* AA_WSNPCPawn::GetStatsComponent() const
 
 UChildActorComponent* AA_WSNPCPawn::GetRightHandComponent() const
 {
-	return nullptr;
+	return RightHandWeapon;
+}
+
+UPawnMovementComponent* AA_WSNPCPawn::GetMovementComponent() const
+{
+	return APawn::GetMovementComponent();
+}
+
+void AA_WSNPCPawn::HandleStaminaDepleted()
+{
+	// todo: 스태미나가 다 떨어진 경우 뛰기를 멈춤
 }
 

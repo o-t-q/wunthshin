@@ -12,6 +12,7 @@
 
 #include "AA_WSCharacter.generated.h"
 
+class UPawnMovementComponent;
 class UStatsComponent;
 class UC_WSShield;
 class AA_WSWeapon;
@@ -133,9 +134,6 @@ public:
 	
 	AA_WSCharacter();
 
-	// 스태미나가 0일 때 호출하는 공개 메서드
-	void HandleStaminaDepleted();
-
 	// FastRun을 호출하는 공개 메서드
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void K2_FastRun();
@@ -143,13 +141,6 @@ public:
 	// UnFastRun을 호출하는 공개 메서드
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void K2_UnFastRun();
-
-	// FastRun 상태를 반환하는 함수
-	UFUNCTION(BlueprintCallable, Category = "Movement")
-	bool IsFastRunning() const { return bIsFastRunning; }
-
-	UFUNCTION(BlueprintCallable, Category = "Movement")
-	bool IsWalking() const { return bIsWalking; }
 
 	// 커스텀 숙이기 가능 여부 함수
 	bool CanBeCrouched() const;
@@ -222,6 +213,7 @@ public:
 	// 사용할 에셋의 이름
 	void SetAssetName(const FName& InAssetName) { AssetName = InAssetName; }
 
+	// ICommonPawn
 	virtual FName GetAssetName() const override { return AssetName; }
 	virtual UCapsuleComponent* GetCapsuleComponent() const override { return ACharacter::GetCapsuleComponent(); }
 	virtual USkeletalMeshComponent* GetSkeletalMeshComponent() const override { return GetMesh(); }
@@ -229,4 +221,13 @@ public:
 	virtual UC_WSShield* GetShieldComponent() const override { return Shield; }
 	virtual UStatsComponent* GetStatsComponent() const override { return CharacterStatsComponent; }
 	virtual UChildActorComponent* GetRightHandComponent() const override { return RightHandWeapon; }
+	virtual UPawnMovementComponent* GetMovementComponent() const override { return ACharacter::GetMovementComponent(); }
+
+	virtual void HandleStaminaDepleted() override;
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	virtual bool IsFastRunning() const override { return bIsFastRunning; }
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	virtual bool IsWalking() const override { return bIsWalking; }
 };
