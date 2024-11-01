@@ -11,6 +11,7 @@
 #include "wunthshin/Subsystem/Utility.h"
 #include "wunthshin/Subsystem/NPCSubsystem/NPCSubsystem.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
 AA_WSNPCPawn::AA_WSNPCPawn()
@@ -18,6 +19,7 @@ AA_WSNPCPawn::AA_WSNPCPawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
+	MovementComponent = CreateOptionalDefaultSubobject<UCharacterMovementComponent>(TEXT("MovementComponent"));
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
 	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
 	Inventory = CreateDefaultSubobject<UC_WSInventory>(TEXT("Inventory"));
@@ -121,7 +123,7 @@ UChildActorComponent* AA_WSNPCPawn::GetRightHandComponent() const
 
 UPawnMovementComponent* AA_WSNPCPawn::GetMovementComponent() const
 {
-	return APawn::GetMovementComponent();
+	return APawn::GetMovementComponent(); // == FindComponentByClass...
 }
 
 void AA_WSNPCPawn::HandleStaminaDepleted()
