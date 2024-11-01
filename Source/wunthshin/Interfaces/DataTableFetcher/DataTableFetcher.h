@@ -38,9 +38,13 @@ class WUNTHSHIN_API IDataTableFetcher
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	// 데이터 테이블 row 타입에 따라 핸들을 가져온 후 ApplyAsset을 호출
-	void FetchAsset(const FName& InRowName)
+	void UpdateDataTable(const FName& InRowName, const bool bForce = false) 
 	{
+		if (!DataTableRowHandle.IsNull() && !bForce) 
+		{
+			return;
+		}
+
 		const UObject* ObjectCast = Cast<UObject>(this);
 
 		if (!ObjectCast)
@@ -48,10 +52,20 @@ public:
 			check(false);
 			return;
 		}
-		
+
 		const UWorld* World = ObjectCast->GetWorld();
 		ensureAlwaysMsgf(World, TEXT("Invalid World!"));
 		DataTableRowHandle = GetRowHandle(ObjectCast, InRowName);
+	}
+
+	// 데이터 테이블 row 타입에 따라 핸들을 가져온 후 ApplyAsset을 호출
+	void FetchAsset(const FName& InRowName)
+	{
+		if (DataTableRowHandle.IsNull()) 
+		{
+			UpdateDataTable(InRowName);
+		}
+
 		ApplyAsset(DataTableRowHandle.GetRow<FTableRowBase>(""));
 	}
 
