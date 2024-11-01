@@ -12,6 +12,7 @@
 #include "wunthshin/Subsystem/NPCSubsystem/NPCSubsystem.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include <wunthshin/Controller/NPCAIController/A_WSNPCAIController.h>
 
 // Sets default values
 AA_WSNPCPawn::AA_WSNPCPawn()
@@ -76,7 +77,28 @@ UClass* AA_WSNPCPawn::GetEditorSubsystemType() const
 void AA_WSNPCPawn::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// 데이터 테이블을 로드
+	// 블루프린트로 생성된 후 배치된 객체의 경우 
+	// OnConstruction이 호출되지 않기 때문에 핸들이 존재하지 않을 수 있음
+	UpdateDataTable(AssetName);
 	
+	if (const FNPCTableRow* Row = GetDataTableHandle().GetRow<FNPCTableRow>("")) 
+	{
+		if (Row->bUseAI)
+		{
+			AIController = GetWorld()->SpawnActorDeferred<AA_WSNPCAIController>(AA_WSNPCAIController::StaticClass(), FTransform::Identity, this);
+			
+			if (Row->BehaviorTree)
+			{
+				AIController->SetBehaviorTree(Row->BehaviorTree);
+			}
+
+			AIController->FinishSpawning(FTransform::Identity);
+
+			PossessedBy(AIController);
+		}
+	}
 }
 
 // Called to bind functionality to input

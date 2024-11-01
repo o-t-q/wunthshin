@@ -14,6 +14,7 @@ class UCapsuleComponent;
 class UStatsComponent;
 class UC_WSShield;
 class UC_WSInventory;
+class AA_WSNPCAIController;
 
 UCLASS()
 class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, public IElementTracked, public ICommonPawn
@@ -49,7 +50,10 @@ class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, publi
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsWalking;
-	
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI", meta = (AllowPrivateAccess = "true"))
+	AA_WSNPCAIController* AIController;
+
 public:
 	// Sets default values for this pawn's properties
 	AA_WSNPCPawn();
