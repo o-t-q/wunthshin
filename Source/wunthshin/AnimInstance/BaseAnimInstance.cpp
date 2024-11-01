@@ -37,12 +37,29 @@ void UBaseAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	const FVector& Velocity = CharaterComponentRef->GetMovementComponent()->Velocity;
 	const double MaxSpeed = CharaterComponentRef->GetMovementComponent()->GetMaxSpeed();
 
-	// 닷 프로덕트 -> 앞 우의 길이 -> 앱솔루트 (+ 음수영역인 뒤, 좌를 접음)
-	const double Horizontal = FMath::Abs(Velocity.Dot(FVector::ForwardVector + FVector::RightVector));
-	const double Vertical = FMath::Abs(Velocity.Dot(FVector::UpVector));
+	if (FVector2D XY = {Velocity.X, Velocity.Y};
+		XY.Length() == 0)
+	{
+		HorizontalSpeed = 0;
+	}
+	else 
+	{
+		// 닷 프로덕트 -> 앞 우의 길이 -> 앱솔루트 (+ 음수영역인 뒤, 좌를 접음)
+		HorizontalSpeed = FMath::Abs(Velocity.Dot(FVector::ForwardVector + FVector::RightVector));
+	}
 
-	HorizontalSpeed = FMath::Clamp(Horizontal / MaxSpeed, 0.f, 1.f);
-	VerticalSpeed = FMath::Clamp(Vertical / MaxSpeed, 0.f, 1.f);
+	if (float Z = Velocity.Z;
+		Z == 0) 
+	{
+		VerticalSpeed = 0;
+	}
+	else 
+	{
+		VerticalSpeed = FMath::Abs(Velocity.Dot(FVector::UpVector));
+	}
+
+	HorizontalSpeed = FMath::Clamp(HorizontalSpeed / MaxSpeed, 0.f, 1.f);
+	VerticalSpeed = FMath::Clamp(VerticalSpeed / MaxSpeed, 0.f, 1.f);
 	bShoudFastRun = CharaterComponentRef->IsFastRunning();
 	bShoudWalk = CharaterComponentRef->IsWalking();
 	bIsCrouch = MovementComponent->IsCrouching();
