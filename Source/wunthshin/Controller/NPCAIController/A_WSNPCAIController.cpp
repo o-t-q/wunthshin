@@ -20,6 +20,8 @@ void AA_WSNPCAIController::SetBehaviorTree(UBehaviorTree* InAsset)
 
 void AA_WSNPCAIController::BeginPlay()
 {
+	Super::BeginPlay();
+	
 	// 에셋으로 행동 트리가 있다면 설정
 	if (BehaviorTree)
 	{
