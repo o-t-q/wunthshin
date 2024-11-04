@@ -58,8 +58,8 @@ void UBaseAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 		VerticalSpeed = FMath::Abs(Velocity.Dot(FVector::UpVector));
 	}
 
-	HorizontalSpeed = FMath::Clamp(HorizontalSpeed / MaxSpeed, 0.f, 1.f);
-	VerticalSpeed = FMath::Clamp(VerticalSpeed / MaxSpeed, 0.f, 1.f);
+	HorizontalSpeed = FMath::Lerp(0.f, 1.f, HorizontalSpeed / MaxSpeed);
+	VerticalSpeed = FMath::Lerp(0.f, 1.f, VerticalSpeed / MaxSpeed);
 	bShoudFastRun = CharaterComponentRef->IsFastRunning();
 	bShoudWalk = CharaterComponentRef->IsWalking();
 	bIsCrouch = MovementComponent->IsCrouching();
