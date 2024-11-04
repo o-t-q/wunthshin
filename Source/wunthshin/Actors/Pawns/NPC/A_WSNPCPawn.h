@@ -47,11 +47,17 @@ class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, publi
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
 	FName AssetName;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Asset", meta = (AllowPrivateAccess = "true"))
+	TArray<UAnimMontage*> HitMontages;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsFastRunning;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsWalking;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	int32 HitAnimationIndex;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI", meta = (AllowPrivateAccess = "true"))
 	AA_WSNPCAIController* AIController;
@@ -103,4 +109,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	virtual bool IsWalking() const override { return bIsWalking; }
 
+private:
+	virtual void SetHitMontages(const TArray<UAnimMontage*>& InMontages) override;
+
+public:
+	virtual void PlayHitMontage() override;
 };

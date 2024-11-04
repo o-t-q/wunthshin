@@ -98,6 +98,10 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
 	FName AssetName;
 
+	// 피격 애니메이션들
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Asset", meta = (AllowPrivateAccess = "true"))
+	TArray<UAnimMontage*> HitMontages;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsFastRunning;
 
@@ -118,6 +122,10 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	// 앉기 키가 눌려있는가?
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsCrouchPressing;
+
+	// 마지막으로 재생한 피격 애니메이션
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
+	int32 HitAnimationIndex;
 
 public:
 	//딜리게이트
@@ -230,4 +238,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	virtual bool IsWalking() const override { return bIsWalking; }
+
+private:
+	virtual void SetHitMontages(const TArray<UAnimMontage*>& InMontages) override;
+
+public:
+	virtual void PlayHitMontage() override;
 };

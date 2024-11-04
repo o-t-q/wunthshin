@@ -32,7 +32,9 @@ class WUNTHSHIN_API ICommonPawn
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+	// 맞으면 재생할 몽타주 setter
+	virtual void SetHitMontages(const TArray<UAnimMontage*>& InMontages) = 0;
+	
 public:
 	virtual FName GetAssetName() const = 0;
 
@@ -52,4 +54,7 @@ public:
 	virtual void HandleStaminaDepleted() = 0;
 
 	void UpdatePawnFromDataTable(const FCharacterTableRow* InData);
+
+	// 맞은 모션 재생
+	virtual void PlayHitMontage() = 0;
 };

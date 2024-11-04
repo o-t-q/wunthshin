@@ -14,6 +14,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include <wunthshin/Controller/NPCAIController/A_WSNPCAIController.h>
 
+#include "Kismet/GameplayStatics.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 
 DEFINE_LOG_CATEGORY(LogNPCPawn);
@@ -98,9 +99,8 @@ void AA_WSNPCPawn::BeginPlay()
 				AIController->SetBehaviorTree(Row->BehaviorTree);
 			}
 
-			AIController->FinishSpawning(FTransform::Identity);
-
-			PossessedBy(AIController);
+			UGameplayStatics::FinishSpawningActor(AIController, FTransform::Identity);
+			AIController->Possess(this);
 		}
 	}
 }
@@ -121,6 +121,7 @@ float AA_WSNPCPawn::TakeDamage(float DamageAmount, struct FDamageEvent const& Da
 		StatsComponent->DecreaseHP(DamageAmount);
 		UE_LOG(LogNPCPawn, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), DamageAmount, *DamageCauser->GetName(), *GetName());
 		CustomEvent.SetFirstHit(this);
+		PlayHitMontage();
 		return DamageAmount;
 	}
 
@@ -170,5 +171,28 @@ UPawnMovementComponent* AA_WSNPCPawn::GetMovementComponent() const
 void AA_WSNPCPawn::HandleStaminaDepleted()
 {
 	// todo: 스태미나가 다 떨어진 경우 뛰기를 멈춤
+}
+
+void AA_WSNPCPawn::SetHitMontages(const TArray<UAnimMontage*>& InMontages)
+{
+	HitMontages = InMontages;
+}
+
+void AA_WSNPCPawn::PlayHitMontage()
+{
+	if (HitMontages.IsEmpty())
+	{
+		return;
+	}
+	
+	if (UAnimInstance* AnimInstance = MeshComponent->GetAnimInstance())
+	{
+		if (UAnimMontage* AnimMontage = HitMontages[HitAnimationIndex])
+		{
+			AnimInstance->Montage_Play(AnimMontage);
+			HitAnimationIndex++;
+			HitAnimationIndex %= HitMontages.Num();
+		}
+	}
 }
 

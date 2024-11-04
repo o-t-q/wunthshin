@@ -30,4 +30,7 @@ struct WUNTHSHIN_API FCharacterTableRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, meta=(RowType = "/Script/wunthshin.CharacterStats"))
 	FDataTableRowHandle Stats;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animations")
+	TArray<UAnimMontage*> HitMontages;
 };

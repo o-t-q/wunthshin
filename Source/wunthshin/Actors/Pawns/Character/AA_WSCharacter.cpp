@@ -128,6 +128,29 @@ void AA_WSCharacter::HandleStaminaDepleted()
     UnFastRun();
 }
 
+void AA_WSCharacter::SetHitMontages(const TArray<UAnimMontage*>& InMontages)
+{
+    HitMontages = InMontages;
+}
+
+void AA_WSCharacter::PlayHitMontage()
+{
+    if (HitMontages.IsEmpty())
+    {
+        return;
+    }
+    
+    if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+    {
+        if (UAnimMontage* AnimMontage = HitMontages[HitAnimationIndex])
+        {
+            AnimInstance->Montage_Play(AnimMontage);
+            HitAnimationIndex++;
+            HitAnimationIndex %= HitMontages.Num();
+        }
+    }
+}
+
 void AA_WSCharacter::K2_FastRun()
 {
     FastRun();
@@ -218,6 +241,7 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
         CharacterStatsComponent->DecreaseHP(Damage);
         UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
         CustomEvent.SetFirstHit(this);
+        PlayHitMontage();
         return Damage;   
     }
 

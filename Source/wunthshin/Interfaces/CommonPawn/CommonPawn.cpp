@@ -26,6 +26,19 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
         GetCapsuleComponent()->SetCapsuleSize(InData->Radius, InData->HalfHeight);
         GetSkeletalMeshComponent()->SetRelativeLocation({ 0.f, 0.f, -InData->HalfHeight });
     }
+    else
+    {
+        if (UCapsuleComponent* CapsuleComponent = GetCapsuleComponent())
+        {
+            const FBoxSphereBounds& MeshBounds = GetSkeletalMeshComponent()->GetLocalBounds();
+            CapsuleComponent->SetCapsuleSize(MeshBounds.SphereRadius, MeshBounds.BoxExtent.Z);
+        }
+    }
+
+    if (!InData->HitMontages.IsEmpty())
+    {
+        SetHitMontages(InData->HitMontages);
+    }
 
     IDataTableFetcher* Casting = Cast<IDataTableFetcher>(this);
     check(Casting);
