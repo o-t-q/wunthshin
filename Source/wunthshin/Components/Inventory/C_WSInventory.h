@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Elements/Framework/TypedElementQueryBuilder.h"
 #include "C_WSInventory.generated.h"
 
 class USG_WSItemMetadata;
@@ -11,21 +12,26 @@ class AA_WSItem;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogInventory, Log, All);
 
+
+
+
+
 USTRUCT()
 struct FInventoryPair
 {
 	GENERATED_BODY()
 
+	friend UInventoryEntryData;
 public:
 	FInventoryPair() : Metadata(nullptr), Count(0) {}
 
 	FInventoryPair(const USG_WSItemMetadata* InMetadata) :
 		Metadata(InMetadata), Count(1) {}
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	const USG_WSItemMetadata* Metadata;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	uint32 Count;
 
 	bool operator==(const FInventoryPair& InOther) 
@@ -36,6 +42,31 @@ public:
 	}
 };
 
+// ListView 동적 생성을 위해 UCLASS로 한번 랩핑함
+UCLASS()
+class WUNTHSHIN_API UInventoryEntryData : public UObject
+{
+	GENERATED_BODY()
+	
+public:
+	UInventoryEntryData(const FObjectInitializer& InObjectInitializer) : Super(InObjectInitializer) {};
+	UInventoryEntryData(const FInventoryPair& InPair)
+		: EntryData(InPair)	{}
+
+	void Initialize(const FInventoryPair& InventoryPair) {EntryData = InventoryPair;}
+public:
+	FInventoryPair EntryData;
+		
+public:
+	bool operator!=(const FInventoryPair& InOther) const
+	{
+		if(EntryData.Metadata == InOther.Metadata)
+			return true;
+
+		return false;
+	}
+
+};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class WUNTHSHIN_API UC_WSInventory : public UActorComponent

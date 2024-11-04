@@ -46,7 +46,9 @@ public:
 	const FEffectParameter& GetItemParameter() const;
 	
 	FName GetAssetName() const { return AssetName; }
-
+	UTexture2D* GetItemIcon() const { return ItemIcon; }
+	
+	
 	template <EItemType ItemT>
 	bool IsItem() const
 	{

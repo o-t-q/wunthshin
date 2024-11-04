@@ -36,6 +36,7 @@ void UC_WSInventory::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
+
 	
 }
 
