@@ -61,4 +61,7 @@ public:
 	void UpdateStamina(float DeltaTime, bool bIsFastRunning);
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	UFUNCTION(BlueprintCallable)
+	float GetHP() const { return CurrentStats.HP; }
 };

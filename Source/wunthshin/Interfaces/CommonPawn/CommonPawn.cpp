@@ -37,7 +37,10 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
 
         if (const FCharacterStats* Stats = TableQuery->GetRowValue<FCharacterStats>(InData->Stats.RowName))
         {
-            GetStatsComponent()->InitializeStats(*Stats);
+            if (UStatsComponent* StatsComponent = GetStatsComponent())
+            {
+                StatsComponent->InitializeStats(*Stats);   
+            }
         }
     }
 }
