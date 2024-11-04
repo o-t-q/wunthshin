@@ -4,8 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "wunthshin/Components/Weapon/C_WSWeapon.h"
+#include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
 #include "WorldStatusSubsystem.generated.h"
 
+class UC_WSWeapon;
+class AA_WSCharacter;
 class USG_WSItemMetadata;
 class AA_WSItem;
 
@@ -33,6 +37,17 @@ private:
 	uint32 MaxExecuteCount = 0;
 };
 
+USTRUCT(BlueprintType)
+struct FDamageTakenArray
+{
+	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TArray<const ICommonPawn*> Victims;
+};
+
+
+
 /**
  * 현재 월드의 아이템 적용 및 캐릭터 관련 정보를 추적하는 서브시스템
  */
@@ -44,16 +59,84 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
 	TArray<AActor*> ItemsNearbyCharacter;
 
+	// 현재 진행중인 모든 공격들
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = "true"))
+	TMap<const UC_WSWeapon*, FGuid> AttacksInProgress;
+
+	// 공격이 피해를 준 Pawn들
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = "true"))
+	TMap<FGuid, FDamageTakenArray> DamageTaken;
+	
 	TArray<FItemTicket> ItemQueue;
 
 public:
-	virtual void Tick(float InDeltaTime);
+	virtual void Tick(float InDeltaTime) override;
+
+	// 추적할 공격을 추가
+	void PushAttack(const UC_WSWeapon* InWeapon)
+	{
+		const FGuid NewAttack = FGuid::NewGuid();
+		AttacksInProgress.Add(InWeapon);
+		AttacksInProgress[InWeapon] = NewAttack;
+	}
+	// 추적이 끝난 공격을 제거
+	void PopAttack(const UC_WSWeapon* InWeapon)
+	{
+		if (AttacksInProgress.Contains(InWeapon))
+		{
+			const FGuid ID = AttacksInProgress[InWeapon];
+			DamageTaken.Remove(ID);
+			AttacksInProgress.Remove(InWeapon);
+		}
+	}
+
+	// 공격 입은 대상을 해당 공격에 매핑
+	void SetDamageTaken(const ICommonPawn* InPawn, const FGuid& InDamageTakenBy)
+	{
+		DamageTaken.Add(InDamageTakenBy);
+		DamageTaken[InDamageTakenBy].Victims.Add(InPawn);
+	}
+	void SetDamageTaken(const ICommonPawn* InPawn, const UC_WSWeapon* InWeapon)
+	{
+		if (AttacksInProgress.Contains(InWeapon))
+		{
+			SetDamageTaken(InPawn, AttacksInProgress[InWeapon]);
+		}
+	}
+
+	bool IsDamageTakenBy(const ICommonPawn* InPawn, const FGuid& InDamageTakenBy) const
+	{
+		if (DamageTaken.Contains(InDamageTakenBy))
+		{
+			return DamageTaken[InDamageTakenBy].Victims.Contains(InPawn);	
+		}
+
+		return false;
+	}
+	bool IsDamageTakenBy(const ICommonPawn* InPawn, const UC_WSWeapon* InWeapon) const
+	{
+		if (AttacksInProgress.Contains(InWeapon))
+		{
+			return IsDamageTakenBy(InPawn, AttacksInProgress[InWeapon]);
+		}
+
+		return false;
+	}
+
+	FGuid GetCurrentAttackID(const UC_WSWeapon* InWeapon) const
+	{
+		if (AttacksInProgress.Contains(InWeapon))
+		{
+			return AttacksInProgress[InWeapon];
+		}
+
+		return {};
+	}
 
 	void PushItem(const USG_WSItemMetadata* InItem, AActor* InInstigator, AActor* InTarget);
-
 	void PushItem(FItemTicket InItemTicket);
 
-	TStatId GetStatId() const
+	virtual TStatId GetStatId() const override
 	{
 		RETURN_QUICK_DECLARE_CYCLE_STAT(UWorldStatusSubsystem, STATGROUP_Tickables);
 	}

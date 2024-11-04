@@ -17,10 +17,15 @@ class WUNTHSHIN_API UC_WSWeapon : public UActorComponent
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	float Damage;
-
+	
 	UFUNCTION()
 	void UpdateCache(TScriptInterface<I_WSTaker> InTaker);
 	void SetupInputComponent();
+
+	UFUNCTION()
+	void PushAttackToWorldStatus() const;
+	UFUNCTION()
+	void PopAttackFromWorldStatus() const;
 
 public:
 	// Sets default values for this component's properties

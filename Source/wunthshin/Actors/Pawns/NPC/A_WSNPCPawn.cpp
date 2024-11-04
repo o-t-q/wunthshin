@@ -14,6 +14,10 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include <wunthshin/Controller/NPCAIController/A_WSNPCAIController.h>
 
+#include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
+
+DEFINE_LOG_CATEGORY(LogNPCPawn);
+
 // Sets default values
 AA_WSNPCPawn::AA_WSNPCPawn()
 {
@@ -106,6 +110,21 @@ void AA_WSNPCPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+float AA_WSNPCPawn::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
+	class AController* EventInstigator, AActor* DamageCauser)
+{
+	if (FWSDamageEvent const& CustomEvent = reinterpret_cast<FWSDamageEvent const&>(DamageEvent);
+		CustomEvent.IsFirstHit(this))
+	{
+		StatsComponent->DecreaseHP(DamageAmount);
+		UE_LOG(LogNPCPawn, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), DamageAmount, *DamageCauser->GetName(), *GetName());
+		CustomEvent.SetFirstHit(this);
+		return DamageAmount;
+	}
+
+	return 0.f;
 }
 
 FName AA_WSNPCPawn::GetAssetName() const

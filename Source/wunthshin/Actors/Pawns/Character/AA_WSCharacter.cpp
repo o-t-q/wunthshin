@@ -25,6 +25,7 @@
 #include "wunthshin/Subsystem/ElementSubsystem/ElementSubsystem.h"
 
 #include "wunthshin/Components/Stats/StatsComponent.h"
+#include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 #include "wunthshin/Subsystem/WorldStatusSubsystem/WorldStatusSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -211,11 +212,16 @@ void AA_WSCharacter::OnConstruction(const FTransform& Transform)
 
 float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-    // todo: Montage 한번에 데미지가 여러번 들어오는걸 막아야 함
-    CharacterStatsComponent->DecreaseHP(Damage);
-    UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
+    if (FWSDamageEvent const& CustomEvent = reinterpret_cast<FWSDamageEvent const&>(DamageEvent);
+        CustomEvent.IsFirstHit(this))
+    {
+        CharacterStatsComponent->DecreaseHP(Damage);
+        UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
+        CustomEvent.SetFirstHit(this);
+        return Damage;   
+    }
 
-    return CharacterStatsComponent->GetHP();
+    return 0.f;
 }
 
 void AA_WSCharacter::Tick(float DeltaSeconds)

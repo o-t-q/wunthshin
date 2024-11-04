@@ -9,6 +9,8 @@
 #include "EnhancedInputComponent.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
+#include "wunthshin/Interfaces/Taker/Taker.h"
+#include "wunthshin/Subsystem/WorldStatusSubsystem/WorldStatusSubsystem.h"
 
 
 // Sets default values for this component's properties
@@ -53,13 +55,15 @@ void UC_WSWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 }
 
 void UC_WSWeapon::AttackDefault()
-{	
+{
 	int32 Index = ContinuousAttackCount % AttackMontages.Num();
 
 	if (AttackMontages[Index]) 
 	{
 		if (!BasicAnimInstance->Montage_IsPlaying(nullptr)) 
 		{
+			PopAttackFromWorldStatus();
+			PushAttackToWorldStatus();
 			BasicAnimInstance->Montage_Play(AttackMontages[Index]);
 			ContinuousAttackCount++;
 		}
@@ -84,7 +88,7 @@ void UC_WSWeapon::UpdateCache(TScriptInterface<I_WSTaker> InTaker)
 
 	BasicAnimInstance = Cast<UBaseAnimInstance>(MeshComponent->GetAnimInstance());
 	check(BasicAnimInstance);
-
+	
 	SetupInputComponent();
 }
 
@@ -120,6 +124,22 @@ void UC_WSWeapon::SetupInputComponent()
 				}
 			}
 		}
+	}
+}
+
+void UC_WSWeapon::PushAttackToWorldStatus() const
+{
+	if (UWorldStatusSubsystem* Subsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+	{
+		Subsystem->PushAttack(this);
+	}
+}
+
+void UC_WSWeapon::PopAttackFromWorldStatus() const
+{
+	if (UWorldStatusSubsystem* Subsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+	{
+		Subsystem->PopAttack(this);
 	}
 }
 

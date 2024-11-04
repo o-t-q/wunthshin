@@ -7,16 +7,24 @@
 #include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
 #include "wunthshin/Components/Weapon/C_WSWeapon.h"
 #include "Engine/DamageEvents.h"
-
+#include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
+#include "wunthshin/Subsystem/WorldStatusSubsystem/WorldStatusSubsystem.h"
 
 
 UFirstAtteckAnimNotifyState::UFirstAtteckAnimNotifyState()
 {
 }
 
-void UFirstAtteckAnimNotifyState::NotifyTick(class USkeletalMeshComponent* MeshComp, class UAnimSequenceBase* Animation, float FrameDeltaTime)
+void UFirstAtteckAnimNotifyState::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+	float TotalDuration, const FAnimNotifyEventReference& EventReference)
 {
-	Super::NotifyBegin(MeshComp, Animation, FrameDeltaTime);
+	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
+}
+
+void UFirstAtteckAnimNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+	float FrameDeltaTime, const FAnimNotifyEventReference& EventReference)
+{
+	Super::NotifyTick(MeshComp, Animation, FrameDeltaTime, EventReference);
 
 	// Montage가 Pawn을 대상으로 실행된다고 가정하며 (캐릭터 또는 폰)
 	APawn* Self = Cast<APawn>(MeshComp->GetOwner());
@@ -50,6 +58,13 @@ void UFirstAtteckAnimNotifyState::NotifyTick(class USkeletalMeshComponent* MeshC
 		// 무기와 충돌한 대상들을 찾고
 		const TArray<FOverlapInfo>& OverlapInfos = WeaponMesh->GetOverlapInfos();
 
+		// 무기 고유의 데미지 이벤트를 생성한 후 
+		FWSDamageEvent DamageEvent{};
+		if (const UWorldStatusSubsystem* Subsystem = Weapon->GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+		{
+			DamageEvent.SetDamageEvent(Subsystem->GetCurrentAttackID(WeaponComponent));
+		}
+
 		for (const FOverlapInfo& OverlapInfo : OverlapInfos)
 		{
 			// 제어가 가능한 대상이며 (Possessable)
@@ -73,9 +88,7 @@ void UFirstAtteckAnimNotifyState::NotifyTick(class USkeletalMeshComponent* MeshC
 					2.f
 				);
 #endif
-
-				// todo: 데미지의 속성을 기록하고
-				FDamageEvent DamageEvent{};
+				
 				// 데미지를 가한다
 				HitActor->TakeDamage(WeaponComponent->GetDamage(), DamageEvent, Self->GetController(), Weapon);
 			}
@@ -114,5 +127,11 @@ void UFirstAtteckAnimNotifyState::NotifyTick(class USkeletalMeshComponent* MeshC
 		AActor* DamagedActor = HitResult.GetActor();
 		// 여기에 케릭터 스테이트의 공격력을 바탕으로 데미지를 넣으면 됨
 	}*/
+}
+
+void UFirstAtteckAnimNotifyState::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation,
+	const FAnimNotifyEventReference& EventReference)
+{
+	Super::NotifyEnd(MeshComp, Animation, EventReference);
 }
 

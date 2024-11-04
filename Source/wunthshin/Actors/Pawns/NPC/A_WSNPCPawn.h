@@ -10,6 +10,8 @@
 
 #include "A_WSNPCPawn.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogNPCPawn, Log, All);
+
 class UCapsuleComponent;
 class UStatsComponent;
 class UC_WSShield;
@@ -76,6 +78,7 @@ protected:
 public:	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	
 	// 사용할 에셋의 이름
 	void SetAssetName(const FName& InAssetName) { AssetName = InAssetName; }
