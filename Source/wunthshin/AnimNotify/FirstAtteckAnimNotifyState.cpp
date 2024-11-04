@@ -28,7 +28,10 @@ void UFirstAtteckAnimNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, U
 
 	// Montage가 Pawn을 대상으로 실행된다고 가정하며 (캐릭터 또는 폰)
 	APawn* Self = Cast<APawn>(MeshComp->GetOwner());
-	check(Self);
+	if (!Self)
+	{
+		return;
+	}
 
 	// 예외대상을 처리한 후
 	TArray<APawn*> Exclude;
