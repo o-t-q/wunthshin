@@ -7,7 +7,8 @@ struct FEditorSubsystemBranching
 	template <typename EditorWorldType, typename GameWorldType>
 	static USubsystem* GetTemplate(const UWorld* InWorld)
 	{
-		if (InWorld->IsEditorWorld())
+		// Inactive는 에디터에서 지금 수정하지 않는 상태에 들어간 경우에 발생함
+		if (InWorld->IsEditorWorld() || InWorld->WorldType == EWorldType::Inactive)
 		{
 			return GEditor->GetEditorSubsystem<EditorWorldType>();
 		}
@@ -21,7 +22,8 @@ struct FEditorSubsystemBranching
 
 	static USubsystem* GetReflection(const UWorld* InWorld, UClass* InEditorType, UClass* InGameWorldType)
 	{
-		if (InWorld->IsEditorWorld())
+		// Inactive는 에디터에서 지금 수정하지 않는 상태에 들어간 경우에 발생함
+		if (InWorld->IsEditorWorld() || InWorld->WorldType == EWorldType::Inactive)
 		{
 			return GEditor->GetEditorSubsystemBase(InEditorType);
 		}
