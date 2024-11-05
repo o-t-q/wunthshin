@@ -21,6 +21,10 @@ class WUNTHSHIN_API UStatsComponent : public UActorComponent
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	float StaminaDepletionRate;
 
+	// 이동 속성
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	FCharacterMovementStats MovementStats;
+	
 public:
 	// 생성자
 	UStatsComponent();
@@ -64,4 +68,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	float GetHP() const { return CurrentStats.HP; }
+
+	// 이동 속성 getter
+	UFUNCTION(BlueprintCallable)
+	const FCharacterMovementStats& GetMovementStats() const { return MovementStats; }
 };

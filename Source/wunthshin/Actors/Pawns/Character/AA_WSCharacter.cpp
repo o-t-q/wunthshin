@@ -26,6 +26,7 @@
 
 #include "wunthshin/Components/Stats/StatsComponent.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
+#include "wunthshin/Subsystem/Utility.h"
 #include "wunthshin/Subsystem/WorldStatusSubsystem/WorldStatusSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -192,6 +193,19 @@ void AA_WSCharacter::ApplyAsset(const FTableRowBase* InRowPointer)
     const FCharacterTableRow* Data = reinterpret_cast<const FCharacterTableRow*>(InRowPointer);
     
     UpdatePawnFromDataTable(Data);
+    
+    if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+    {
+        if (const UStatsComponent* StatsComponent = GetStatsComponent())
+        {
+            const FCharacterMovementStats& MovementStats = StatsComponent->GetMovementStats();
+            MovementComponent->MaxWalkSpeed = MovementStats.NormalMaxSpeed;
+            MovementComponent->MaxFlySpeed = MovementStats.MaxFlyingSpeed;
+            MovementComponent->MaxWalkSpeedCrouched = MovementStats.CrouchMaxSpeed;
+            MovementComponent->JumpZVelocity = MovementStats.InitialJumpVelocity;
+            
+        }
+    }
 }
 
 UClass* AA_WSCharacter::GetSubsystemType() const
@@ -210,6 +224,8 @@ void AA_WSCharacter::BeginPlay()
 {
     // Call the base class  
     Super::BeginPlay();
+
+    BLUEPRINT_REFRESH_EDITOR
 
     // 무기를 소환하는 차일드 액터 컴포넌트가 매시에 제대로 부착되었는지 확인
     ensure(
@@ -456,7 +472,7 @@ void AA_WSCharacter::FastRun()
 
     bIsFastRunning = true;
 	OnFastRun.Broadcast();
-    GetCharacterMovement()->MaxWalkSpeed = 1000;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().FastMaxSpeed;
 }
 
 void AA_WSCharacter::UnFastRun()
@@ -470,7 +486,7 @@ void AA_WSCharacter::UnFastRun()
 
     bIsFastRunning = false;
 	OffFastRun.Broadcast();
-    GetCharacterMovement()->MaxWalkSpeed = 500;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().NormalMaxSpeed;
 
     if (bIsWalkingPressing) 
     {
@@ -495,7 +511,7 @@ void AA_WSCharacter::GoOnWalk()
 
     OnWalk.Broadcast();
     bIsWalking = true;
-    GetCharacterMovement()->MaxWalkSpeed = 200;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().WalkMaxSpeed;
 }
 
 void AA_WSCharacter::GoOffWalk() 
@@ -509,7 +525,7 @@ void AA_WSCharacter::GoOffWalk()
 
     OffWalk.Broadcast();
     bIsWalking = false;
-    GetCharacterMovement()->MaxWalkSpeed = 500;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().NormalMaxSpeed;
 
     // 상충되는 빠르게 달리기가 눌려있다면 빠르게 달리기로 상태변환
     if (bIsFastRunningPressing) 

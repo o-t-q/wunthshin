@@ -5,6 +5,7 @@
 #include "NPCTableRow.generated.h"
 
 class UBehaviorTree;
+class UBlueprintAIPerceptionComponent;
 
 USTRUCT()
 struct WUNTHSHIN_API FNPCTableRow : public FCharacterTableRow
@@ -17,7 +18,10 @@ struct WUNTHSHIN_API FNPCTableRow : public FCharacterTableRow
 	UPROPERTY(EditAnywhere, Category = "AI", meta = (EditCondition = "bUseAI", EditConditionHide))
 	UBehaviorTree* BehaviorTree;
 
+	UPROPERTY(EditAnywhere, Category = "AI", meta = (EditCondition = "bUseAI", EditConditionHide))
+	TSubclassOf<UBlueprintAIPerceptionComponent> UserDefinedSensory;
+	
 	UPROPERTY(EditAnywhere)
 	bool bEnemy;
-
+	
 };

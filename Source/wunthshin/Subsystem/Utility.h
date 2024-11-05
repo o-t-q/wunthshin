@@ -2,6 +2,18 @@
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 
 #ifdef WITH_EDITOR
+// 블루프린트 객체가 리컴파일하기 전까지 데이터 테이블이 수정된 사항이 반영되지 않음
+// 블루프린트에서 설정된 에디터 메타데이터를 강제로 갱신
+#define BLUEPRINT_REFRESH_EDITOR \
+		if (!GetClass()->IsNative() && GetWorld()->IsGameWorld()) \
+		{ \
+		FetchAsset(AssetName); \
+		}
+#else
+#define BLUEPRINT_REFRESH_EDITOR __nop()
+#endif
+
+#ifdef WITH_EDITOR
 struct FEditorSubsystemBranching
 {
 	template <typename EditorWorldType, typename GameWorldType>

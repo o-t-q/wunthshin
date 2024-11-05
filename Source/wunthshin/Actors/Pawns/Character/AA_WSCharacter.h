@@ -229,7 +229,7 @@ public:
 	virtual UC_WSShield* GetShieldComponent() const override { return Shield; }
 	virtual UStatsComponent* GetStatsComponent() const override { return CharacterStatsComponent; }
 	virtual UChildActorComponent* GetRightHandComponent() const override { return RightHandWeapon; }
-	virtual UPawnMovementComponent* GetMovementComponent() const override { return ACharacter::GetMovementComponent(); }
+	virtual UPawnMovementComponent* GetPawnMovementComponent() const override { return ACharacter::GetMovementComponent(); }
 
 	virtual void HandleStaminaDepleted() override;
 

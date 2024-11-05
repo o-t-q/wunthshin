@@ -11,9 +11,9 @@
 #include "wunthshin/Subsystem/Utility.h"
 #include "wunthshin/Subsystem/NPCSubsystem/NPCSubsystem.h"
 #include "Components/CapsuleComponent.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include <wunthshin/Controller/NPCAIController/A_WSNPCAIController.h>
 
+#include "GameFramework/FloatingPawnMovement.h"
 #include "Kismet/GameplayStatics.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 
@@ -25,7 +25,7 @@ AA_WSNPCPawn::AA_WSNPCPawn()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-	MovementComponent = CreateOptionalDefaultSubobject<UCharacterMovementComponent>(TEXT("MovementComponent"));
+	MovementComponent = CreateOptionalDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComponent"));
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
 	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
 	Inventory = CreateDefaultSubobject<UC_WSInventory>(TEXT("Inventory"));
@@ -41,6 +41,15 @@ AA_WSNPCPawn::AA_WSNPCPawn()
 	MeshComponent->SetRelativeRotation({ 0.f, 270.f, 0.f });
 
 	Shield->SetupAttachment(MeshComponent);
+	MovementComponent->SetUpdatedComponent(RootComponent);
+
+	AIControllerClass = AA_WSNPCAIController::StaticClass();
+	AutoPossessPlayer = EAutoReceiveInput::Type::Disabled;
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	bUseControllerRotationPitch = true;
+	bUseControllerRotationYaw = true;
+	bUseControllerRotationRoll = false;
 }
 
 void AA_WSNPCPawn::OnConstruction(const FTransform& Transform)
@@ -64,6 +73,11 @@ void AA_WSNPCPawn::ApplyAsset(const FTableRowBase* InRowPointer)
 	const FNPCTableRow* TableRow = reinterpret_cast<const FNPCTableRow*>(InRowPointer);
 
 	UpdatePawnFromDataTable(TableRow);
+
+	if (UFloatingPawnMovement* FloatingPawnMovement = Cast<UFloatingPawnMovement>(MovementComponent))
+	{
+		FloatingPawnMovement->MaxSpeed = GetStatsComponent()->GetMovementStats().NormalMaxSpeed;
+	}
 }
 
 UClass* AA_WSNPCPawn::GetSubsystemType() const
@@ -83,6 +97,13 @@ void AA_WSNPCPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
+	BLUEPRINT_REFRESH_EDITOR
+}
+
+void AA_WSNPCPawn::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
 	// 데이터 테이블을 로드
 	// 블루프린트로 생성된 후 배치된 객체의 경우 
 	// OnConstruction이 호출되지 않기 때문에 핸들이 존재하지 않을 수 있음
@@ -90,17 +111,18 @@ void AA_WSNPCPawn::BeginPlay()
 	
 	if (const FNPCTableRow* Row = GetDataTableHandle().GetRow<FNPCTableRow>("")) 
 	{
-		if (Row->bUseAI)
+		if (AA_WSNPCAIController* AIController = Cast<AA_WSNPCAIController>(GetController());
+			Row->bUseAI && AIController)
 		{
-			AIController = GetWorld()->SpawnActorDeferred<AA_WSNPCAIController>(AA_WSNPCAIController::StaticClass(), FTransform::Identity, this);
+			if (Row->UserDefinedSensory)
+			{
+				AIController->SetPerceptionComponent(Row->UserDefinedSensory);
+			}
 			
 			if (Row->BehaviorTree)
 			{
 				AIController->SetBehaviorTree(Row->BehaviorTree);
 			}
-
-			UGameplayStatics::FinishSpawningActor(AIController, FTransform::Identity);
-			AIController->Possess(this);
 		}
 	}
 }
@@ -163,7 +185,7 @@ UChildActorComponent* AA_WSNPCPawn::GetRightHandComponent() const
 	return RightHandWeapon;
 }
 
-UPawnMovementComponent* AA_WSNPCPawn::GetMovementComponent() const
+UPawnMovementComponent* AA_WSNPCPawn::GetPawnMovementComponent() const
 {
 	return APawn::GetMovementComponent(); // == FindComponentByClass...
 }

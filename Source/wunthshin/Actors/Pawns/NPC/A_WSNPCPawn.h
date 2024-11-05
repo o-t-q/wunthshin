@@ -59,9 +59,6 @@ class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, publi
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	int32 HitAnimationIndex;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI", meta = (AllowPrivateAccess = "true"))
-	AA_WSNPCAIController* AIController;
-
 public:
 	// Sets default values for this pawn's properties
 	AA_WSNPCPawn();
@@ -80,6 +77,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void PossessedBy(AController* NewController) override;
 
 public:	
 	// Called to bind functionality to input
@@ -99,7 +97,7 @@ public:
 	virtual UC_WSShield* GetShieldComponent() const override;
 	virtual UStatsComponent* GetStatsComponent() const override;
 	virtual UChildActorComponent* GetRightHandComponent() const override;
-	virtual UPawnMovementComponent* GetMovementComponent() const override;
+	virtual UPawnMovementComponent* GetPawnMovementComponent() const override;
 
 	virtual void HandleStaminaDepleted() override;
 

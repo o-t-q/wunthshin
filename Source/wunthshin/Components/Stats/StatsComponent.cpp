@@ -67,6 +67,7 @@ void UStatsComponent::InitializeStats(const FCharacterStats& InInitialStats)
 {
     CurrentStats = InInitialStats;
     CurrentStats.HP = CurrentStats.MaxHP;
+    MovementStats = CurrentStats.Movement;
 }
 
 void UStatsComponent::UpdateStamina(float DeltaTime, bool bIsFastRunning)
@@ -103,7 +104,7 @@ void UStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
     ICommonPawn* Pawn = Cast<ICommonPawn>(GetOwner());
     if (Pawn)
     {
-        if (FMath::Abs(Pawn->GetMovementComponent()->Velocity.Dot(FVector::ForwardVector + FVector::RightVector)) > 0.f)
+        if (FMath::Abs(Pawn->GetPawnMovementComponent()->Velocity.Dot(FVector::ForwardVector + FVector::RightVector)) > 0.f)
         {
             UpdateStamina(DeltaTime, Pawn->IsFastRunning());
         }

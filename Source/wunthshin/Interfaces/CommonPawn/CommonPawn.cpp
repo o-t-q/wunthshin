@@ -5,6 +5,7 @@
 #include "wunthshin/Data/Characters/CharacterStats/CharacterStats.h"
 #include "wunthshin/Components/Stats/StatsComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 
 // Add default functionality here for any ICommonPawn functions that are not pure virtual.
@@ -31,8 +32,13 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
         if (UCapsuleComponent* CapsuleComponent = GetCapsuleComponent())
         {
             const FBoxSphereBounds& MeshBounds = GetSkeletalMeshComponent()->GetLocalBounds();
-            CapsuleComponent->SetCapsuleSize(MeshBounds.SphereRadius, MeshBounds.BoxExtent.Z);
+            CapsuleComponent->SetCapsuleSize(MeshBounds.BoxExtent.X, MeshBounds.BoxExtent.Z);
         }
+    }
+
+    if (!InData->MeshOffset.Equals(FTransform::Identity))
+    {
+        GetSkeletalMeshComponent()->SetRelativeTransform(InData->MeshOffset);
     }
 
     if (!InData->HitMontages.IsEmpty())

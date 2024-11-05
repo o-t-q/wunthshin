@@ -19,6 +19,9 @@ struct WUNTHSHIN_API FCharacterTableRow : public FTableRowBase
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UAnimInstance> AnimInstance;
 
+	UPROPERTY(EditDefaultsOnly)
+	FTransform MeshOffset;
+
 	UPROPERTY(EditAnywhere, Category = "Collision")
 	bool bCustomCapsuleSize;
 

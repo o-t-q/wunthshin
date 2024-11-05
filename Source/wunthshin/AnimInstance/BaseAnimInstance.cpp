@@ -34,8 +34,8 @@ void UBaseAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 
 	if (!MovementComponent) { return; }
 
-	const FVector& Velocity = CharaterComponentRef->GetMovementComponent()->Velocity;
-	const double MaxSpeed = CharaterComponentRef->GetMovementComponent()->GetMaxSpeed();
+	const FVector& Velocity = CharaterComponentRef->GetPawnMovementComponent()->Velocity;
+	const double MaxSpeed = CharaterComponentRef->GetPawnMovementComponent()->GetMaxSpeed();
 
 	if (FVector2D XY = {Velocity.X, Velocity.Y};
 		XY.Length() == 0)
