@@ -3,7 +3,7 @@
 
 #include "C_WSInventory.h"
 
-#include "wunthshin/Subsystem/WorldStatusSubsystem/WorldStatusSubsystem.h"
+#include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
 #include "wunthshin/Actors/Item/A_WSItem.h"
 
 DEFINE_LOG_CATEGORY(LogInventory);

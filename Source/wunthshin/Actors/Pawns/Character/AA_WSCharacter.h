@@ -164,7 +164,7 @@ public:
 	virtual void ApplyAsset(const FTableRowBase* InRowPointer) override;
 
 	virtual UClass* GetSubsystemType() const override;
-#ifdef WITH_EDITOR
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
 	virtual UClass* GetEditorSubsystemType() const override;
 #endif
 

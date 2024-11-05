@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "wunthshin/Subsystem/EffectSubsystem/EffectSubsystem.h"
+#include "EffectSubsystem.h"
 #include "wunthshin/Data/Effects/O_WSBaseEffect.h"
 
 DEFINE_LOG_CATEGORY(LogEffectSubsystem);

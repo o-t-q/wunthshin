@@ -25,23 +25,3 @@ USG_WSItemMetadata* UWeaponSubsystem::GetMetadata(const FName& InAssetName)
 {
 	return FItemSubsystemUtility::GetMetadataTemplate(Metadata, InAssetName);
 }
-
-USG_WSItemMetadata* UWeaponEditorSubsystem::GetMetadata(const FName& InAssetName)
-{
-	return FItemSubsystemUtility::GetMetadataTemplate(Metadata, InAssetName);
-}
-
-UWeaponEditorSubsystem::UWeaponEditorSubsystem()
-{
-	static ConstructorHelpers::FObjectFinder<UDataTable> Table(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_WeaponTable.DT_WeaponTable'"));
-	check(Table.Object);
-	DataTable = Table.Object;
-}
-
-void UWeaponEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{
-	Super::Initialize(Collection);
-	FItemSubsystemUtility::UpdateTable<FWeaponTableRow>(DataTable, Metadata);
-
-	DataTableMapping.Emplace(FWeaponTableRow::StaticStruct(), DataTable);
-}

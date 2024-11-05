@@ -28,21 +28,3 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 };
-
-UCLASS()
-class WUNTHSHIN_API UCharacterEditorSubsystem : public UEditorSubsystem, public IDataTableQuery
-{
-	GENERATED_BODY()
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
-	UDataTable* AssetDataTable;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
-	UDataTable* StatDataTable;
-	
-public:
-	UCharacterEditorSubsystem();
-
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-
-};

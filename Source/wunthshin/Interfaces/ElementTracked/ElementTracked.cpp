@@ -3,7 +3,7 @@
 
 #include "ElementTracked.h"
 
-#include "wunthshin/Subsystem/ElementSubsystem/ElementSubsystem.h"
+#include "wunthshin/Subsystem/GameInstanceSubsystem/Element/ElementSubsystem.h"
 
 
 // Add default functionality here for any IMyClass functions that are not pure virtual.

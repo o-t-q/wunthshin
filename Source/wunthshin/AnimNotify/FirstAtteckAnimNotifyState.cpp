@@ -2,13 +2,11 @@
 
 
 #include "wunthshin/AnimNotify/FirstAtteckAnimNotifyState.h"
-#include "FirstAtteckAnimNotifyState.h"
-#include "Kismet/KismetSystemLibrary.h"
+#include "Engine/DamageEvents.h"
 #include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
 #include "wunthshin/Components/Weapon/C_WSWeapon.h"
-#include "Engine/DamageEvents.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
-#include "wunthshin/Subsystem/WorldStatusSubsystem/WorldStatusSubsystem.h"
+#include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
 
 
 UFirstAtteckAnimNotifyState::UFirstAtteckAnimNotifyState()

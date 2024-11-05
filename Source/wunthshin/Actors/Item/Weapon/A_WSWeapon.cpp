@@ -3,14 +3,15 @@
 
 #include "A_WSWeapon.h"
 
-#include "Components/ShapeComponent.h"
-
+#include "Components/WidgetComponent.h"
 #include "Engine/DataTable.h"
-#include "GameFramework/ProjectileMovementComponent.h"
 #include "wunthshin/Components/Weapon/C_WSWeapon.h"
 #include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
-#include "wunthshin/Subsystem/Utility.h"
-#include "Components/WidgetComponent.h"
+
+#ifdef WITH_EDITOR
+#include "wunthshin/Subsystem/EditorSubsystem/Weapon/WeaponEditorSubsystem.h"
+#endif
+#include "wunthshin/Subsystem/GameInstanceSubsystem/Weapon/WeaponSubsystem.h"
 
 AA_WSWeapon::AA_WSWeapon(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.DoNotCreateDefaultSubobject("CollisionComponent") // 무기를 손잡이에서 잡기위해 매시 원점 사용
@@ -36,7 +37,7 @@ UClass* AA_WSWeapon::GetSubsystemType() const
 	return UWeaponSubsystem::StaticClass();
 }
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
 UClass* AA_WSWeapon::GetEditorSubsystemType() const
 {
 	return UWeaponEditorSubsystem::StaticClass();

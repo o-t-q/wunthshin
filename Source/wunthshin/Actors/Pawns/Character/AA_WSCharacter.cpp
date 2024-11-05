@@ -22,12 +22,16 @@
 #include "wunthshin/Components/Shield/C_WSShield.h"
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
-#include "wunthshin/Subsystem/ElementSubsystem/ElementSubsystem.h"
+#include "wunthshin/Subsystem/GameInstanceSubsystem/Element/ElementSubsystem.h"
 
 #include "wunthshin/Components/Stats/StatsComponent.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 #include "wunthshin/Subsystem/Utility.h"
-#include "wunthshin/Subsystem/WorldStatusSubsystem/WorldStatusSubsystem.h"
+#ifdef WITH_EDITOR
+#include "wunthshin/Subsystem/EditorSubsystem/Character/CharacterEditorSubsystem.h"
+#endif
+#include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
+#include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -213,7 +217,7 @@ UClass* AA_WSCharacter::GetSubsystemType() const
     return UCharacterSubsystem::StaticClass();
 }
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
 UClass* AA_WSCharacter::GetEditorSubsystemType() const
 {
     return UCharacterEditorSubsystem::StaticClass();

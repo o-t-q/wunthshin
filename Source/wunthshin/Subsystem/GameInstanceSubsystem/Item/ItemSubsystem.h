@@ -33,22 +33,3 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual USG_WSItemMetadata* GetMetadata(const FName& InAssetName) override;
 };
-
-UCLASS()
-class WUNTHSHIN_API UItemEditorSubsystem : public UEditorSubsystem, public IItemMetadataGetter, public IDataTableQuery
-{
-	GENERATED_BODY()
-
-	// 아이템 고유 메타데이터
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta=(AllowPrivateAccess = "true"))
-	TMap<FName, USG_WSItemMetadata*> Metadata;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
-	UDataTable* DataTable;
-	
-public:
-	UItemEditorSubsystem();
-
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual USG_WSItemMetadata* GetMetadata(const FName& InAssetName) override;
-};

@@ -4,16 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-
-#include "wunthshin/Subsystem/CharacterSubsystem/CharacterSubsystem.h"
-#include "wunthshin/Subsystem/ItemSubsystem/ItemSubsystem.h"
-#include "wunthshin/Subsystem/WeaponSubsystem/WeaponSubsystem.h"
-
-#include "Editor/UnrealEd/Public/Editor.h"
-
-#include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
-#include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
-
 #include "DataTableFetcher.generated.h"
 
 struct FWeaponTableRow;
@@ -71,7 +61,7 @@ public:
 
 	// 상속 객체에 해당하는 서브 시스템 getter
 	virtual UClass* GetSubsystemType() const = 0;
-#ifdef WITH_EDITOR
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR 
 	virtual UClass* GetEditorSubsystemType() const = 0;
 #endif
 

@@ -1,7 +1,8 @@
 ﻿#pragma once
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
+#include "wunthshin/Interfaces/ItemMetadataGetter/ItemMetadataGetter.h"
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
 // 블루프린트 객체가 리컴파일하기 전까지 데이터 테이블이 수정된 사항이 반영되지 않음
 // 블루프린트에서 설정된 에디터 메타데이터를 강제로 갱신
 #define BLUEPRINT_REFRESH_EDITOR \
@@ -10,10 +11,12 @@
 		FetchAsset(AssetName); \
 		}
 #else
-#define BLUEPRINT_REFRESH_EDITOR __nop()
+#define BLUEPRINT_REFRESH_EDITOR __nop();
 #endif
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
+#include "Editor.h"
+
 struct FEditorSubsystemBranching
 {
 	template <typename EditorWorldType, typename GameWorldType>
@@ -103,7 +106,7 @@ struct FItemSubsystemUtility
 		USubsystem* Subsystem = nullptr;
 		MetadataT* OutValue = nullptr;
 		
-#ifdef WITH_EDITOR
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
 		Subsystem = SUBSYSTEM_EDITOR_BRANCHING_REFLECT(InWorld, InDataTableFetcher->GetEditorSubsystemType(), InDataTableFetcher->GetSubsystemType());
 #else
 		Subsystem = InWorld->GetGameInstance()->GetSubsystemBase(InDataTableFetcher->GetSubsystemType());

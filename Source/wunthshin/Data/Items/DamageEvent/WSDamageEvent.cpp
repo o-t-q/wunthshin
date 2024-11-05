@@ -1,5 +1,5 @@
 #include "WSDamageEvent.h"
-#include "wunthshin/Subsystem/WorldStatusSubsystem/WorldStatusSubsystem.h"
+#include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
 
 bool FWSDamageEvent::IsFirstHit(const ICommonPawn* InPawn) const
 {

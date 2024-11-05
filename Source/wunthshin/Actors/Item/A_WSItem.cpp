@@ -9,12 +9,17 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
-#include "wunthshin/Components/PickUp/C_WSPickUp.h"
-#include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
-#include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
-#include "wunthshin/Subsystem/Utility.h"
-#include "wunthshin/Widgets/ItemNotify/WG_WSItemNotify.h"
 #include "Components/WidgetComponent.h"
+#include "wunthshin/Components/PickUp/C_WSPickUp.h"
+#include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
+#include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
+#include "wunthshin/Subsystem/Utility.h"
+#include "wunthshin/Subsystem/GameInstanceSubsystem/Item/ItemSubsystem.h"
+#include "wunthshin/Widgets/ItemNotify/WG_WSItemNotify.h"
+
+#ifdef WITH_EDITOR
+#include "wunthshin/Subsystem/EditorSubsystem/Item/ItemEditorSubsystem.h"
+#endif
 
 class USphereComponent;
 const FName AA_WSItem::CollisionComponentName = TEXT("Collision");
@@ -177,7 +182,7 @@ UClass* AA_WSItem::GetSubsystemType() const
 	return UItemSubsystem::StaticClass();
 }
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR 
 UClass* AA_WSItem::GetEditorSubsystemType() const
 {
 	return UItemEditorSubsystem::StaticClass();

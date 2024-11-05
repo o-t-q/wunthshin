@@ -3,18 +3,19 @@
 
 #include "wunthshin/Actors/Pawns/NPC/A_WSNPCPawn.h"
 
+#include <wunthshin/Controller/NPCAIController/A_WSNPCAIController.h>
+#include "Components/CapsuleComponent.h"
 #include "wunthshin/Components/Inventory/C_WSInventory.h"
 #include "wunthshin/Components/Shield/C_WSShield.h"
 #include "wunthshin/Components/Stats/StatsComponent.h"
 #include "wunthshin/Data/NPCs/NPCStats/NPCStats.h"
 #include "wunthshin/Data/NPCs/NPCTableRow/NPCTableRow.h"
 #include "wunthshin/Subsystem/Utility.h"
-#include "wunthshin/Subsystem/NPCSubsystem/NPCSubsystem.h"
-#include "Components/CapsuleComponent.h"
-#include <wunthshin/Controller/NPCAIController/A_WSNPCAIController.h>
-
+#include "wunthshin/Subsystem/GameInstanceSubsystem/NPC/NPCSubsystem.h"
+#ifdef WITH_EDITOR
+#include "wunthshin/Subsystem/EditorSubsystem/NPC/NPCEditorSubsystem.h"
+#endif
 #include "GameFramework/FloatingPawnMovement.h"
-#include "Kismet/GameplayStatics.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 
 DEFINE_LOG_CATEGORY(LogNPCPawn);
@@ -85,7 +86,7 @@ UClass* AA_WSNPCPawn::GetSubsystemType() const
 	return UNPCSubsystem::StaticClass();
 }
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR 
 UClass* AA_WSNPCPawn::GetEditorSubsystemType() const
 {
 	return UNPCEditorSubsystem::StaticClass();

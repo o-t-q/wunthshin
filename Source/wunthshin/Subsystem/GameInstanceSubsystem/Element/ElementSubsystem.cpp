@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "wunthshin/Subsystem/ElementSubsystem/ElementSubsystem.h"
+#include "ElementSubsystem.h"
 #include "wunthshin/Data/Elements/ElementTableRow/ElementTableRow.h"
 #include "wunthshin/Data/Elements/O_WSElementReactor.h"
 #include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"

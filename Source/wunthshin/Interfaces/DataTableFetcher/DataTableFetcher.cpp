@@ -2,8 +2,8 @@
 
 
 #include "DataTableFetcher.h"
-#include "Editor.h"
 
+#include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "wunthshin/Subsystem/Utility.h"
 
 USubsystem* IDataTableFetcher::GetSubsystem() const
@@ -11,10 +11,10 @@ USubsystem* IDataTableFetcher::GetSubsystem() const
 	const UWorld* World = Cast<UObject>(this)->GetWorld();
 	USubsystem* Subsystem = nullptr;
 
-#ifdef WITH_EDITOR
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
 	Subsystem = SUBSYSTEM_EDITOR_BRANCHING_REFLECT(World, GetEditorSubsystemType(), GetSubsystemType());
 #else
-	Subsystem = GetWorld()->GetGameInstance()->GetSubsystemBase(GetSubsystemType());
+	Subsystem = World->GetGameInstance()->GetSubsystemBase(GetSubsystemType());
 #endif
 	
 	check(Subsystem);

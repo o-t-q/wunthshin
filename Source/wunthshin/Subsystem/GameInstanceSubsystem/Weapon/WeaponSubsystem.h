@@ -32,22 +32,3 @@ public:
 	virtual void                Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual USG_WSItemMetadata* GetMetadata(const FName& InAssetName) override;
 };
-
-UCLASS()
-class WUNTHSHIN_API UWeaponEditorSubsystem : public UEditorSubsystem, public IItemMetadataGetter, public IDataTableQuery
-{
-	GENERATED_BODY()
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta=(AllowPrivateAccess = "true"))
-	TMap<FName, USG_WSItemMetadata*> Metadata;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Table", meta=(AllowPrivateAccess = "true"))
-	UDataTable* DataTable;
-	
-public:
-	UWeaponEditorSubsystem();
-	
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual USG_WSItemMetadata* GetMetadata(const FName& InAssetName) override;
-
-};
