@@ -9,6 +9,7 @@
 
 class USG_WSItemMetadata;
 class AA_WSItem;
+class UImage;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogInventory, Log, All);
 
@@ -53,10 +54,15 @@ public:
 	UInventoryEntryData(const FInventoryPair& InPair)
 		: EntryData(InPair)	{}
 
-	void Initialize(const FInventoryPair& InventoryPair) {EntryData = InventoryPair;}
+	void Initialize(const FInventoryPair& InventoryPair, UTexture2D* InImage)
+	{
+		EntryData = InventoryPair;
+		RarityBackground = MoveTemp(InImage);
+	}
 public:
 	FInventoryPair EntryData;
-		
+	UTexture2D* RarityBackground;
+
 public:
 	bool operator!=(const FInventoryPair& InOther) const
 	{

@@ -340,17 +340,17 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
     Inventory->AddItem(Item);
 
     // todo/test: 아이템 효과 테스트, 이후에 삭제 필요함
-    {
-        if (!Item->IsA<AA_WSWeapon>()) 
-        {
-            int32 Index = Inventory->FindItemIndex(Item->GetItemMetadata());
-
-            if (Index != INDEX_NONE)
-            {
-                Inventory->UseItem(Index, this);
-            }
-        }
-    }
+    // {
+    //     if (!Item->IsA<AA_WSWeapon>()) 
+    //     {
+    //         int32 Index = Inventory->FindItemIndex(Item->GetItemMetadata());
+    //
+    //         if (Index != INDEX_NONE)
+    //         {
+    //             Inventory->UseItem(Index, this);
+    //         }
+    //     }
+    // }
     
     return true;
 }

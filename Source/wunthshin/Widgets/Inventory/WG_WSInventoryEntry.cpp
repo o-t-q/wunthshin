@@ -11,8 +11,10 @@ void UWG_WSInventoryEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 	IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
 
 	UInventoryEntryData* Data = Cast<UInventoryEntryData>(ListItemObject);
-	if (Data) return;
+	if (!Data) return;
 
+	RarityBackground->SetBrushFromTexture(Data->RarityBackground);
 	ItemCount->SetText(FText::FromString(FString::FromInt(Data->EntryData.Count)));
 	ItemIcon->SetBrushFromTexture(Data->EntryData.Metadata->GetItemIcon());
+	
 }

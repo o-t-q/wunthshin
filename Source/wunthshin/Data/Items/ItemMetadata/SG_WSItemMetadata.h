@@ -21,6 +21,11 @@ class WUNTHSHIN_API USG_WSItemMetadata : public USaveGame
 
 	friend struct FItemSubsystemUtility;
 
+public:
+	UPROPERTY()
+	ERarity ItemRarity;
+
+private:
 	UPROPERTY()
 	EItemType ItemType;
 

@@ -10,6 +10,10 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 {
 	GENERATED_BODY()
 
+	// 등급
+	UPROPERTY(EditAnywhere)
+	ERarity ItemRarity;
+	
 	// ItemType(소모, 장비, 기타 등)
 	UPROPERTY(EditAnywhere)
 	EItemType ItemType;
