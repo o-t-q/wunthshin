@@ -16,12 +16,15 @@ protected:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 
 protected:
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
 	class UTextBlock* ItemCount;
 	
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
 	class UImage* ItemIcon;
 
-	UPROPERTY(meta = (BindWidget))
-	class UImage* RarityBackground;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
+	class UWidgetSwitcher* Backgrounds;
+	
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
+	//  TArray<UTexture2D*> RarityBackgrounds;
 };

@@ -26,8 +26,4 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
 	UTileView* TileView;
-
-	// 등급 배경
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
-	TMap<ERarity, UTexture2D*> RarityBackground;
 };

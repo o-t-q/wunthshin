@@ -54,14 +54,12 @@ public:
 	UInventoryEntryData(const FInventoryPair& InPair)
 		: EntryData(InPair)	{}
 
-	void Initialize(const FInventoryPair& InventoryPair, UTexture2D* InImage)
+	void Initialize(const FInventoryPair& InventoryPair)
 	{
 		EntryData = InventoryPair;
-		RarityBackground = MoveTemp(InImage);
 	}
 public:
 	FInventoryPair EntryData;
-	UTexture2D* RarityBackground;
 
 public:
 	bool operator!=(const FInventoryPair& InOther) const
