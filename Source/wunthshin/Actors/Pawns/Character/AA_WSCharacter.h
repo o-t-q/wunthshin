@@ -170,9 +170,6 @@ public:
 	// 걷기 가능 여부 함수
 	bool CanWalk() const;
 
-	bool CheckClimState();
-
-
 	virtual UScriptStruct* GetTableType() const override;
 
 	virtual void ApplyAsset(const FTableRowBase* InRowPointer) override;
@@ -260,6 +257,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	virtual bool IsWalking() const override { return bIsWalking; }
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	virtual bool CheckClimbState() const override;
 
 private:
 	virtual void SetHitMontages(const TArray<UAnimMontage*>& InMontages) override;

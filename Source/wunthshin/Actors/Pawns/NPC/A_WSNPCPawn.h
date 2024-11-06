@@ -108,6 +108,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	virtual bool IsWalking() const override { return bIsWalking; }
 
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	virtual bool CheckClimbState() const override { return false; }
+	
 private:
 	virtual void SetHitMontages(const TArray<UAnimMontage*>& InMontages) override;
 

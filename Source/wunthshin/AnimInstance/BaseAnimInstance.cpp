@@ -62,14 +62,14 @@ void UBaseAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	HorizontalSpeed = FMath::Lerp(0.f, 1.f, HorizontalSpeed / MaxSpeed);
 	VerticalSpeed = FMath::Lerp(0.f, 1.f, VerticalSpeed / MaxSpeed);
 	
-	const FTransform ActorTransfor = CharaterComponentRef->GetActorTransform();
+	const FTransform ActorTransfor = Cast<AActor>(CharaterComponentRef.GetInterface())->GetActorTransform();
 	const FVector LocalVelocity = ActorTransfor.InverseTransformVector(Velocity);
 	
 	VelocityBlendspaceY = LocalVelocity.Y;
 	VelocityBlendspaceZ = Velocity.Z;
 	bShoudFastRun = CharaterComponentRef->IsFastRunning();
 	bShoudWalk = CharaterComponentRef->IsWalking();
-	bIsCliming = CharaterComponentRef->CheckClimState();
+	bIsCliming = CharaterComponentRef->CheckClimbState();
 	bIsCrouch = MovementComponent->IsCrouching();
 	bIsFalling = MovementComponent->IsFalling();
 

@@ -50,6 +50,8 @@ public:
 	virtual bool IsFastRunning() const = 0;
 	// 걷고 있는지 확인하는 함수
 	virtual bool IsWalking() const = 0;
+	// 등반하고 있는지 확인하는 함수
+	virtual bool CheckClimbState() const = 0;
 	// 스태미나가 다 떨어지면 호출되는 함수
 	virtual void HandleStaminaDepleted() = 0;
 

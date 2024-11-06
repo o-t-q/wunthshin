@@ -141,6 +141,11 @@ void AA_WSCharacter::HandleStaminaDepleted()
     UnFastRun();
 }
 
+bool AA_WSCharacter::CheckClimbState() const
+{
+    return CilmMovementComponent->bWantsToClimbVeiw();
+}
+
 void AA_WSCharacter::SetHitMontages(const TArray<UAnimMontage*>& InMontages)
 {
     HitMontages = InMontages;
@@ -191,12 +196,6 @@ bool AA_WSCharacter::CanFastRun() const
 bool AA_WSCharacter::CanWalk() const
 {
     return !bIsWalking && !bIsFastRunning;
-}
-
-bool AA_WSCharacter::CheckClimState()
-{
-    return CilmMovementComponent->bWantsToClimbVeiw();
-
 }
 
 UScriptStruct* AA_WSCharacter::GetTableType() const
