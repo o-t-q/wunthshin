@@ -11,7 +11,7 @@ void UWG_WSInventoryEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
 
-	UInventoryEntryData* Data = Cast<UInventoryEntryData>(ListItemObject);
+	Data = Cast<UInventoryEntryData>(ListItemObject);
 	if (!Data) return;
 
 	Backgrounds->SetActiveWidgetIndex(int32(Data->EntryData.Metadata->ItemRarity));

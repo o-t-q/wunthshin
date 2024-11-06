@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "WG_WSInGameBundle.generated.h"
 
+class UButton;
 /**
  * 
  */
@@ -21,13 +22,18 @@ enum class EChildWidget
 		Menu,
 	};	
 
-// public:
-// 	UFUNCTION()
-// 	void SetActive();
+protected:
+	virtual void NativeConstruct() override;
+public:
+	UFUNCTION()
+	void SetActive();
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<TSubclassOf<UUserWidget>> ChildWidgets;
+	TArray<UUserWidget*> ChildWidgets;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UButton* Button_OpenInventory;
 };
 
 

@@ -52,7 +52,7 @@ public:
 	
 	FName GetAssetName() const { return AssetName; }
 	UTexture2D* GetItemIcon() const { return ItemIcon; }
-	
+	FName GetItemDescription() const { return ItemDescription; }
 	
 	template <EItemType ItemT>
 	bool IsItem() const

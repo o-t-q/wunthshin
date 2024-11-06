@@ -4,6 +4,9 @@
 #include "WG_WSInventory.h"
 
 #include "WG_WSInventoryEntry.h"
+#include "Components/Button.h"
+#include "Components/Image.h"
+#include "Components/TextBlock.h"
 #include "GeometryCollection/ManagedArrayTypes.h"
 #include "Kismet/GameplayStatics.h"
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
@@ -36,9 +39,11 @@ void UWG_WSInventory::NativeConstruct()
 	// check(RarityBGLegend.Object)
 	// RarityBackground.Emplace(ERarity::Legendary, NewObject<UTexture2D>(RarityBGLegend.Object));
 
+	AA_WSCharacter* Player = Cast<AA_WSCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(),0));
+	PlayerInventory = Player->GetComponentByClass<UC_WSInventory>();
 	
 	// todo: 아이템 획득하는 delegate에 RefreshListItem() 바인딩
-	
+
 	RefreshListItem();
 }
 
@@ -56,9 +61,8 @@ void UWG_WSInventory::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 void UWG_WSInventory::RefreshListItem()
 {
 	// 인벤토리 컴포넌트의 TArray를 복사
-	AA_WSCharacter* Player = Cast<AA_WSCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(),0));
 	TArray<UInventoryEntryData*> NewArray;
-	auto& Items = Player->GetComponentByClass<UC_WSInventory>()->GetItems();
+	auto& Items = PlayerInventory->GetItems();
 
 	for (auto& Item : Items)
 	{
@@ -68,4 +72,45 @@ void UWG_WSInventory::RefreshListItem()
 	}
 	
 	TileView->SetListItems(NewArray);
+
+	//
+	uint32 InvenCount = Items.Num();
+	uint32 InvenMaxCount = 1000; // 임의로 정함
+	
+	FString InText = FString::Printf(TEXT("%i/%i"), InvenCount,InvenMaxCount);
+	InventoryCount->SetText(FText::FromString(InText));
+
+	Button_ClosePanel->OnClicked.AddDynamic(this, &ThisClass::OnClickButton_ClosePanel);
+
+	// 선택된 아이템 정보 출력
+	auto Selected = TileView->GetSelectedItem<UWG_WSInventoryEntry>();
+	if(!Selected) return;
+	
+	auto AssetName = Selected->GetData()->EntryData.Metadata->GetAssetName(); 
+	ItemName->SetText(FText::FromName(AssetName));
+	
+	auto itemIcon = Selected->GetData()->EntryData.Metadata->GetItemIcon();
+	ItemIcon->SetBrushFromTexture(itemIcon);
+
+	//auto itemType = Selected->GetData()->EntryData.Metadata->GetItemType();
+
+	auto itemCount = Selected->GetData()->EntryData.Count;
+	ItemCount->SetText(FText::FromString(FString::Printf(TEXT("%i"), itemCount)));
+
+	//auto itemEfficiency = Selected->GetData()->EntryData.Metadata->
+
+	auto itemDesc = Selected->GetData()->EntryData.Metadata->GetItemDescription();
+	ItemDescription->SetText(FText::FromName(itemDesc));
+	
+	auto selected = TileView->GetSelectedItem<UWG_WSInventoryEntry>();
 }
+
+void UWG_WSInventory::OnClickButton_ClosePanel()
+{
+	ESlateVisibility bIsVisible = IsVisible() ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
+	SetVisibility(bIsVisible);
+}
+
+
+
+

@@ -7,14 +7,22 @@
 #include "WG_WSInventoryEntry.generated.h"
 
 
+
+class UInventoryEntryData;
+
 UCLASS()
 class WUNTHSHIN_API UWG_WSInventoryEntry : public UUserWidget, public IUserObjectListEntry
 {
 	GENERATED_BODY()
-	
+
 protected:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
-
+public:
+	UInventoryEntryData* GetData() { return Data; }	
+protected:
+	UPROPERTY()
+	UInventoryEntryData* Data;
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
 	class UTextBlock* ItemCount;
@@ -24,7 +32,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
 	class UWidgetSwitcher* Backgrounds;
-	
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
-	//  TArray<UTexture2D*> RarityBackgrounds;
+
+public:
+	UPROPERTY()
+	FOnItemClicked OnItemClicked;
 };
