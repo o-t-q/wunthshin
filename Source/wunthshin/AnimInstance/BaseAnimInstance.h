@@ -33,6 +33,12 @@ protected:
 	double VerticalSpeed = 0.f;
 
 	UPROPERTY(BlueprintReadOnly)
+	double VelocityBlendspaceY = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly)
+	double VelocityBlendspaceZ = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly)
 	bool bShoudWalk = false;
 
 	UPROPERTY(BlueprintReadOnly)
@@ -61,6 +67,8 @@ protected:
 ;
 	UPROPERTY(BlueprintReadOnly)
 	bool bwallHighthHigh = false;
+
+	
 
 	UPROPERTY()
 	TScriptInterface<ICommonPawn> CharaterComponentRef;

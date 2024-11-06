@@ -23,6 +23,7 @@
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Element/ElementSubsystem.h"
+#include "wunthshin/Components/ClimCharacterMovementComponent.h"
 
 #include "wunthshin/Components/Stats/StatsComponent.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
@@ -48,7 +49,8 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 const FName AA_WSCharacter::RightHandWeaponSocketName = TEXT("WeaponProp02");
 const float AA_WSCharacter::WalkCoolTime = 0.2f;
 
-AA_WSCharacter::AA_WSCharacter()
+AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
+    : Super(ObjectInitializer.SetDefaultSubobjectClass<UClimCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
     {
         static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC_Default(TEXT("/Script/EnhancedInput.InputMappingContext'/Game/ThirdPerson/Input/IMC_Default.IMC_Default'"));
@@ -67,6 +69,9 @@ AA_WSCharacter::AA_WSCharacter()
         ADD_INPUT_ACTION(PickUpAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_PickUp.IA_PickUp'");
         ADD_INPUT_ACTION(DropAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Drop.IA_Drop'");
         ADD_INPUT_ACTION(ZoomWheelAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_ZoomWheel.IA_ZoomWheel'");
+        ADD_INPUT_ACTION(ClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Climb.IA_Climb'");
+        ADD_INPUT_ACTION(CancelClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_CancelClimb.IA_CancelClimb'");
+    
     }
 
 
@@ -125,6 +130,9 @@ AA_WSCharacter::AA_WSCharacter()
     RightHandWeapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("RightHandWeapon"));
 
 	CameraBoom->bEnableCameraLag = true;
+
+    CilmMovementComponent = Cast<UClimCharacterMovementComponent>(GetCharacterMovement());
+
 }
 
 void AA_WSCharacter::HandleStaminaDepleted()
@@ -183,6 +191,12 @@ bool AA_WSCharacter::CanFastRun() const
 bool AA_WSCharacter::CanWalk() const
 {
     return !bIsWalking && !bIsFastRunning;
+}
+
+bool AA_WSCharacter::CheckClimState()
+{
+    return CilmMovementComponent->bWantsToClimbVeiw();
+
 }
 
 UScriptStruct* AA_WSCharacter::GetTableType() const
@@ -284,7 +298,10 @@ void AA_WSCharacter::Tick(float DeltaSeconds)
         bCanGlide = false;
         StopJumping();
     }
-    
+  
+
+
+
 }
 
 bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
@@ -387,6 +404,10 @@ void AA_WSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
         // 떨어뜨리기
         EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Started, this, &AA_WSCharacter::CheckItemAndDrop);
 
+        // 등반
+        EnhancedInputComponent->BindAction(ClimAction, ETriggerEvent::Started, this, &AA_WSCharacter::Climb);
+
+        EnhancedInputComponent->BindAction(CancelClimAction, ETriggerEvent::Started, this, &AA_WSCharacter::CancelClimb);
         
     }
     else
@@ -398,25 +419,54 @@ void AA_WSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 void AA_WSCharacter::Move(const FInputActionValue& Value)
 {
     // input is a Vector2D
-    FVector2D MovementVector = Value.Get<FVector2D>();
+    FVector MovementVector = Value.Get<FVector>();
 
-    if (Controller != nullptr)
-    {
-        // find out which way is forward
-        const FRotator Rotation = Controller->GetControlRotation();
-        const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-        // get forward vector
-        const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+   
+       if (Controller != nullptr)
+        {
+            // find out which way is forward
+            const FRotator Rotation = Controller->GetControlRotation();
+            const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-        // get right vector 
-        const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+            // get forward vector
+            const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-        // add movement 
-        AddMovementInput(ForwardDirection, MovementVector.Y);
-        AddMovementInput(RightDirection, MovementVector.X);
-    }
+            // get right vector 
+            const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+            // add movement 
+            FVector Direction;
+            if (CilmMovementComponent->IsClimbing())
+            {                        // 외적
+                Direction = FVector::CrossProduct(CilmMovementComponent->GetClimbSurfaceNormal(), -GetActorRightVector());
+                AddMovementInput(Direction, MovementVector.Y);
+            }
+            else
+            {
+                AddMovementInput(ForwardDirection, MovementVector.Y);
+            }
+            FVector Direction1;
+            if (CilmMovementComponent->IsClimbing())
+            {
+                Direction1 = FVector::CrossProduct(CilmMovementComponent->GetClimbSurfaceNormal(), GetActorUpVector());
+                AddMovementInput(Direction1, MovementVector.X);
+            }
+            else
+            {
+                AddMovementInput(RightDirection, MovementVector.X);
+            }
+           
+            
+        }
+    
+
+    
 }
+
+
+
+
 
 void AA_WSCharacter::Look(const FInputActionValue& Value)
 {
@@ -673,3 +723,18 @@ void AA_WSCharacter::CheckItemAndDrop()
         UE_LOG(LogTemplateCharacter, Log, TEXT("Character does not have Item, discard"));
     }
 }
+
+void AA_WSCharacter::Climb()
+{
+    
+    CilmMovementComponent->TryClimbing();
+}
+
+void AA_WSCharacter::CancelClimb()
+{
+    CilmMovementComponent->CancelClimbing();
+}
+
+
+
+

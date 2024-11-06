@@ -102,13 +102,13 @@ void UFirstAtteckAnimNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, U
 	//MeshComp->GetOwner()->SetActorLocation(NewLocation);
 	
 
-	const FVector WeaponSoketLocation = MeshComp->GetSocketLocation(TEXT("RightHandWepon"));// 무기 컴포넌트 이름 넣어야함
-	FHitResult HitResult;
-	
-	
-	TArray<AActor*> IgnoreActors;
-	// 오너에 따른 엑터에 따라 적과 플레이어를 설정하여 FName("BlockAll"),이부분을 수정하면 된다.
-	AActor* OwningActor = MeshComp->GetOwner();
+	//const FVector WeaponSoketLocation = MeshComp->GetSocketLocation(TEXT("RightHandWepon"));// 무기 컴포넌트 이름 넣어야함
+	//FHitResult HitResult;
+	//
+	//
+	//TArray<AActor*> IgnoreActors;
+	//// 오너에 따른 엑터에 따라 적과 플레이어를 설정하여 FName("BlockAll"),이부분을 수정하면 된다.
+	//AActor* OwningActor = MeshComp->GetOwner();
 
 
 

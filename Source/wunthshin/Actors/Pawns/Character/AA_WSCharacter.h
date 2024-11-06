@@ -73,6 +73,14 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* ZoomWheelAction;
 
+	/** Clim Action*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ClimAction;
+
+	/** Cancel Clim Action*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* CancelClimAction;
+
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
@@ -111,6 +119,9 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bCanGlide = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bCanClim;
+
 	// 빠르게 달리는 키가 눌려있는가?
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsFastRunningPressing;
@@ -140,7 +151,7 @@ public:
 	static const FName RightHandWeaponSocketName;
 	static const float WalkCoolTime;
 	
-	AA_WSCharacter();
+	AA_WSCharacter(const FObjectInitializer& ObjectInitializer);
 
 	// FastRun을 호출하는 공개 메서드
 	UFUNCTION(BlueprintCallable, Category = "Movement")
@@ -158,6 +169,9 @@ public:
 
 	// 걷기 가능 여부 함수
 	bool CanWalk() const;
+
+	bool CheckClimState();
+
 
 	virtual UScriptStruct* GetTableType() const override;
 
@@ -195,6 +209,14 @@ protected:
 	void FindAndTake();
 
 	void CheckItemAndDrop();
+
+
+	void Climb();
+	void CancelClimb();
+
+	
+
+	
 
 protected:
 	// APawn interface
@@ -244,4 +266,15 @@ private:
 
 public:
 	virtual void PlayHitMontage() override;
+protected:
+	UPROPERTY(Category=Character , VisibleAnywhere,BlueprintReadOnly)
+	UClimCharacterMovementComponent* CilmMovementComponent;
+
+public:
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE UClimCharacterMovementComponent* GetCustomCharacterMovement() const { return CilmMovementComponent; }
+
+
+
+
 };
