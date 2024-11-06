@@ -298,9 +298,6 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
     if (const AA_WSWeapon* WeaponCast = Cast<AA_WSWeapon>(Item);
         WeaponCast && !RightHandWeapon->GetChildActor())
     {
-        // todo: 동적으로 변경될떄의 대응
-        // 테스트용으로 블루프린트 클래스를 사용하기 때문에 빈 클래스를 쓰게 될 경우
-        // 대상의 아이템 및 무기의 이름에 따라 에셋을 다시 설정해줘야 함
         RightHandWeapon->SetChildActorClass(WeaponCast->GetClass());
         
         // 런타임 에셋 설정을 위해 Deferred spawn이 필요함

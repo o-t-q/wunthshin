@@ -46,7 +46,7 @@ struct FDamageTakenArray
 	TArray<const ICommonPawn*> Victims;
 };
 
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAttackEnded, FGuid, InAttackID);
 
 /**
  * 현재 월드의 아이템 적용 및 캐릭터 관련 정보를 추적하는 서브시스템
@@ -70,6 +70,8 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 	TArray<FItemTicket> ItemQueue;
 
 public:
+	FOnWeaponAttackEnded OnWeaponAttackEnded;
+	
 	virtual void Tick(float InDeltaTime) override;
 
 	// 추적할 공격을 추가
@@ -85,6 +87,7 @@ public:
 		if (AttacksInProgress.Contains(InWeapon))
 		{
 			const FGuid ID = AttacksInProgress[InWeapon];
+			OnWeaponAttackEnded.Broadcast(ID);
 			DamageTaken.Remove(ID);
 			AttacksInProgress.Remove(InWeapon);
 		}

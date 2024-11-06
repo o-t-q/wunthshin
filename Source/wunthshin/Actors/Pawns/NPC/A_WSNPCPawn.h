@@ -7,6 +7,7 @@
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 #include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
 #include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
+#include "wunthshin/Interfaces/Taker/Taker.h"
 
 #include "A_WSNPCPawn.generated.h"
 
@@ -19,7 +20,7 @@ class UC_WSInventory;
 class AA_WSNPCAIController;
 
 UCLASS()
-class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, public IElementTracked, public ICommonPawn
+class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, public IElementTracked, public ICommonPawn, public I_WSTaker
 {
 	GENERATED_BODY()
 
@@ -112,4 +113,6 @@ private:
 
 public:
 	virtual void PlayHitMontage() override;
+
+	virtual bool Take(UC_WSPickUp* InTakenComponent) override;
 };

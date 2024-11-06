@@ -36,4 +36,10 @@ struct WUNTHSHIN_API FCharacterTableRow : public FTableRowBase
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animations")
 	TArray<UAnimMontage*> HitMontages;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	bool bHasDefaultWeapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta=(RowType = "/Script/wunthshin.WeaponTableRow", EditCondition = "bHasDefaultWeapon", EditConditionHide))
+	FDataTableRowHandle Weapon;
 };

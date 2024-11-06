@@ -16,6 +16,10 @@
 #include "wunthshin/Subsystem/EditorSubsystem/NPC/NPCEditorSubsystem.h"
 #endif
 #include "GameFramework/FloatingPawnMovement.h"
+#include "wunthshin/Actors/Item/A_WSItem.h"
+#include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
+#include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
+#include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 
 DEFINE_LOG_CATEGORY(LogNPCPawn);
@@ -50,7 +54,7 @@ AA_WSNPCPawn::AA_WSNPCPawn()
 
 	bUseControllerRotationPitch = true;
 	bUseControllerRotationYaw = true;
-	bUseControllerRotationRoll = false;
+	bUseControllerRotationRoll = true;
 }
 
 void AA_WSNPCPawn::OnConstruction(const FTransform& Transform)
@@ -99,6 +103,13 @@ void AA_WSNPCPawn::BeginPlay()
 	Super::BeginPlay();
 
 	BLUEPRINT_REFRESH_EDITOR
+
+	ensure(
+		RightHandWeapon->AttachToComponent
+		(
+			MeshComponent,
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale
+	));
 }
 
 void AA_WSNPCPawn::PossessedBy(AController* NewController)
@@ -217,5 +228,43 @@ void AA_WSNPCPawn::PlayHitMontage()
 			HitAnimationIndex %= HitMontages.Num();
 		}
 	}
+}
+
+bool AA_WSNPCPawn::Take(UC_WSPickUp* InTakenComponent)
+{
+	// 아이템을 저장
+	AA_WSItem* Item = Cast<AA_WSItem>(InTakenComponent->GetOwner());
+	ensure(Item);
+	UE_LOG(LogNPCPawn, Log, TEXT("Pick up item: %s"), *Item->GetName());
+
+	// 손이 비어있고, 무기를 잡으려 할때
+	if (const AA_WSWeapon* WeaponCast = Cast<AA_WSWeapon>(Item);
+		WeaponCast && !RightHandWeapon->GetChildActor())
+	{
+		RightHandWeapon->SetChildActorClass(WeaponCast->GetClass());
+        
+		// 런타임 에셋 설정을 위해 Deferred spawn이 필요함
+		RightHandWeapon->CreateChildActor([Item](AActor* InActor) 
+			{
+				AA_WSItem* GeneratedItem = Cast<AA_WSItem>(InActor);
+				// 생성에 사용된 클래스가 Item 상속 클래스가 아닌경우
+				check(GeneratedItem);
+
+				GeneratedItem->SetAssetName(Item->GetAssetName());
+			});
+
+		// 손에 있는 무기를 주울 수 없도록 pick up component를 비활성화
+		if (UC_WSPickUp* PickUpComponent = RightHandWeapon->GetChildActor()->GetComponentByClass<UC_WSPickUp>()) 
+		{
+			PickUpComponent->SetTaken(this);
+		}
+
+		// 충돌 반응 비활성화, overlap으로 반응하는 아이템 프로필로 설정
+		RightHandWeapon->GetChildActor()->GetComponentByClass<UMeshComponent>()->SetCollisionProfileName("ItemEquipped");
+	}
+    
+	// 인벤토리로 무기 또는 아이템 저장
+	Inventory->AddItem(Item);
+	return true;
 }
 

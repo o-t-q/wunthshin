@@ -43,6 +43,11 @@ void UC_WSWeapon::BeginPlay()
 		AttackMontages = WeaponCasting->GetAttackMontages();
 	}
 
+	if (AActor* Taken = GetOwner()->GetAttachParentActor())
+	{
+		UpdateCache(Taken);
+	}
+
 	// ...
 	
 }
@@ -53,23 +58,39 @@ void UC_WSWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 
 }
 
-void UC_WSWeapon::AttackDefault()
+bool UC_WSWeapon::AttackDefault()
 {
-	int32 Index = ContinuousAttackCount % AttackMontages.Num();
-
-	if (AttackMontages[Index]) 
+	if (AttackMontages[NextAttackIndex]) 
 	{
 		if (!BasicAnimInstance->Montage_IsPlaying(nullptr)) 
 		{
-			PopAttackFromWorldStatus();
+			if (const UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+			{
+				if (const FGuid& AttackID = WorldStatusSubsystem->GetCurrentAttackID(this);
+					AttackID.IsValid())
+				{
+					PopAttackFromWorldStatus(nullptr, false);
+				}
+			}
+			
 			PushAttackToWorldStatus();
-			BasicAnimInstance->Montage_Play(AttackMontages[Index]);
-			ContinuousAttackCount++;
+			BasicAnimInstance->Montage_Play(AttackMontages[NextAttackIndex]);
+			NextAttackIndex = (NextAttackIndex + 1) % AttackMontages.Num();
 		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
 	}
 
 	OwningPawn->GetWorldTimerManager().ClearTimer(ResetCounterTimerHandle);
 	OwningPawn->GetWorldTimerManager().SetTimer(ResetCounterTimerHandle, this, &UC_WSWeapon::ResetCounter, ResetTime, false);
+
+	return true;
 }
 
 void UC_WSWeapon::UpdateCache(TScriptInterface<I_WSTaker> InTaker)
@@ -85,8 +106,18 @@ void UC_WSWeapon::UpdateCache(TScriptInterface<I_WSTaker> InTaker)
 		return;
 	}
 
+	if (BasicAnimInstance)
+	{
+		BasicAnimInstance->OnMontageEnded.RemoveAll(this);
+	}
+
 	BasicAnimInstance = Cast<UBaseAnimInstance>(MeshComponent->GetAnimInstance());
 	check(BasicAnimInstance);
+
+	if (BasicAnimInstance)
+	{
+		BasicAnimInstance->OnMontageEnded.AddUniqueDynamic(this, &UC_WSWeapon::PopAttackFromWorldStatus);
+	}
 	
 	SetupInputComponent();
 }
@@ -118,7 +149,7 @@ void UC_WSWeapon::SetupInputComponent()
 				if (It.Action->GetFName() == TEXT("IA_Attack"))
 				{
 					InputAction = It.Action.Get();
-					AttackActionBinding = &EnhancedInputComponent->BindAction(InputAction, ETriggerEvent::Started, this, &ThisClass::AttackDefault);
+					AttackActionBinding = &EnhancedInputComponent->BindAction(InputAction, ETriggerEvent::Started, this, "AttackDefault");
 					break;
 				}
 			}
@@ -134,17 +165,26 @@ void UC_WSWeapon::PushAttackToWorldStatus() const
 	}
 }
 
-void UC_WSWeapon::PopAttackFromWorldStatus() const
+void UC_WSWeapon::PopAttackFromWorldStatus(UAnimMontage* InMontage, bool /*bInterrupted*/)
 {
-	if (UWorldStatusSubsystem* Subsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+	int32 PreviousIndex = (NextAttackIndex - 1) % AttackMontages.Num();
+	if (PreviousIndex < 0)
 	{
-		Subsystem->PopAttack(this);
+		PreviousIndex = AttackMontages.Num() + PreviousIndex;
+	}
+	
+	if (!InMontage || InMontage == AttackMontages[PreviousIndex])
+	{
+		if (UWorldStatusSubsystem* Subsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+		{
+			Subsystem->PopAttack(this);
+		}
 	}
 }
 
 void UC_WSWeapon::ResetCounter()
 {
-	ContinuousAttackCount = 0;
+	NextAttackIndex = 0;
 	UE_LOG(LogTemp, Warning, TEXT("Attack Counter Reset"));
 
 }
@@ -179,9 +219,20 @@ void UC_WSWeapon::BeginDestroy()
 	}
 }
 
-void UC_WSWeapon::AttackSecondary()
+bool UC_WSWeapon::IsAttackInProgress() const
+{
+	if (BasicAnimInstance)
+	{
+		return BasicAnimInstance->Montage_IsPlaying(AttackMontages[NextAttackIndex]);
+	}
+
+	return false;
+}
+
+bool UC_WSWeapon::AttackSecondary()
 {
 	// todo: 몽타주 재생
+	return false;
 }
 
 

@@ -20,13 +20,16 @@ class WUNTHSHIN_API UC_WSWeapon : public UActorComponent
 	
 	UFUNCTION()
 	void UpdateCache(TScriptInterface<I_WSTaker> InTaker);
+	
 	void SetupInputComponent();
 
+	// 단일 공격에 대한 다중 공격 처리 방지를 위한 함수
+	// WorldStatusSubsystem에 의해 처리됨
 	UFUNCTION()
 	void PushAttackToWorldStatus() const;
 	UFUNCTION()
-	void PopAttackFromWorldStatus() const;
-
+	void PopAttackFromWorldStatus(UAnimMontage* InMontage, bool bInterrupted);
+	
 public:
 	// Sets default values for this component's properties
 	UC_WSWeapon();
@@ -37,10 +40,15 @@ protected:
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
-	virtual void AttackDefault();
-	virtual void AttackSecondary();
+	UFUNCTION()
+	virtual bool AttackDefault();
+	UFUNCTION()
+	virtual bool AttackSecondary();
+
 	void ResetCounter();
 	virtual void BeginDestroy() override;
+
+	bool IsAttackInProgress() const;
 
 	float GetDamage() const { return Damage; }
 	void SetDamage(const float InDamage) { Damage = InDamage; }
@@ -68,7 +76,7 @@ protected:
 
 
 	//연속 공격 카운트
-	int32 ContinuousAttackCount = 0;
+	int32 NextAttackIndex = 0;
 	FTimerHandle ResetCounterTimerHandle;
 	float ResetTime = 2.0f;
 	
