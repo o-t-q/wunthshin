@@ -11,5 +11,6 @@ public class wunthshinEditorTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
 		ExtraModuleNames.Add("wunthshin");
+		ExtraModuleNames.Add("wunthshinEditorModule");
 	}
 }

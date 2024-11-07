@@ -11,6 +11,11 @@
 			"AdditionalDependencies": [
 				"Engine"
 			]
+		},
+		{
+			"Name": "wunthshinEditorModule",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit" 
 		}
 	],
 	"Plugins": [
