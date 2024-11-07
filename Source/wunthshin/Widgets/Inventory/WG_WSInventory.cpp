@@ -7,11 +7,9 @@
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
-#include "GeometryCollection/ManagedArrayTypes.h"
 #include "Kismet/GameplayStatics.h"
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Components/Inventory/C_WSInventory.h"
-#include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 
 
@@ -39,11 +37,14 @@ void UWG_WSInventory::NativeConstruct()
 	// check(RarityBGLegend.Object)
 	// RarityBackground.Emplace(ERarity::Legendary, NewObject<UTexture2D>(RarityBGLegend.Object));
 
+	// 자주 사용할거 같아서 미리 받아놓음
 	AA_WSCharacter* Player = Cast<AA_WSCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(),0));
 	PlayerInventory = Player->GetComponentByClass<UC_WSInventory>();
-	
-	// todo: 아이템 획득하는 delegate에 RefreshListItem() 바인딩
 
+	// 각종 버튼 바인딩
+	Button_ClosePanel->OnClicked.AddDynamic(this, &ThisClass::OnClickButton_ClosePanel);
+	// todo: 아이템 획득하는 delegate에 RefreshListItem() 바인딩
+	
 	RefreshListItem();
 }
 
@@ -63,7 +64,8 @@ void UWG_WSInventory::RefreshListItem()
 	// 인벤토리 컴포넌트의 TArray를 복사
 	TArray<UInventoryEntryData*> NewArray;
 	auto& Items = PlayerInventory->GetItems();
-
+	if(Items.IsEmpty()) return;
+	
 	for (auto& Item : Items)
 	{
 		auto newItem = NewObject<UInventoryEntryData>(this);
@@ -72,45 +74,52 @@ void UWG_WSInventory::RefreshListItem()
 	}
 	
 	TileView->SetListItems(NewArray);
-
-	//
+	
+	// 아이템 숫자 표시
 	uint32 InvenCount = Items.Num();
 	uint32 InvenMaxCount = 1000; // 임의로 정함
-	
 	FString InText = FString::Printf(TEXT("%i/%i"), InvenCount,InvenMaxCount);
 	InventoryCount->SetText(FText::FromString(InText));
 
-	Button_ClosePanel->OnClicked.AddDynamic(this, &ThisClass::OnClickButton_ClosePanel);
-
-	// 선택된 아이템 정보 출력
-	auto Selected = TileView->GetSelectedItem<UWG_WSInventoryEntry>();
-	if(!Selected) return;
 	
+	//------------------------------------------------------------------------------------
+	// 선택된 아이템 정보 출력
+	//
+	//
+	
+	const auto Selected = UWG_WSInventoryEntry::Selected;
+	if(!Selected) return;
+
+
+	// 아이템 이름
 	auto AssetName = Selected->GetData()->EntryData.Metadata->GetAssetName(); 
 	ItemName->SetText(FText::FromName(AssetName));
-	
+
+	// 아이템 아이콘
 	auto itemIcon = Selected->GetData()->EntryData.Metadata->GetItemIcon();
 	ItemIcon->SetBrushFromTexture(itemIcon);
 
+	// 아이템 타입
 	//auto itemType = Selected->GetData()->EntryData.Metadata->GetItemType();
 
+	// 아이템 갯수
 	auto itemCount = Selected->GetData()->EntryData.Count;
 	ItemCount->SetText(FText::FromString(FString::Printf(TEXT("%i"), itemCount)));
 
+	// 아이템 효과 설명
 	//auto itemEfficiency = Selected->GetData()->EntryData.Metadata->
 
+	// 아이템 설명
 	auto itemDesc = Selected->GetData()->EntryData.Metadata->GetItemDescription();
 	ItemDescription->SetText(FText::FromName(itemDesc));
-	
-	auto selected = TileView->GetSelectedItem<UWG_WSInventoryEntry>();
 }
 
 void UWG_WSInventory::OnClickButton_ClosePanel()
 {
+	// 창 닫기
 	ESlateVisibility bIsVisible = IsVisible() ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
 	SetVisibility(bIsVisible);
 }
-
 
 
 

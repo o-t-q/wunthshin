@@ -7,7 +7,6 @@
 #include "WG_WSInventoryEntry.generated.h"
 
 
-
 class UInventoryEntryData;
 
 UCLASS()
@@ -15,10 +14,17 @@ class WUNTHSHIN_API UWG_WSInventoryEntry : public UUserWidget, public IUserObjec
 {
 	GENERATED_BODY()
 
+public:
+	static UWG_WSInventoryEntry* Selected;
+	
 protected:
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
+
 public:
-	UInventoryEntryData* GetData() { return Data; }	
+	UInventoryEntryData* GetData() const { return Data; }
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void OnClickButton();
 protected:
 	UPROPERTY()
 	UInventoryEntryData* Data;
@@ -33,7 +39,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
 	class UWidgetSwitcher* Backgrounds;
 
-public:
-	UPROPERTY()
-	FOnItemClicked OnItemClicked;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
+	class UButton* Button_SelectItem;
 };

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "wunthshin/Widgets/WG_WSUserWidgetBase.h"
 #include "WG_WSInventoryEntry.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Image.h"
@@ -18,26 +19,12 @@ class UTextBlock;
 class UImage;
 enum class ERarity : uint8;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnClickListItem,TScriptInterface<IUserObjectListEntry>, ListItem);
-
-UCLASS()
-class WUNTHSHIN_API UCustomListView : public UListView
-{
-	GENERATED_BODY()
-	virtual void OnItemClickedInternal(UObject* Item) override
-	{
-		auto selected = GetSelectedItem<UWG_WSInventoryEntry>();
-		auto data = selected->GetData();
-
-		
-	}
-};
 
 /**
  * 
  */
 UCLASS()
-class WUNTHSHIN_API UWG_WSInventory : public UUserWidget
+class WUNTHSHIN_API UWG_WSInventory : public UWG_WSUserWidgetBase
 {
 	GENERATED_BODY()
 
@@ -45,13 +32,9 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 public:
+	UFUNCTION()
 	void RefreshListItem();
-public:
-	void SetDescription(FText InText) { ItemDescription->SetText(InText);}
-	void SetItemName(FText InText)	{ItemName->SetText(InText);}
-	void SetItemIcon(UTexture2D* InTexture) {ItemIcon->SetBrushFromTexture(InTexture);}
-	void SetItemEfficiency(FText InText) {ItemEfficiency->SetText(InText);}
-	
+
 protected:
 	UPROPERTY()
 	UC_WSInventory* PlayerInventory;

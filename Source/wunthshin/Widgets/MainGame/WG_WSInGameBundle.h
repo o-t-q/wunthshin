@@ -6,6 +6,9 @@
 #include "Blueprint/UserWidget.h"
 #include "WG_WSInGameBundle.generated.h"
 
+class UWG_WSInventory;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnClickMenuButton, int, test);
+
 class UButton;
 /**
  * 
@@ -24,15 +27,18 @@ enum class EChildWidget
 
 protected:
 	virtual void NativeConstruct() override;
-public:
-	UFUNCTION()
-	void SetActive();
-
+	virtual void NativeOnInitialized() override;
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<UUserWidget*> ChildWidgets;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	TArray<class UWG_WSUserWidgetBase*> ChildWidgets;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UWG_WSInventory* Window_Inventory;
+
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	// UWG_WSUserWidgetBase* Window_Inventory;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UButton* Button_OpenInventory;
 };
 
