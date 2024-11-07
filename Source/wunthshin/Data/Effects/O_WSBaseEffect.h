@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EffectParameter/EffectParameter.h"
 #include "UObject/NoExportTypes.h"
 #include "wunthshin/Data/Effects/EffectTableRow/EffectTableRow.h"
 
@@ -19,7 +20,7 @@ class WUNTHSHIN_API UO_WSBaseEffect : public UObject
 public:
 	/**
 	* @brief 아이템 효과가 발동했을때 호출되는 함수
-	* @param InOriginItem 해당 효과가 발동된 아이템
+	* @param InParameter 해당 효과에서 참조할 매개변수
 	* @param InInstigator 해당 아이템을 사용한 대상
 	* @param InTargetActor 아이템 효과가 적용되는 대상
 	*/

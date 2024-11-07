@@ -55,10 +55,25 @@ void UElementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UElementSubsystem::ApplyElement(AActor* InTarget, AActor* InInstigator, const FElementRowHandle& InElementRow)
 {
+	// 빈 요청
+	if (InElementRow.Handle.IsNull())
+	{
+		return;
+	}
+	
 	UE_LOG(LogElementSubsystem, Log, TEXT("Applying the element %s to %s by %s"), *InElementRow.Handle.RowName.ToString(), *InTarget->GetName(), *InInstigator->GetName());
+
 	if (TrackingObjects.Contains(InTarget)) 
 	{
 		FElementTrackingMap& Map = TrackingObjects[InTarget];
+		
+		// 중복된 원소효과는 해당 원소의 타이머를 갱신
+		if (Map.Contains(InElementRow))
+		{
+			UE_LOG(LogElementSubsystem, Log, TEXT("Element %s exists, extending the timer"), *InElementRow.Handle.RowName.ToString());
+			Map.ResetTimer(InInstigator->GetWorld(), InElementRow);
+		}
+		
 		Map.Add(InInstigator->GetWorld(), InInstigator, InElementRow);
 
 		if (IElementTracked* Interface = Cast<IElementTracked>(InTarget))

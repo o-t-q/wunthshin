@@ -12,8 +12,8 @@
 #include "wunthshin/Data/NPCs/NPCTableRow/NPCTableRow.h"
 #include "wunthshin/Subsystem/Utility.h"
 #include "wunthshin/Subsystem/GameInstanceSubsystem/NPC/NPCSubsystem.h"
-#ifdef WITH_EDITOR
-#include "wunthshin/Subsystem/EditorSubsystem/NPC/NPCEditorSubsystem.h"
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
+#include "wunthshinEditorModule/Subsystem/EditorSubsystem/NPC/NPCEditorSubsystem.h"
 #endif
 #include "GameFramework/FloatingPawnMovement.h"
 #include "wunthshin/Actors/Item/A_WSItem.h"
@@ -156,6 +156,12 @@ float AA_WSNPCPawn::TakeDamage(float DamageAmount, struct FDamageEvent const& Da
 		UE_LOG(LogNPCPawn, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), DamageAmount, *DamageCauser->GetName(), *GetName());
 		CustomEvent.SetFirstHit(this);
 		PlayHitMontage();
+
+		// 무기를 맞았을 경우 무기의 원소 효과를 부여
+		if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
+		{
+			ApplyElement(EventInstigator, Weapon->GetElement());
+		}
 		return DamageAmount;
 	}
 

@@ -2,6 +2,9 @@
 
 #include "WorldStatusSubsystem.h"
 
+#include <functional>
+
+#include "LevelSequencePlayer.h"
 #include "wunthshin/Actors/Item/A_WSItem.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Data/Effects/O_WSBaseEffect.h"
@@ -93,6 +96,25 @@ void UWorldStatusSubsystem::Tick(float InDeltaTime)
     }
 
     ItemQueue.Empty();
+}
+
+void UWorldStatusSubsystem::PlayLevelSequence(ULevelSequence* InSequence, const TFunction<void()>& OnEndedFunction)
+{
+    FMovieSceneSequencePlaybackSettings PlaybackSettings;
+    PlaybackSettings.bAutoPlay = true;
+    PlaybackSettings.LoopCount.Value = 0;
+    PlaybackSettings.bHideHud = true;
+				
+    ULevelSequencePlayer* SkillLevelSequence = ULevelSequencePlayer::CreateLevelSequencePlayer
+    (
+        GetWorld(),
+        InSequence,
+        PlaybackSettings,
+        LevelSequenceActor
+    );
+
+    OnLevelSequenceEnded = OnEndedFunction;
+    SkillLevelSequence->OnFinished.AddUniqueDynamic(this, &UWorldStatusSubsystem::ClearLevelSequence);
 }
 
 void UWorldStatusSubsystem::PushItem(const USG_WSItemMetadata* InItem, AActor* InInstigator, AActor* InTarget)

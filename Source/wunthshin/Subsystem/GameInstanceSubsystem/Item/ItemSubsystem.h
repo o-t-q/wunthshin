@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include <vector>
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
 

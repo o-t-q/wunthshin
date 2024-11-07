@@ -8,6 +8,9 @@
 #include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
 #include "WorldStatusSubsystem.generated.h"
 
+class ULevelSequence;
+class ALevelSequenceActor;
+class ULevelSequencePlayer;
 class UC_WSWeapon;
 class AA_WSCharacter;
 class USG_WSItemMetadata;
@@ -56,6 +59,12 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 {
 	GENERATED_BODY()
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sequence", meta = (AllowPrivateAccess = "true"))
+	ULevelSequencePlayer* CurrentLevelSequence;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sequence", meta = (AllowPrivateAccess = "true"))
+	ALevelSequenceActor* LevelSequenceActor;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
 	TArray<AActor*> ItemsNearbyCharacter;
 
@@ -66,13 +75,29 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 	// 공격이 피해를 준 Pawn들
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = "true"))
 	TMap<FGuid, FDamageTakenArray> DamageTaken;
-	
+
+	TFunction<void()> OnLevelSequenceEnded;
 	TArray<FItemTicket> ItemQueue;
 
 public:
 	FOnWeaponAttackEnded OnWeaponAttackEnded;
 	
 	virtual void Tick(float InDeltaTime) override;
+
+	void PlayLevelSequence(ULevelSequence* InSequence, const TFunction<void()>& OnEndedFunction = {});
+	bool IsLevelSequencePlaying() const { return CurrentLevelSequence != nullptr; }
+	
+	UFUNCTION()
+	ULevelSequencePlayer* GetCurrentLevelSequence() const { return CurrentLevelSequence; }
+
+	UFUNCTION()
+	void ClearLevelSequence()
+	{
+		OnLevelSequenceEnded();
+		CurrentLevelSequence = nullptr;
+		LevelSequenceActor = nullptr;
+		OnLevelSequenceEnded = {};
+	}
 
 	// 추적할 공격을 추가
 	void PushAttack(const UC_WSWeapon* InWeapon)

@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
-#include "wunthshin/Data/Effects/EffectTableRow/EffectTableRow.h"
+#include "wunthshin/Data/Effects/EffectParameter/EffectParameter.h"
+#include "wunthshin/Data/Effects/EffectRowHandle/EffectRowHandle.h"
 
 #include "SG_WSItemMetadata.generated.h"
 

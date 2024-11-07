@@ -28,8 +28,8 @@
 #include "wunthshin/Components/Stats/StatsComponent.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 #include "wunthshin/Subsystem/Utility.h"
-#ifdef WITH_EDITOR
-#include "wunthshin/Subsystem/EditorSubsystem/Character/CharacterEditorSubsystem.h"
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
+#include "wunthshinEditorModule/Subsystem/EditorSubsystem/Character/CharacterEditorSubsystem.h"
 #endif
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
@@ -275,6 +275,12 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
         UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
         CustomEvent.SetFirstHit(this);
         PlayHitMontage();
+
+        // 무기를 맞았을 경우 무기의 원소 효과를 부여
+        if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
+        {
+            ApplyElement(EventInstigator, Weapon->GetElement());
+        }
         return Damage;   
     }
 

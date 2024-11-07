@@ -46,7 +46,7 @@ private:
 	TMap<FElementRowHandle, FElementTrackingContext> Elements;
 
 public:
-	void Add(UWorld* InWorldContext, AActor* InInstigator, const FElementRowHandle& InElementRow, const float InExpired = 1.f) 
+	void Add(UWorld* InWorldContext, AActor* InInstigator, const FElementRowHandle& InElementRow, const float InExpired = 5.f) 
 	{
 		if (!IsValid(InWorldContext))
 		{
@@ -120,6 +120,36 @@ public:
 	bool IsFull() const 
 	{
 		return Elements.Num() >= 2;
+	}
+	
+	bool Contains(const FElementRowHandle& InElement) const
+	{
+		return Elements.Contains(InElement);
+	}
+
+	void ResetTimer(UWorld* InWorldContext, const FElementRowHandle& InElement, const float InExpired = 5.f)
+	{
+		if (Elements.Contains(InElement))
+		{
+			FElementTrackingContext& TrackingContext = Elements[InElement];
+			
+			InWorldContext->GetTimerManager().ClearTimer(TrackingContext.ExpiredHandle);
+			FTimerDelegate OnExpiredDelegate;
+			OnExpiredDelegate.BindRaw(this, &FElementTrackingMap::Remove, InWorldContext, InElement, true);
+
+			FTimerManagerTimerParameters TimerParam;
+			TimerParam.bLoop = false;
+			TimerParam.bMaxOncePerFrame = false;
+			TimerParam.FirstDelay = -1.f;
+
+			InWorldContext->GetTimerManager().SetTimer
+			(
+				TrackingContext.ExpiredHandle,
+				OnExpiredDelegate,
+				InExpired,
+				TimerParam
+			);
+		}
 	}
 
 	FElementReactionPair ExtractElement() 

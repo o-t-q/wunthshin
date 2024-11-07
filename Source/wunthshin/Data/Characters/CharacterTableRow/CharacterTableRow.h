@@ -42,4 +42,7 @@ struct WUNTHSHIN_API FCharacterTableRow : public FTableRowBase
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon", meta=(RowType = "/Script/wunthshin.WeaponTableRow", EditCondition = "bHasDefaultWeapon", EditConditionHide))
 	FDataTableRowHandle Weapon;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skill", meta=(RowType = "/Script/wunthshin.SkillTableRow"));
+	FDataTableRowHandle Skill;
 };

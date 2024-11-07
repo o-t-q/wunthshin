@@ -9,6 +9,7 @@
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 #include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
 #include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
+#include "wunthshin/Interfaces/SkillCast/SkillCast.h"
 
 #include "AA_WSCharacter.generated.h"
 
@@ -33,7 +34,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGlide);
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game, Blueprintable)
-class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFetcher, public IElementTracked, public ICommonPawn
+class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFetcher, public IElementTracked, public ICommonPawn, public ISkillCast
 {
 	GENERATED_BODY()
 	
