@@ -67,9 +67,9 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
             SpawnedWeapon->SetAssetName(InData->Weapon.RowName);
             SpawnedWeapon->FinishSpawning(FTransform::Identity);
 
-            if (I_WSTaker* Taker = Cast<I_WSTaker>(PawnCasting))
+            if (const UC_WSPickUp* PickupComponent = SpawnedWeapon->GetComponentByClass<UC_WSPickUp>())
             {
-                Taker->Take(SpawnedWeapon->GetComponentByClass<UC_WSPickUp>());
+                PickupComponent->OnPickUp.Broadcast(PawnCasting);
             }
         }
     }
