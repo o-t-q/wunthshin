@@ -4,8 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "FCTweenInstance.h"
 #include "WG_WSUserWidgetBase.generated.h"
 
+
+class UImage;
 /**
  * 
  */
@@ -14,7 +17,20 @@ class WUNTHSHIN_API UWG_WSUserWidgetBase : public UUserWidget
 {
 	GENERATED_BODY()
 
-// public:
-// 	void SetVisibleWidget(bool bIsVisible)
+protected:
+	virtual void NativeConstruct() override;
+	bool InitializeWidget();
+
+public:
+	UFUNCTION()
+	void OnVisibleWidget();
+	UFUNCTION()
+	void OnHideWidget();
 	
+protected:
+	void SetVisibleWidget(bool bIsVisible);
+
+protected:
+	UPROPERTY(VisibleAnywhere, meta = (BindWidget))
+	TMap<FName,class UWG_WSUserWidgetBase*> ChildWidgets;
 };

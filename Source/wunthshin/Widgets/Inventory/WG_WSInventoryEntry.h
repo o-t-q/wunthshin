@@ -3,14 +3,14 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/IUserObjectListEntry.h"
-
+#include "wunthshin/Widgets/WG_WSUserWidgetBase.h"
 #include "WG_WSInventoryEntry.generated.h"
 
 
 class UInventoryEntryData;
 
 UCLASS()
-class WUNTHSHIN_API UWG_WSInventoryEntry : public UUserWidget, public IUserObjectListEntry
+class WUNTHSHIN_API UWG_WSInventoryEntry : public UWG_WSUserWidgetBase, public IUserObjectListEntry
 {
 	GENERATED_BODY()
 

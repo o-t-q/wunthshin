@@ -3,6 +3,7 @@
 
 #include "WG_WSInventory.h"
 
+#include "FCTween.h"
 #include "WG_WSInventoryEntry.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
@@ -42,7 +43,8 @@ void UWG_WSInventory::NativeConstruct()
 	PlayerInventory = Player->GetComponentByClass<UC_WSInventory>();
 
 	// 각종 버튼 바인딩
-	Button_ClosePanel->OnClicked.AddDynamic(this, &ThisClass::OnClickButton_ClosePanel);
+	Button_ClosePanel->OnClicked.AddDynamic(this, &ThisClass::OnHideWidget);
+	OnVisibilityChanged.AddDynamic(this,&ThisClass::OnRefreshListItem);
 	// todo: 아이템 획득하는 delegate에 RefreshListItem() 바인딩
 	
 	RefreshListItem();
@@ -116,9 +118,7 @@ void UWG_WSInventory::RefreshListItem()
 
 void UWG_WSInventory::OnClickButton_ClosePanel()
 {
-	// 창 닫기
-	ESlateVisibility bIsVisible = IsVisible() ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
-	SetVisibility(bIsVisible);
+	
 }
 
 

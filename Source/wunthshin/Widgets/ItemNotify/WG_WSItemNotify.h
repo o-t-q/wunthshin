@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "wunthshin/Widgets/WG_WSUserWidgetBase.h"
 #include "WG_WSItemNotify.generated.h"
 
 class AA_WSItem;
@@ -13,7 +14,7 @@ class UTextBlock;
  * 
  */
 UCLASS()
-class WUNTHSHIN_API UWG_WSItemNotify : public UUserWidget
+class WUNTHSHIN_API UWG_WSItemNotify : public UWG_WSUserWidgetBase
 {
 	GENERATED_BODY()
 

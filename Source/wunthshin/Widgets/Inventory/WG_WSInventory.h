@@ -33,6 +33,8 @@ protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 public:
 	UFUNCTION()
+	void OnRefreshListItem(ESlateVisibility IsVisibility) { RefreshListItem(); }
+	UFUNCTION()
 	void RefreshListItem();
 
 protected:
