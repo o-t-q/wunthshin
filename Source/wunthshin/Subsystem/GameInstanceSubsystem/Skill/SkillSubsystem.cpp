@@ -41,26 +41,34 @@ void USkillSubsystem::CastSkill(const FSkillRowHandle& InSkill, ICommonPawn* InI
 {
 	if (const FSkillTableRow* Skill = InSkill.Handle.GetRow<FSkillTableRow>(TEXT("")))
 	{
+		UO_WSBaseSkill* SkillProcessor = PreinstantiatedSkillProcessor[Skill->SkillProcessor];
+		// 미리 스킬 처리기가 생성되지 않은 경우
+		check(SkillProcessor);
+
+		const TFunction<void()> SkillProcessorFunction = [Skill, InInstigator, SkillProcessor, InTargetLocation, InTargetActor]()
+		{
+			const AActor* InstigatorActor = Cast<AActor>(InInstigator);
+			UE_LOG(LogSkillSubsystem, Log, TEXT("Take effect of skill! %s and %s -> %s, %s"), *SkillProcessor->GetName(), *InstigatorActor->GetName(), *InTargetLocation.ToString(), *InTargetActor->GetName());
+			SkillProcessor->DoSkill(Skill->Parameter, InInstigator, InTargetLocation, InTargetActor);	
+		};
+		
 		if (Skill->Parameter.CastingSequence)
 		{
+			UE_LOG(LogSkillSubsystem, Log, TEXT("Skill level seqeunce found, playing: %s"), *Skill->Parameter.CastingSequence->GetName());
 			if (UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
 			{
+				WorldStatusSubsystem->SetSkillVictimPawn(Cast<AActor>(InInstigator));
 				if (WorldStatusSubsystem->IsLevelSequencePlaying())
 				{
 					return;
 				}
-				
-				UO_WSBaseSkill* SkillProcessor = PreinstantiatedSkillProcessor[Skill->SkillProcessor];
-				// 미리 스킬 처리기가 생성되지 않은 경우
-				check(SkillProcessor);
 
-				const TFunction<void()> SkillProcessorFunction = [Skill, InInstigator, SkillProcessor, InTargetLocation, InTargetActor]()
-				{
-					SkillProcessor->DoSkill(Skill->Parameter, InInstigator, InTargetLocation, InTargetActor);	
-				};
-				
 				WorldStatusSubsystem->PlayLevelSequence(Skill->Parameter.CastingSequence, SkillProcessorFunction);
 			}
+		}
+		else
+		{
+			SkillProcessorFunction();
 		}
 	}
 }

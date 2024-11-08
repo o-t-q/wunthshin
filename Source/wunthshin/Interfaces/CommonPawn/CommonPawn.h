@@ -45,6 +45,7 @@ public:
 	COMPONENT_GETTER(UStatsComponent, StatsComponent);
 	COMPONENT_GETTER(UChildActorComponent, RightHandComponent);
 	COMPONENT_GETTER(UPawnMovementComponent, PawnMovementComponent);
+	COMPONENT_GETTER(UC_WSSkill, SkillComponent);
 
 	// 빨리 달리는지 확인하는 함수
 	virtual bool IsFastRunning() const = 0;

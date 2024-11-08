@@ -20,6 +20,7 @@
 #include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
+#include "wunthshin/Components/Skill/C_WSSkill.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 
 DEFINE_LOG_CATEGORY(LogNPCPawn);
@@ -37,9 +38,11 @@ AA_WSNPCPawn::AA_WSNPCPawn()
 	Shield = CreateDefaultSubobject<UC_WSShield>(TEXT("Shield"));
 	StatsComponent = CreateDefaultSubobject<UStatsComponent>(TEXT("StatsComponent"));
 	RightHandWeapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("RightHandWeapon"));
-
+	Skill = CreateDefaultSubobject<UC_WSSkill>(TEXT("SkillComponent"));
+	
 	SetRootComponent(CapsuleComponent);
 	CapsuleComponent->InitCapsuleSize(42.f, 96.f);
+	CapsuleComponent->SetCollisionProfileName("Pawn");
 
 	MeshComponent->SetupAttachment(CapsuleComponent);
 	MeshComponent->SetRelativeLocation({ 0.f, 0.f, -96.f });

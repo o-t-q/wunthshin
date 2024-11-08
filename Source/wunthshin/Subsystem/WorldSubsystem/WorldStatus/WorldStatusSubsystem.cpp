@@ -14,6 +14,11 @@
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 
+UWorldStatusSubsystem::UWorldStatusSubsystem()
+    : CurrentLevelSequence(nullptr), LevelSequenceActor(nullptr), SkillVictimPawn(nullptr)
+{
+}
+
 void UWorldStatusSubsystem::Tick(float InDeltaTime)
 {
     ItemsNearbyCharacter.Empty();

@@ -13,6 +13,7 @@
 
 #include "AA_WSCharacter.generated.h"
 
+class UC_WSSkill;
 class UPawnMovementComponent;
 class UStatsComponent;
 class UC_WSShield;
@@ -98,6 +99,9 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UC_WSShield* Shield;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	UC_WSSkill* Skill;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UStatsComponent* CharacterStatsComponent;
 
@@ -250,7 +254,8 @@ public:
 	virtual UStatsComponent* GetStatsComponent() const override { return CharacterStatsComponent; }
 	virtual UChildActorComponent* GetRightHandComponent() const override { return RightHandWeapon; }
 	virtual UPawnMovementComponent* GetPawnMovementComponent() const override { return ACharacter::GetMovementComponent(); }
-
+	virtual UC_WSSkill* GetSkillComponent() const override { return Skill; }
+	
 	virtual void HandleStaminaDepleted() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
@@ -274,8 +279,4 @@ protected:
 public:
 	UFUNCTION(BlueprintPure)
 	FORCEINLINE UClimCharacterMovementComponent* GetCustomCharacterMovement() const { return CilmMovementComponent; }
-
-
-
-
 };

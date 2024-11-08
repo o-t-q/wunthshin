@@ -31,6 +31,7 @@
 #if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
 #include "wunthshinEditorModule/Subsystem/EditorSubsystem/Character/CharacterEditorSubsystem.h"
 #endif
+#include "wunthshin/Components/Skill/C_WSSkill.h"
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
 
@@ -71,7 +72,6 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
         ADD_INPUT_ACTION(ZoomWheelAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_ZoomWheel.IA_ZoomWheel'");
         ADD_INPUT_ACTION(ClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Climb.IA_Climb'");
         ADD_INPUT_ACTION(CancelClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_CancelClimb.IA_CancelClimb'");
-    
     }
 
 
@@ -128,11 +128,12 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
     Shield->SetupAttachment(GetMesh());
     
     RightHandWeapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("RightHandWeapon"));
-
+    
 	CameraBoom->bEnableCameraLag = true;
 
     CilmMovementComponent = Cast<UClimCharacterMovementComponent>(GetCharacterMovement());
 
+    Skill = CreateDefaultSubobject<UC_WSSkill>(TEXT("SkillComponent"));
 }
 
 void AA_WSCharacter::HandleStaminaDepleted()

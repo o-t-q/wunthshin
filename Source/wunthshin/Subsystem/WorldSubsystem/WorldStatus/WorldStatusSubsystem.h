@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelSequenceActor.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "wunthshin/Components/Weapon/C_WSWeapon.h"
 #include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
@@ -64,6 +65,9 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sequence", meta = (AllowPrivateAccess = "true"))
 	ALevelSequenceActor* LevelSequenceActor;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill", meta = (AllowPrivateAccess = "true"))
+	AActor* SkillVictimPawn;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
 	TArray<AActor*> ItemsNearbyCharacter;
@@ -81,12 +85,18 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 
 public:
 	FOnWeaponAttackEnded OnWeaponAttackEnded;
+
+	UWorldStatusSubsystem();
 	
 	virtual void Tick(float InDeltaTime) override;
 
 	void PlayLevelSequence(ULevelSequence* InSequence, const TFunction<void()>& OnEndedFunction = {});
 	bool IsLevelSequencePlaying() const { return CurrentLevelSequence != nullptr; }
-	
+	void SetSkillVictimPawn(AActor* InSkillVictimPawn) { SkillVictimPawn = InSkillVictimPawn; }
+
+	UFUNCTION(BlueprintCallable)
+	AActor* GetSkillVictimPawn() const { return SkillVictimPawn; }
+
 	UFUNCTION()
 	ULevelSequencePlayer* GetCurrentLevelSequence() const { return CurrentLevelSequence; }
 
@@ -94,8 +104,10 @@ public:
 	void ClearLevelSequence()
 	{
 		OnLevelSequenceEnded();
+		LevelSequenceActor->Destroy();
 		CurrentLevelSequence = nullptr;
 		LevelSequenceActor = nullptr;
+		SetSkillVictimPawn(nullptr);
 		OnLevelSequenceEnded = {};
 	}
 
