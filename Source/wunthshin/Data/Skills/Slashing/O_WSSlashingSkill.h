@@ -15,5 +15,5 @@ class WUNTHSHIN_API UO_WSSlashingSkill : public UO_WSBaseSkill
 	GENERATED_BODY()
 
 public:
-	virtual void DoSkill(const FSkillParameter& InParameter, ICommonPawn* InInstigator, const FVector& InTargetLocation, AActor* InTargetActor) override;
+	virtual void DoSkillImpl(const FSkillParameter& InParameter, ICommonPawn* InInstigator, const FVector& InTargetLocation, AActor* InTargetActor) override;
 };

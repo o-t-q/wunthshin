@@ -32,7 +32,10 @@ public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-	void CastSkill(const FSkillRowHandle& InSkill, ICommonPawn* InInstigator, const FVector& InTargetLocation, AActor* InTargetActor);
+	bool CastSkill(
+		const FSkillRowHandle& InSkill, ICommonPawn* InInstigator, const FVector& InTargetLocation,
+		AActor*                InTargetActor
+	);
 	
 	UO_WSBaseSkill* GetSkillProcessor(TSubclassOf<UO_WSBaseSkill> SkillClass);
 	UO_WSBaseSkill* GetSkillProcessor(const FSkillRowHandle& InSkill);

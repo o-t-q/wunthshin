@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "SkillTableRow/SkillTableRow.h"
 #include "UObject/Object.h"
+
+#include "wunthshin/Data/Elements/ElementRowHandle/ElementRowHandle.h"
+
 #include "O_WSBaseSkill.generated.h"
 
 class ICommonPawn;
@@ -17,5 +20,6 @@ class WUNTHSHIN_API UO_WSBaseSkill : public UObject
 	GENERATED_BODY()
 
 public:
-	virtual void DoSkill(const FSkillParameter& InParameter, ICommonPawn* InInstigator, const FVector& InTargetLocation, AActor* InTargetActor) PURE_VIRTUAL(UO_WSBaseSkill::DoSkill, );
+	virtual void DoSkillImpl(const FSkillParameter& InParameter, ICommonPawn* InInstigator, const FVector& InTargetLocation, AActor* InTargetActor) PURE_VIRTUAL(UO_WSBaseSkill::DoSkillImpl, );
+	void DoSkill(const FSkillParameter& InParameter, ICommonPawn* InInstigator, const FVector& InTargetLocation, AActor* InTargetActor);
 };

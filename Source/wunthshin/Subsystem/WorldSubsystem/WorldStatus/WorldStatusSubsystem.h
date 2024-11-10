@@ -9,6 +9,7 @@
 #include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
 #include "WorldStatusSubsystem.generated.h"
 
+class AA_WSNPCPawn;
 class ULevelSequence;
 class ALevelSequenceActor;
 class ULevelSequencePlayer;
@@ -60,25 +61,32 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 {
 	GENERATED_BODY()
 
+	// 레벨 시퀀스 플레이어 (스킬, 씬 등..)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sequence", meta = (AllowPrivateAccess = "true"))
 	ULevelSequencePlayer* CurrentLevelSequence;
-	
+
+	// 현재 실행중인 레벨 시퀀스 액터
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sequence", meta = (AllowPrivateAccess = "true"))
 	ALevelSequenceActor* LevelSequenceActor;
 
+	// 스킬에 씬에 대상이 되는 폰
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill", meta = (AllowPrivateAccess = "true"))
-	AActor* SkillVictimPawn;
+	APawn* SkillVictimPawn;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
 	TArray<AActor*> ItemsNearbyCharacter;
 
 	// 현재 진행중인 모든 공격들
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = "true"))
-	TMap<const UC_WSWeapon*, FGuid> AttacksInProgress;
+	TMap<const UObject*, FGuid> AttacksInProgress;
 
 	// 공격이 피해를 준 Pawn들
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = "true"))
 	TMap<FGuid, FDamageTakenArray> DamageTaken;
+
+	// 월드에 스폰된 NPC Pawn들
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pawn", meta = (AllowPrivateAccess = "true"))
+	TSet<AA_WSNPCPawn*> NPCPawns;
 
 	TFunction<void()> OnLevelSequenceEnded;
 	TArray<FItemTicket> ItemQueue;
@@ -90,15 +98,21 @@ public:
 	
 	virtual void Tick(float InDeltaTime) override;
 
+	void AddNPCPawn(AA_WSNPCPawn* InNewNPCPawn) { NPCPawns.Add(InNewNPCPawn); }
+	void RemoveNPCPawn(const AA_WSNPCPawn* InPawnToRemove) { NPCPawns.Remove(InPawnToRemove); }
+
 	void PlayLevelSequence(ULevelSequence* InSequence, const TFunction<void()>& OnEndedFunction = {});
 	bool IsLevelSequencePlaying() const { return CurrentLevelSequence != nullptr; }
-	void SetSkillVictimPawn(AActor* InSkillVictimPawn) { SkillVictimPawn = InSkillVictimPawn; }
+	void SetSkillVictimPawn(APawn* InSkillVictimPawn) { SkillVictimPawn = InSkillVictimPawn; }
 
 	UFUNCTION(BlueprintCallable)
 	AActor* GetSkillVictimPawn() const { return SkillVictimPawn; }
 
 	UFUNCTION()
 	ULevelSequencePlayer* GetCurrentLevelSequence() const { return CurrentLevelSequence; }
+
+	void FreezeSpawnedNPCsBT();
+	void UnfreezeSpawnedNPCsBT();
 
 	UFUNCTION()
 	void ClearLevelSequence()
@@ -112,21 +126,21 @@ public:
 	}
 
 	// 추적할 공격을 추가
-	void PushAttack(const UC_WSWeapon* InWeapon)
+	void PushAttack(const UObject* InGiver)
 	{
 		const FGuid NewAttack = FGuid::NewGuid();
-		AttacksInProgress.Add(InWeapon);
-		AttacksInProgress[InWeapon] = NewAttack;
+		AttacksInProgress.Add(InGiver);
+		AttacksInProgress[InGiver] = NewAttack;
 	}
 	// 추적이 끝난 공격을 제거
-	void PopAttack(const UC_WSWeapon* InWeapon)
+	void PopAttack(const UObject* InGiver)
 	{
-		if (AttacksInProgress.Contains(InWeapon))
+		if (AttacksInProgress.Contains(InGiver))
 		{
-			const FGuid ID = AttacksInProgress[InWeapon];
+			const FGuid ID = AttacksInProgress[InGiver];
 			OnWeaponAttackEnded.Broadcast(ID);
 			DamageTaken.Remove(ID);
-			AttacksInProgress.Remove(InWeapon);
+			AttacksInProgress.Remove(InGiver);
 		}
 	}
 
@@ -153,21 +167,21 @@ public:
 
 		return false;
 	}
-	bool IsDamageTakenBy(const ICommonPawn* InPawn, const UC_WSWeapon* InWeapon) const
+	bool IsDamageTakenBy(const ICommonPawn* InPawn, const UObject* InGiver) const
 	{
-		if (AttacksInProgress.Contains(InWeapon))
+		if (AttacksInProgress.Contains(InGiver))
 		{
-			return IsDamageTakenBy(InPawn, AttacksInProgress[InWeapon]);
+			return IsDamageTakenBy(InPawn, AttacksInProgress[InGiver]);
 		}
 
 		return false;
 	}
 
-	FGuid GetCurrentAttackID(const UC_WSWeapon* InWeapon) const
+	FGuid GetCurrentAttackID(const UObject* InGiver) const
 	{
-		if (AttacksInProgress.Contains(InWeapon))
+		if (AttacksInProgress.Contains(InGiver))
 		{
-			return AttacksInProgress[InWeapon];
+			return AttacksInProgress[InGiver];
 		}
 
 		return {};

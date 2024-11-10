@@ -22,6 +22,7 @@
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Components/Skill/C_WSSkill.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
+#include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogNPCPawn);
 
@@ -104,7 +105,7 @@ UClass* AA_WSNPCPawn::GetEditorSubsystemType() const
 void AA_WSNPCPawn::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	BLUEPRINT_REFRESH_EDITOR
 
 	ensure(
@@ -113,6 +114,30 @@ void AA_WSNPCPawn::BeginPlay()
 			MeshComponent,
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale
 	));
+
+	// 월드에 스폰된 NPC들 리스트에 추가
+	if (const UWorld* World = GetWorld())
+	{
+		if (UWorldStatusSubsystem* WorldStatusSubsystem = World->GetSubsystem<UWorldStatusSubsystem>())
+		{
+			WorldStatusSubsystem->AddNPCPawn(this);
+		}
+	}
+	
+}
+
+void AA_WSNPCPawn::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	// 월드에 스폰된 NPC들 리스트에서 제거
+	if (const UWorld* World = GetWorld())
+	{
+		if (UWorldStatusSubsystem* WorldStatusSubsystem = World->GetSubsystem<UWorldStatusSubsystem>())
+		{
+			WorldStatusSubsystem->RemoveNPCPawn(this);
+		}
+	}
 }
 
 void AA_WSNPCPawn::PossessedBy(AController* NewController)

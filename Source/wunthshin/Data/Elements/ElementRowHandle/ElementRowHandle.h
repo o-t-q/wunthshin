@@ -20,3 +20,5 @@ public:
 		return Handle == Other.Handle;
 	}
 };
+
+uint32 GetTypeHash(const FElementRowHandle& InDataTableHandle);

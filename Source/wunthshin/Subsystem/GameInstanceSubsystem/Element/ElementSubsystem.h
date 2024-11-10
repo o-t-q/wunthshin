@@ -34,8 +34,6 @@ struct FElementTrackingContext
 	FTimerHandle ExpiredHandle;
 };
 
-uint32 GetTypeHash(const FElementRowHandle& InDataTableHandle);
-
 USTRUCT()
 struct FElementTrackingMap
 {
@@ -210,6 +208,5 @@ public:
 	void ApplyElement(AActor* InTarget, AActor* InInstigator, const FElementRowHandle& InElementRow);
 
 	UO_WSElementReactor* GetReactor(const FElementRowHandle& InLeft, const FElementRowHandle& InRight) const;
-
 	UO_WSElementReactor* GetReactor(TSubclassOf<UO_WSElementReactor> InReactorType) const;
 };

@@ -23,5 +23,5 @@ class WUNTHSHIN_API ISkillCast
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	void CastSkill(const FSkillRowHandle& InSkill, const FVector& InTargetLocation, AActor* InTargetActor);
+	bool CastSkill(const FSkillRowHandle& InSkill, const FVector& InTargetLocation, AActor* InTargetActor);
 };

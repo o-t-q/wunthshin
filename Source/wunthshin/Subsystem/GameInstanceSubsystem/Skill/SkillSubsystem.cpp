@@ -7,6 +7,7 @@
 #include "wunthshin/Data/Skills/O_WSBaseSkill.h"
 #include "wunthshin/Data/Skills/SkillRowHandle/SkillRowHandle.h"
 #include "wunthshin/Data/Skills/SkillTableRow/SkillTableRow.h"
+#include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogSkillSubsystem);
@@ -37,7 +38,9 @@ void USkillSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	}
 }
 
-void USkillSubsystem::CastSkill(const FSkillRowHandle& InSkill, ICommonPawn* InInstigator, const FVector& InTargetLocation, AActor* InTargetActor)
+bool USkillSubsystem::CastSkill(
+	const FSkillRowHandle& InSkill, ICommonPawn* InInstigator, const FVector& InTargetLocation, AActor* InTargetActor
+)
 {
 	if (const FSkillTableRow* Skill = InSkill.Handle.GetRow<FSkillTableRow>(TEXT("")))
 	{
@@ -47,22 +50,36 @@ void USkillSubsystem::CastSkill(const FSkillRowHandle& InSkill, ICommonPawn* InI
 
 		const TFunction<void()> SkillProcessorFunction = [Skill, InInstigator, SkillProcessor, InTargetLocation, InTargetActor]()
 		{
-			const AActor* InstigatorActor = Cast<AActor>(InInstigator);
-			UE_LOG(LogSkillSubsystem, Log, TEXT("Take effect of skill! %s and %s -> %s, %s"), *SkillProcessor->GetName(), *InstigatorActor->GetName(), *InTargetLocation.ToString(), *InTargetActor->GetName());
-			SkillProcessor->DoSkill(Skill->Parameter, InInstigator, InTargetLocation, InTargetActor);	
+			if (AActor* InstigatorActor = Cast<AActor>(InInstigator))
+			{
+				UE_LOG(LogSkillSubsystem, Log, TEXT("Take effect of skill! %s and %s -> %s, %s"), *SkillProcessor->GetName(), *InstigatorActor->GetName(), *InTargetLocation.ToString(), *InTargetActor->GetName());
+
+				SkillProcessor->DoSkill(Skill->Parameter, InInstigator, InTargetLocation, InTargetActor);
+				if (IElementTracked* ElementTracked = Cast<IElementTracked>(InTargetActor))
+				{
+					if (!Skill->Element.IsNull())
+					{
+						ElementTracked->ApplyElement(InstigatorActor, FElementRowHandle{Skill->Element});
+					}
+				}
+				
+				InstigatorActor->GetWorld()->GetSubsystem<UWorldStatusSubsystem>()->UnfreezeSpawnedNPCsBT();
+			}
 		};
 		
 		if (Skill->Parameter.CastingSequence)
 		{
-			UE_LOG(LogSkillSubsystem, Log, TEXT("Skill level seqeunce found, playing: %s"), *Skill->Parameter.CastingSequence->GetName());
+			UE_LOG(LogSkillSubsystem, Log, TEXT("Skill level sequence found, playing: %s"), *Skill->Parameter.CastingSequence->GetName());
 			if (UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
 			{
-				WorldStatusSubsystem->SetSkillVictimPawn(Cast<AActor>(InInstigator));
+				WorldStatusSubsystem->SetSkillVictimPawn(Cast<APawn>(InInstigator));
+				
 				if (WorldStatusSubsystem->IsLevelSequencePlaying())
 				{
-					return;
+					return false;
 				}
 
+				WorldStatusSubsystem->FreezeSpawnedNPCsBT();
 				WorldStatusSubsystem->PlayLevelSequence(Skill->Parameter.CastingSequence, SkillProcessorFunction);
 			}
 		}
@@ -70,7 +87,11 @@ void USkillSubsystem::CastSkill(const FSkillRowHandle& InSkill, ICommonPawn* InI
 		{
 			SkillProcessorFunction();
 		}
+
+		return true;
 	}
+
+	return false;
 }
 
 UO_WSBaseSkill* USkillSubsystem::GetSkillProcessor(TSubclassOf<UO_WSBaseSkill> SkillClass)

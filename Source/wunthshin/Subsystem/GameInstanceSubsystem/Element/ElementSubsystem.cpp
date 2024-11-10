@@ -8,11 +8,6 @@
 
 DEFINE_LOG_CATEGORY(LogElementSubsystem);
 
-uint32 GetTypeHash(const FElementRowHandle& InDataTableHandle)
-{
-	return CityHash32(reinterpret_cast<const char*>(&InDataTableHandle), sizeof(InDataTableHandle));
-}
-
 UElementSubsystem::UElementSubsystem()
 {
 	static ConstructorHelpers::FObjectFinder<UDataTable> Table(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_ElementTable.DT_ElementTable'"));

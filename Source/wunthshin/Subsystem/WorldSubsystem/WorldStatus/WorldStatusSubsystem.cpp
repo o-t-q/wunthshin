@@ -5,6 +5,9 @@
 #include <functional>
 
 #include "LevelSequencePlayer.h"
+
+#include "BehaviorTree/BehaviorTreeComponent.h"
+
 #include "wunthshin/Actors/Item/A_WSItem.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Data/Effects/O_WSBaseEffect.h"
@@ -12,6 +15,7 @@
 #include "Components/WidgetComponent.h"
 
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
+#include "wunthshin/Actors/Pawns/NPC/A_WSNPCPawn.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 
 UWorldStatusSubsystem::UWorldStatusSubsystem()
@@ -76,31 +80,35 @@ void UWorldStatusSubsystem::Tick(float InDeltaTime)
 		}
 	}
 
-    for (FItemTicket& Ticket : ItemQueue) 
+    // 레벨 시퀀스가 시작되어 있다면 아이템 효과 
+    if (!GetCurrentLevelSequence())
     {
-        FItemTicket::ExecuteAndAdjustLifetime(GetWorld(), Ticket);
-
-        if (Ticket.IsValid()) 
+        for (FItemTicket& Ticket : ItemQueue) 
         {
-            FTimerDelegate Delegate;
-            FTimerManagerTimerParameters Params;
-            Params.bLoop = false;
-            Params.FirstDelay = -1.f;
-            Params.bMaxOncePerFrame = false;
+            FItemTicket::ExecuteAndAdjustLifetime(GetWorld(), Ticket);
 
-            Delegate.BindUObject(this, &UWorldStatusSubsystem::PushItem, Ticket);
+            if (Ticket.IsValid()) 
+            {
+                FTimerDelegate Delegate;
+                FTimerManagerTimerParameters Params;
+                Params.bLoop = false;
+                Params.FirstDelay = -1.f;
+                Params.bMaxOncePerFrame = false;
 
-            GetWorld()->GetTimerManager().SetTimer
-            (
-                Ticket.GetTimerHandle(),
-                Delegate,
-                Ticket.Rate,
-                Params
-            );
+                Delegate.BindUObject(this, &UWorldStatusSubsystem::PushItem, Ticket);
+
+                GetWorld()->GetTimerManager().SetTimer
+                (
+                    Ticket.GetTimerHandle(),
+                    Delegate,
+                    Ticket.Rate,
+                    Params
+                );
+            }
         }
-    }
 
-    ItemQueue.Empty();
+        ItemQueue.Empty();
+    }
 }
 
 void UWorldStatusSubsystem::PlayLevelSequence(ULevelSequence* InSequence, const TFunction<void()>& OnEndedFunction)
@@ -109,6 +117,8 @@ void UWorldStatusSubsystem::PlayLevelSequence(ULevelSequence* InSequence, const 
     PlaybackSettings.bAutoPlay = true;
     PlaybackSettings.LoopCount.Value = 0;
     PlaybackSettings.bHideHud = true;
+    PlaybackSettings.bDisableLookAtInput = true;
+    PlaybackSettings.bDisableMovementInput = true;
 				
     ULevelSequencePlayer* SkillLevelSequence = ULevelSequencePlayer::CreateLevelSequencePlayer
     (
@@ -117,9 +127,25 @@ void UWorldStatusSubsystem::PlayLevelSequence(ULevelSequence* InSequence, const 
         PlaybackSettings,
         LevelSequenceActor
     );
-
+    
     OnLevelSequenceEnded = OnEndedFunction;
     SkillLevelSequence->OnFinished.AddUniqueDynamic(this, &UWorldStatusSubsystem::ClearLevelSequence);
+}
+
+void UWorldStatusSubsystem::FreezeSpawnedNPCsBT()
+{
+    for (const AA_WSNPCPawn* Pawn : NPCPawns)
+    {
+        Pawn->GetController()->GetComponentByClass<UBehaviorTreeComponent>()->PauseLogic("By world status subsystem");
+    }
+}
+
+void UWorldStatusSubsystem::UnfreezeSpawnedNPCsBT()
+{
+    for (const AA_WSNPCPawn* Pawn : NPCPawns)
+    {
+        Pawn->GetController()->GetComponentByClass<UBehaviorTreeComponent>()->ResumeLogic("By world status subsystem");
+    }
 }
 
 void UWorldStatusSubsystem::PushItem(const USG_WSItemMetadata* InItem, AActor* InInstigator, AActor* InTarget)

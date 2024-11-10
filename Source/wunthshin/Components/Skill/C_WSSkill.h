@@ -31,6 +31,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill", meta=(AllowPrivateAccess=true))
 	FSkillRowHandle CharacterSkill;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill", meta = (AllowPrivateAccess = "true"))
+	bool bActive;
+
 	FEnhancedInputActionEventBinding* SkillKeyBinding;
 
 protected:
@@ -46,4 +49,7 @@ protected:
 
 public:
 	void SetCharacterSkill(const FSkillRowHandle& InCharacterSkill) { CharacterSkill = InCharacterSkill; }
+
+	void SetSkillActive(const bool InValue) { bActive = InValue; }
+	bool GetSkillActive() const { return bActive; }
 };

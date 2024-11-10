@@ -13,25 +13,22 @@
 DEFINE_LOG_CATEGORY(LogSkillComponent);
 
 // Sets default values for this component's properties
-UC_WSSkill::UC_WSSkill(): SkillKeyBinding(nullptr)
+UC_WSSkill::UC_WSSkill()
+	: bActive(false), SkillKeyBinding(nullptr)
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
-	if (static ConstructorHelpers::FObjectFinder<UInputAction> IA_Skill(
-			TEXT("/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Skill.IA_Skill'"));
-		IA_Skill.Succeeded())
-	{
-		SkillAction = IA_Skill.Object;
-	}
+	if (static ConstructorHelpers::FObjectFinder<UInputAction> IA_Skill
+		(
+		 TEXT("/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Skill.IA_Skill'")
+		); IA_Skill.Succeeded()) { SkillAction = IA_Skill.Object; }
 
-	if (static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC_Skill(
-			TEXT("/Script/EnhancedInput.InputMappingContext'/Game/ThirdPerson/Input/IMC_Skill.IMC_Skill'"));
-		IMC_Skill.Succeeded())
-	{
-		SkillMappingContext = IMC_Skill.Object;
-	}
+	if (static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC_Skill
+		(
+		 TEXT("/Script/EnhancedInput.InputMappingContext'/Game/ThirdPerson/Input/IMC_Skill.IMC_Skill'")
+		); IMC_Skill.Succeeded()) { SkillMappingContext = IMC_Skill.Object; }
 
 	// ...
 }
@@ -54,6 +51,11 @@ void UC_WSSkill::BeginDestroy()
 
 void UC_WSSkill::CastSkill()
 {
+	if (GetSkillActive())
+	{
+		return;
+	}
+	
 	if (ICommonPawn* CommonPawn = Cast<ICommonPawn>(GetOwner()))
 	{
 		const FSkillTableRow* SkillDescription = CharacterSkill.Handle.GetRow<FSkillTableRow>(TEXT(""));
@@ -94,7 +96,8 @@ void UC_WSSkill::CastSkill()
 			{
 				UE_LOG(LogSkillComponent, Log, TEXT("CastSkill: Targeting %s"), *HitResult.GetActor()->GetName());
 				ISkillCast* SkillCast = Cast<ISkillCast>(CommonPawn);
-				SkillCast->CastSkill(CharacterSkill, HitResult.Location, HitResult.GetActor());
+				bool bSkill = SkillCast->CastSkill(CharacterSkill, HitResult.Location, HitResult.GetActor());
+				SetSkillActive(bSkill);
 			}
 		}
 		else
@@ -103,7 +106,8 @@ void UC_WSSkill::CastSkill()
 			// e.g., 캐릭터의 주변에 버프, 캐릭터가 바라보는 방향에 스킬 등...
 			UE_LOG(LogSkillComponent, Log, TEXT("CastSkill: Non-Targeting %s"), *Actor->GetActorLocation().ToString());
 			ISkillCast* SkillCast = Cast<ISkillCast>(CommonPawn);
-			SkillCast->CastSkill(CharacterSkill, Actor->GetActorLocation(), nullptr);	
+			bool bSkill = SkillCast->CastSkill(CharacterSkill, Actor->GetActorLocation(), nullptr);
+			SetSkillActive(bSkill);
 		}
 	}
 }
