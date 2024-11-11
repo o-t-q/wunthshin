@@ -8,7 +8,6 @@
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "CharacterSubsystem.generated.h"
 
-struct FCharacterTableRow;
 /**
  * 
  */
@@ -22,10 +21,9 @@ class WUNTHSHIN_API UCharacterSubsystem : public UGameInstanceSubsystem, public 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
 	UDataTable* StatDataTable;
-	
+
 public:
 	UCharacterSubsystem();
-
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	FCharacterTableRow* GetTableRow(FName AssetName) const { return AssetDataTable->FindRow<FCharacterTableRow>(AssetName,TEXT(""));}
+
 };

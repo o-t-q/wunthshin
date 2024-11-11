@@ -5,6 +5,7 @@
 
 #include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
+#include "wunthshin/Data/Effects/EffectRowHandle/EffectRowHandle.h"
 #include "wunthshin/Subsystem/Utility.h"
 
 UWeaponSubsystem::UWeaponSubsystem()

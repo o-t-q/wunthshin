@@ -2,12 +2,16 @@
 
 #include "wunthshinGameMode.h"
 
+#include "wunthshinPlayerController.h"
+#include "wunthshinPlayerState.h"
 #include "Actors/Pawns/Character/AA_WSCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
 AwunthshinGameMode::AwunthshinGameMode()
 {
 	DefaultPawnClass = AA_WSCharacter::StaticClass();
+	PlayerStateClass = AwunthshinPlayerState::StaticClass();
+	PlayerControllerClass = AwunthshinPlayerController::StaticClass();
 }
 
 APawn* AwunthshinGameMode::SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform)

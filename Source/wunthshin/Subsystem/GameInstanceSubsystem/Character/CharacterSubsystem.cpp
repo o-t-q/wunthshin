@@ -3,6 +3,7 @@
 
 #include "CharacterSubsystem.h"
 
+#include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Data/Characters/CharacterStats/CharacterStats.h"
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 
