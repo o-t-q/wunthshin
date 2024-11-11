@@ -8,6 +8,7 @@
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
+#include "wunthshin/Components/Stats/StatsComponent.h"
 #include "wunthshin/Data/Skills/SkillTableRow/SkillTableRow.h"
 
 DEFINE_LOG_CATEGORY(LogSkillComponent);
@@ -60,6 +61,12 @@ void UC_WSSkill::CastSkill()
 	{
 		const FSkillTableRow* SkillDescription = CharacterSkill.Handle.GetRow<FSkillTableRow>(TEXT(""));
 		AActor* Actor = Cast<AActor>(CommonPawn);
+		UStatsComponent* StatsComponent = CommonPawn->GetStatsComponent();
+		
+		if (StatsComponent->GetStamina() < SkillDescription->Parameter.StaminaCost)
+		{
+			return;
+		}
 
 		// 스킬이 타게팅이라면,
 		if (SkillDescription->bTargeting)
@@ -97,6 +104,11 @@ void UC_WSSkill::CastSkill()
 				UE_LOG(LogSkillComponent, Log, TEXT("CastSkill: Targeting %s"), *HitResult.GetActor()->GetName());
 				ISkillCast* SkillCast = Cast<ISkillCast>(CommonPawn);
 				bool bSkill = SkillCast->CastSkill(CharacterSkill, HitResult.Location, HitResult.GetActor());
+
+				if (bSkill)
+				{
+					StatsComponent->DecreaseStamina(SkillDescription->Parameter.StaminaCost);
+				}
 				SetSkillActive(bSkill);
 			}
 		}
@@ -107,6 +119,11 @@ void UC_WSSkill::CastSkill()
 			UE_LOG(LogSkillComponent, Log, TEXT("CastSkill: Non-Targeting %s"), *Actor->GetActorLocation().ToString());
 			ISkillCast* SkillCast = Cast<ISkillCast>(CommonPawn);
 			bool bSkill = SkillCast->CastSkill(CharacterSkill, Actor->GetActorLocation(), nullptr);
+
+			if (bSkill)
+			{
+				StatsComponent->DecreaseStamina(SkillDescription->Parameter.StaminaCost);
+			}
 			SetSkillActive(bSkill);
 		}
 	}

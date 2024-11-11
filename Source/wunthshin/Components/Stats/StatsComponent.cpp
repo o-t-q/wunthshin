@@ -60,7 +60,47 @@ void UStatsComponent::IncreaseHP(const float InValue)
         return;
     }
 
-    CurrentStats.HP = FMath::Clamp(CurrentStats.HP + InValue, 0, CurrentStats.MaxHP);
+    CurrentStats.Stamina = FMath::Clamp(CurrentStats.HP + InValue, 0, CurrentStats.MaxHP);
+}
+
+void UStatsComponent::DecreaseStamina(const float InValue)
+{
+    if (InValue < 0)
+    {
+        // 입력은 양수로 (오버/언더플로우 체크를 위해)
+        ensureAlways(false);
+        IncreaseHP(FMath::Abs(InValue));
+        return;
+    }
+
+    if (FMath::Abs(std::numeric_limits<float>::min() + CurrentStats.Stamina) < InValue)
+    {
+        UE_LOG(LogStatsComponent, Warning, TEXT("%s: Underflow! assuming Stamina as 0"), *GetOwner()->GetName());
+        CurrentStats.Stamina = 0;
+        return;
+    }
+
+    CurrentStats.Stamina = FMath::Clamp(CurrentStats.Stamina - InValue, 0, CurrentStats.Stamina);
+}
+
+void UStatsComponent::IncreaseStamina(const float InValue)
+{
+    if (InValue < 0)
+    {
+        // 입력은 양수로 (오버/언더플로우 체크를 위해)
+        ensureAlways(false);
+        DecreaseHP(FMath::Abs(InValue));
+        return;
+    }
+
+    if (std::numeric_limits<float>::max() - CurrentStats.Stamina < InValue)
+    {
+        UE_LOG(LogStatsComponent, Warning, TEXT("%s: Overflow! assuming Stamina as 100"), *GetOwner()->GetName());
+        CurrentStats.Stamina = 100.f;
+        return;
+    }
+
+    CurrentStats.HP = FMath::Clamp(CurrentStats.Stamina + InValue, 0, 100.f);
 }
 
 void UStatsComponent::InitializeStats(const FCharacterStats& InInitialStats)
@@ -101,12 +141,8 @@ void UStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
     // 여기서 스태미나 업데이트 로직을 추가
-    ICommonPawn* Pawn = Cast<ICommonPawn>(GetOwner());
-    if (Pawn)
+    if (const ICommonPawn* Pawn = Cast<ICommonPawn>(GetOwner()))
     {
-        if (FMath::Abs(Pawn->GetPawnMovementComponent()->Velocity.Dot(FVector::ForwardVector + FVector::RightVector)) > 0.f)
-        {
-            UpdateStamina(DeltaTime, Pawn->IsFastRunning());
-        }
+        UpdateStamina(DeltaTime, Pawn->IsFastRunning());
     }
 }
