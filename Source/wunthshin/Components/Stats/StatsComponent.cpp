@@ -146,3 +146,8 @@ void UStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
         UpdateStamina(DeltaTime, Pawn->IsFastRunning());
     }
 }
+
+void UStatsComponent::SetHP(const float HP)
+{
+    CurrentStats.HP = FMath::Clamp(HP, 0, CurrentStats.MaxHP);
+}
