@@ -50,10 +50,11 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
     {
         SetHitMontages(InData->HitMontages);
     }
-
+    
     if (InData->bHasDefaultWeapon)
     {
-        if (APawn* PawnCasting = Cast<APawn>(this))
+        if (APawn* PawnCasting = Cast<APawn>(this);
+            PawnCasting && PawnCasting->GetWorld()->IsGameWorld())
         {
             // todo: 무기가 두번 스폰됨 (여기서 한번, ChildActorComponent에서 한번)
             AA_WSWeapon* SpawnedWeapon = PawnCasting->GetWorld()->SpawnActorDeferred<AA_WSWeapon>
