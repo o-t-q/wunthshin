@@ -60,7 +60,7 @@ void UStatsComponent::IncreaseHP(const float InValue)
         return;
     }
 
-    CurrentStats.Stamina = FMath::Clamp(CurrentStats.HP + InValue, 0, CurrentStats.MaxHP);
+    CurrentStats.HP = FMath::Clamp(CurrentStats.HP + InValue, 0, CurrentStats.MaxHP);
 }
 
 void UStatsComponent::DecreaseStamina(const float InValue)
@@ -69,7 +69,7 @@ void UStatsComponent::DecreaseStamina(const float InValue)
     {
         // 입력은 양수로 (오버/언더플로우 체크를 위해)
         ensureAlways(false);
-        IncreaseHP(FMath::Abs(InValue));
+        IncreaseStamina(FMath::Abs(InValue));
         return;
     }
 
@@ -89,7 +89,7 @@ void UStatsComponent::IncreaseStamina(const float InValue)
     {
         // 입력은 양수로 (오버/언더플로우 체크를 위해)
         ensureAlways(false);
-        DecreaseHP(FMath::Abs(InValue));
+        DecreaseStamina(FMath::Abs(InValue));
         return;
     }
 
@@ -100,7 +100,7 @@ void UStatsComponent::IncreaseStamina(const float InValue)
         return;
     }
 
-    CurrentStats.HP = FMath::Clamp(CurrentStats.Stamina + InValue, 0, 100.f);
+    CurrentStats.Stamina = FMath::Clamp(CurrentStats.Stamina + InValue, 0, 100.f);
 }
 
 void UStatsComponent::InitializeStats(const FCharacterStats& InInitialStats)
