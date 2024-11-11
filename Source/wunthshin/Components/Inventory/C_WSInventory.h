@@ -7,6 +7,7 @@
 #include "Elements/Framework/TypedElementQueryBuilder.h"
 #include "C_WSInventory.generated.h"
 
+class UListView;
 class USG_WSItemMetadata;
 class AA_WSItem;
 class UImage;
@@ -54,13 +55,20 @@ public:
 	UInventoryEntryData(const FInventoryPair& InPair)
 		: EntryData(InPair)	{}
 
-	void Initialize(const FInventoryPair& InventoryPair)
+	void Initialize(const FInventoryPair& InventoryPair, UListView* InListView, UObject* InOwner)
 	{
 		EntryData = InventoryPair;
+		Root = InListView;
+		Owner = InOwner;
 	}
 public:
 	FInventoryPair EntryData;
 
+	UPROPERTY()
+	UListView* Root;
+
+	UPROPERTY()
+	UObject* Owner;
 public:
 	bool operator!=(const FInventoryPair& InOther) const
 	{

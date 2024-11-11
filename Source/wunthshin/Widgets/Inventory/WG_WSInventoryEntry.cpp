@@ -16,8 +16,6 @@ UWG_WSInventoryEntry* UWG_WSInventoryEntry::Selected = nullptr;
 void UWG_WSInventoryEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
-
-	Button_SelectItem->OnClicked.AddDynamic(this,&ThisClass::OnClickButton);
 	
 	Data = Cast<UInventoryEntryData>(ListItemObject);
 	if (!Data) return;
@@ -26,12 +24,22 @@ void UWG_WSInventoryEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 	ItemCount->SetText(FText::FromString(FString::FromInt(Data->EntryData.Count)));
 	ItemIcon->SetBrushFromTexture(Data->EntryData.Metadata->GetItemIcon());
 
+	// Inventory 부모 클래스가 해당 엔트리의 OnInventoryEntryClicked를 Listen
+	auto Parent = Data->Owner;
+	OnInventoryEntryClicked.AddUniqueDynamic(Cast<UWG_WSInventory>(Parent), &UWG_WSInventory::OnRefreshListItemChangedItem);
+	
 	//Cast<UTileView>(GetOwningListView())->OnItemClicked().AddUFunction(this,FName("OnClickButton"));
 }
 
-void UWG_WSInventoryEntry::OnClickButton()
+FReply UWG_WSInventoryEntry::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	// auto UI = Cast<UWG_WSInventory>(GetOwningListView()->GetOuter()->GetOuter());
-	// UI->RefreshListItem();
-	Selected = this;
+	FReply Value = Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	OnInventoryEntryClicked.Broadcast(this);	
+	return Value;
 }
+
+void UWG_WSInventoryEntry::NativeOnItemSelectionChanged(bool bIsSelected)
+{
+	IUserObjectListEntry::NativeOnItemSelectionChanged(bIsSelected);
+}
+

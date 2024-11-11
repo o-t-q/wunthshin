@@ -9,7 +9,7 @@
 
 class FCTween;
 class FCTweenInstanceFloat;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnClickMenuButton, int, test);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnClickMenuButton, FName, WindowName);
 
 class UImage;
 class UButton;
@@ -34,14 +34,27 @@ protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeOnInitialized() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-	
+
 public:
-	FCTweenInstance* FadeInOut(bool bIsIn,float InDuration = 1.f);
+	static FCTweenInstance* FadeInOut(bool bIsIn, float InDuration = 1.f);
+
+protected:
+	UFUNCTION()
+	void OpenWindow(FName InWindowName);
+
+protected:
+	UFUNCTION()
+	void OpenWindowInventory();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UImage* FadeImage;
+	static UImage* FadeImageStatic;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UButton* Button_OpenInventory;
+
+protected:
+	UPROPERTY()
+	FOnClickMenuButton OnClickMenuButton;
 };

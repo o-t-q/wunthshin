@@ -9,15 +9,22 @@
 #include "Components/Button.h"
 #include "Components/CanvasPanelSlot.h"
 
+UImage* UWG_WSInGameBundle::FadeImageStatic = nullptr;
 
 void UWG_WSInGameBundle::NativeConstruct()
 {
 	Super::NativeConstruct();
 	InitializeWidget();
-	UCanvasPanelSlot* image = NewObject<UCanvasPanelSlot>();
 	
-	auto inven = Cast<UWG_WSInventory>(ChildWidgets["Window_Inventory"]);
-	Button_OpenInventory->OnClicked.AddDynamic(inven, &UWG_WSInventory::OnHideWidget);
+	FadeImageStatic = FadeImage;
+	OnClickMenuButton.AddDynamic(this,&ThisClass::OpenWindow);
+	
+	Button_OpenInventory->OnClicked.AddDynamic(this,&ThisClass::OpenWindowInventory);
+
+	for(auto& Widget : ChildWidgets)
+	{
+		Widget.Value->OnHideWidget();
+	}
 }
 
 void UWG_WSInGameBundle::NativeOnInitialized()
@@ -32,12 +39,23 @@ void UWG_WSInGameBundle::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 
 FCTweenInstance* UWG_WSInGameBundle::FadeInOut(bool bIsIn, float InDuration)
 {
-	const FLinearColor Original = FadeImage->GetColorAndOpacity();
-	FadeImage->SetColorAndOpacity(FLinearColor::Black);
 	float Start = bIsIn ? 1.0f : 0.0f;
 	float End = 1.f - Start;
 
-	return FCTween::Play(Start, End, [&](float t) { FadeImage->SetOpacity(t); }, InDuration);
+	return FCTween::Play(Start, End, [&](float t) { FadeImageStatic->SetOpacity(t); }, InDuration);
 }
+
+void UWG_WSInGameBundle::OpenWindow(FName InWindowName)
+{
+	FadeInOut(false)->SetOnComplete([&] () { ChildWidgets[InWindowName]->OnVisibleWidget();});
+}
+
+void UWG_WSInGameBundle::OpenWindowInventory()
+{
+	OpenWindow("Window_Inventory");
+}
+
+
+
 
 

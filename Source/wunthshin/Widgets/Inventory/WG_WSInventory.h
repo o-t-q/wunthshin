@@ -35,12 +35,20 @@ public:
 	UFUNCTION()
 	void OnRefreshListItem(ESlateVisibility IsVisibility) { RefreshListItem(); }
 	UFUNCTION()
+	void OnRefreshListItemChangedItem(UWG_WSInventoryEntry* InObject)
+	{
+		SelectedEntry = InObject;
+		RefreshListItem();
+	}
+	UFUNCTION()
 	void RefreshListItem();
 
 protected:
 	UPROPERTY()
 	UC_WSInventory* PlayerInventory;
-	
+
+	UPROPERTY()
+	UWG_WSInventoryEntry* SelectedEntry;
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
 	UTileView* TileView;
@@ -49,7 +57,7 @@ protected:
 	UTextBlock* InventoryCount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
-	UButton* Button_ClosePanel;
+	UButton* Button_CloseInventory;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
 	UTextBlock* ItemName;
@@ -71,5 +79,5 @@ protected:
 
 public:
 	UFUNCTION()
-	void OnClickButton_ClosePanel();
+	void OnClickButton_CloseInventory();
 };
