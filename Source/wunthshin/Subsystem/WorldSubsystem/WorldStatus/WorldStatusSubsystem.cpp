@@ -18,6 +18,11 @@
 #include "wunthshin/Actors/Pawns/NPC/A_WSNPCPawn.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 
+void UWorldStatusSubsystem::PushTicket_Internal(TSharedPtr<FEventTicket> InTicket)
+{
+    EventQueue.Push(InTicket);
+}
+
 UWorldStatusSubsystem::UWorldStatusSubsystem()
     : CurrentLevelSequence(nullptr), LevelSequenceActor(nullptr), SkillVictimPawn(nullptr)
 {
@@ -81,38 +86,39 @@ void UWorldStatusSubsystem::Tick(float InDeltaTime)
 	}
 
     // 레벨 시퀀스가 시작되어 있지 않다면 지속적으로 이벤트 처리
-    if (!GetCurrentLevelSequence())
+    while (!EventQueue.IsEmpty()) 
     {
-        for (TSharedPtr<FEventTicket>& Ticket : EventQueue) 
+        if (GetCurrentLevelSequence())
         {
-            Ticket->Execute(GetWorld());
-
-            if (Ticket.IsValid()) 
-            {
-                FTimerDelegate Delegate;
-                FTimerManagerTimerParameters Params;
-                Params.bLoop = false;
-                Params.FirstDelay = -1.f;
-                Params.bMaxOncePerFrame = false;
-
-                Delegate.BindUObject
-                (
-                    this,
-                    &UWorldStatusSubsystem::PushTicket,
-                    Ticket.ToWeakPtr()
-                );
-
-                GetWorld()->GetTimerManager().SetTimer
-                (
-                    Ticket->GetTimerHandle(),
-                    Delegate,
-                    Ticket->GetRate(),
-                    Params
-                );
-            }
+            break;
         }
 
-        EventQueue.Empty();
+        if (TSharedPtr<FEventTicket> Ticket = EventQueue.Pop();
+            Ticket->IsValid()) 
+        {
+            Ticket->Execute(GetWorld());
+            
+            FTimerDelegate Delegate;
+            FTimerManagerTimerParameters Params;
+            Params.bLoop = false;
+            Params.FirstDelay = -1.f;
+            Params.bMaxOncePerFrame = false;
+
+            Delegate.BindUObject
+            (
+                this,
+                &UWorldStatusSubsystem::PushTicket_Internal,
+                Ticket
+            );
+
+            GetWorld()->GetTimerManager().SetTimer
+            (
+                Ticket->GetTimerHandle(),
+                Delegate,
+                Ticket->GetRate(),
+                Params
+            );
+        }
     }
 }
 
@@ -125,7 +131,7 @@ void UWorldStatusSubsystem::PlayLevelSequence(ULevelSequence* InSequence, const 
     PlaybackSettings.bDisableLookAtInput = true;
     PlaybackSettings.bDisableMovementInput = true;
 				
-    ULevelSequencePlayer* SkillLevelSequence = ULevelSequencePlayer::CreateLevelSequencePlayer
+    CurrentLevelSequence = ULevelSequencePlayer::CreateLevelSequencePlayer
     (
         GetWorld(),
         InSequence,
@@ -134,7 +140,7 @@ void UWorldStatusSubsystem::PlayLevelSequence(ULevelSequence* InSequence, const 
     );
     
     OnLevelSequenceEnded = OnEndedFunction;
-    SkillLevelSequence->OnFinished.AddUniqueDynamic(this, &UWorldStatusSubsystem::ClearLevelSequence);
+    CurrentLevelSequence->OnFinished.AddUniqueDynamic(this, &UWorldStatusSubsystem::ClearLevelSequence);
 }
 
 void UWorldStatusSubsystem::FreezeSpawnedNPCsBT()
@@ -158,6 +164,24 @@ void UWorldStatusSubsystem::PushTicket(TWeakPtr<FEventTicket> Ticket)
     if (Ticket.IsValid())
     {
         EventQueue.Add(Ticket.Pin());
+    }
+}
+
+void UWorldStatusSubsystem::PushTicketScheduled(TWeakPtr<FEventTicket> Ticket, FTimerHandle& InTimerHandle, const float InDuration)
+{
+    if (Ticket.IsValid())
+    {
+        FTimerDelegate TimerDelegate;
+        TimerDelegate.BindUObject(this, &UWorldStatusSubsystem::PushTicket_Internal, Ticket.Pin());
+        
+        GetWorld()->GetTimerManager().SetTimer
+        (
+            InTimerHandle,
+            TimerDelegate,
+            InDuration,
+            false,
+            -1
+        );
     }
 }
 

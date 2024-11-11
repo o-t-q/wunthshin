@@ -73,6 +73,10 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 	TFunction<void()> OnLevelSequenceEnded;
 	TArray<TSharedPtr<FEventTicket>> EventQueue;
 
+	// WeakPtr로 넘김에 따라 객체 소멸이 발생할 경우,
+	// FTimerDelegate 등 임시변수에 공유 포인터를 저장, 소멸하지 않을 경우 사용
+	void PushTicket_Internal(TSharedPtr<FEventTicket> InTicket);
+
 public:
 	FOnWeaponAttackEnded OnWeaponAttackEnded;
 
@@ -99,7 +103,11 @@ public:
 	UFUNCTION()
 	void ClearLevelSequence()
 	{
-		OnLevelSequenceEnded();
+		if (OnLevelSequenceEnded)
+		{
+			OnLevelSequenceEnded();	
+		}
+		
 		LevelSequenceActor->Destroy();
 		CurrentLevelSequence = nullptr;
 		LevelSequenceActor = nullptr;
@@ -172,6 +180,7 @@ public:
 	void PushItem(const USG_WSItemMetadata* InItem, AActor* InInstigator, AActor* InTarget);
 
 	void PushTicket(TWeakPtr<FEventTicket> Ticket);
+	void PushTicketScheduled(TWeakPtr<FEventTicket> Ticket, FTimerHandle& InTimerHandle, const float InDuration);
 	bool IsElementalTracking(const AActor* InTarget) const { return ElementTrackingObjects.Contains(InTarget); }
 	FElementTrackingMap& AddElementTracking(AActor* InTarget) { return ElementTrackingObjects.Add(InTarget); }
 	FElementTrackingMap& GetElementTracking(const AActor* InTarget) { return ElementTrackingObjects[InTarget]; }

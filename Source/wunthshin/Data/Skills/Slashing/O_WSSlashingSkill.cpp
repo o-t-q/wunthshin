@@ -5,6 +5,7 @@
 
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
+#include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/EventTicket/WeaponTicket/WeaponModifierTicket.h"
 
 void UO_WSSlashingSkill::DoSkillImpl(const FSkillParameter& InParameter, ICommonPawn* InInstigator,
                                      const FVector& InTargetLocation, AActor* InTargetActor)
@@ -27,6 +28,13 @@ void UO_WSSlashingSkill::DoSkillImpl(const FSkillParameter& InParameter, ICommon
 
 				// 즉발이므로 바로 추적 해제
 				WorldStatusSubsystem->PopAttack(this);
+
+				const TSharedPtr<FWeaponModifierTicket> ModifierTicket = MakeShared<FWeaponModifierTicket>();
+				ModifierTicket->WeaponComponent = Weapon->GetComponentByClass<UC_WSWeapon>();
+				ModifierTicket->AttackSpeed = 1.5f;
+				ModifierTicket->DamageModifier = 1.2f;
+
+				WorldStatusSubsystem->PushTicket(ModifierTicket);
 			}
 		}
 	}

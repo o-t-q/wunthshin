@@ -9,9 +9,9 @@ public:
 
 	FTimerHandle& GetTimerHandle() { return TimerHandle; }
 	float GetRate() const { return Rate; }
-
-protected:
 	void SetRate(const float InRate) { Rate = InRate; }
+	
+protected:
 	void SetDisposed() { bDisposed = true; }
 	
 private:

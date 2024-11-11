@@ -253,12 +253,6 @@ void AA_WSCharacter::BeginPlay()
             FAttachmentTransformRules::SnapToTargetNotIncludingScale,
             RightHandWeaponSocketName
         ));
-
-    {
-        // todo/test: 효과 적용이 된 경우를 테스트, 무기/몹등이 구현되고 나서 지워야 함
-        ApplyElement(this, UElementSubsystem::GetElementHandle(GetWorld(), "Rock"));
-        ApplyElement(this, UElementSubsystem::GetElementHandle(GetWorld(), "Fire"));
-    }
 }
 
 void AA_WSCharacter::OnConstruction(const FTransform& Transform)

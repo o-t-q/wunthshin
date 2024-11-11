@@ -32,8 +32,8 @@ public:
 	
 	/**
 	 * @brief 해당 물체에 원소를 적용함 
-	 * @param InInstigator 적용되는 물체에 원소를 적용시킨 물체
+	 * @param InGiver 적용되는 물체에 원소를 적용시킨 물체
 	 * @param InHandle 적용될 원소의 테이블 핸들
 	 */
-	void ApplyElement(AActor* InInstigator, const FElementRowHandle& InHandle);
+	void ApplyElement(AActor* InGiver, const FElementRowHandle& InHandle);
 };

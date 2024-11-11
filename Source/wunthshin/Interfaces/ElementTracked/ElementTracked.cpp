@@ -7,7 +7,7 @@
 
 
 // Add default functionality here for any IMyClass functions that are not pure virtual.
-void IElementTracked::ApplyElement(AActor* InInstigator, const FElementRowHandle& InHandle)
+void IElementTracked::ApplyElement(AActor* InGiver, const FElementRowHandle& InHandle)
 {
 	// 유효하지 않은 원소
 	if (InHandle.Handle.IsNull())
@@ -31,5 +31,5 @@ void IElementTracked::ApplyElement(AActor* InInstigator, const FElementRowHandle
 		return;
 	}
 
-	Subsystem->ApplyElement(Self, InInstigator, InHandle);
+	Subsystem->ApplyElement(Self, InGiver, InHandle);
 }

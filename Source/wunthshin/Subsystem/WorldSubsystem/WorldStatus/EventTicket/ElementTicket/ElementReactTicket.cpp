@@ -13,6 +13,7 @@ void FElementReactTicket::Execute(UWorld* InWorld)
 	// 빈 요청
 	if (ElementHandle.Handle.IsNull())
 	{
+		SetDisposed();
 		return;
 	}
 	
@@ -48,6 +49,7 @@ void FElementReactTicket::Execute(UWorld* InWorld)
 				{
 					// 매칭되는 요소의 반응이 없는 경우
 					ensure(false);
+					SetDisposed();
 					return;
 				}
 			
@@ -56,6 +58,7 @@ void FElementReactTicket::Execute(UWorld* InWorld)
 					// element를 적용한 대상이 두명이 아닌 경우 
 					// (둘 다 같은 instigator는 예외, 같은 Instigator가 다른 속성 두개를 부여할 수 있음)
 					ensure(false);
+					SetDisposed();
 					return;
 				}
 			
@@ -75,6 +78,8 @@ void FElementReactTicket::Execute(UWorld* InWorld)
 			NewMap.Add(InWorld, Instigator, ElementHandle);
 		}
 	}
+
+	SetDisposed();
 }
 
 void FElementReactFinishTicket::Execute(UWorld* InWorld)
@@ -84,7 +89,10 @@ void FElementReactFinishTicket::Execute(UWorld* InWorld)
 	{
 		if (WorldStatusSubsystem->IsElementalTracking(TargetActor))
 		{
+			UE_LOG(LogElementTicket, Log, TEXT("Remove element tracking of %s"), *TargetActor->GetName())
 			WorldStatusSubsystem->RemoveElementTracking(TargetActor);
 		}
 	}
+
+	SetDisposed();
 }

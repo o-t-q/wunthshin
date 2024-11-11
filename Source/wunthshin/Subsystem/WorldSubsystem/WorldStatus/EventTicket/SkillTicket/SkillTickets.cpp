@@ -18,18 +18,20 @@ void FSkillStartTicket::Execute(UWorld* InWorld)
 		{
 			if (Skill->Parameter.CastingSequence)
 			{
-				UE_LOG(LogSkillSubsystem, Log, TEXT("Skill level sequence found, playing: %s"), *Skill->Parameter.CastingSequence->GetName());
 				if (WorldStatusSubsystem->IsLevelSequencePlaying())
 				{
+					SetDisposed();
 					return;
 				}
+				
+				UE_LOG(LogSkillSubsystem, Log, TEXT("Skill level sequence found, playing: %s"), *Skill->Parameter.CastingSequence->GetName());
 
 				WorldStatusSubsystem->SetSkillVictimPawn(Cast<APawn>(Instigator));
 				WorldStatusSubsystem->FreezeSpawnedNPCsBT();
 				WorldStatusSubsystem->PlayLevelSequence(Skill->Parameter.CastingSequence);
 			}
 
-			TSharedPtr<FSkillEndTicket> SkillEndTicket = MakeShared<FSkillEndTicket>();
+			const TSharedPtr<FSkillEndTicket> SkillEndTicket = MakeShared<FSkillEndTicket>();
 			SkillEndTicket->Instigator = Instigator;
 			SkillEndTicket->SkillProcessor = SkillProcessor;
 			SkillEndTicket->SkillHandle = SkillHandle;
@@ -39,6 +41,8 @@ void FSkillStartTicket::Execute(UWorld* InWorld)
 			WorldStatusSubsystem->PushTicket(SkillEndTicket);
 		}
 	}
+	
+	SetDisposed();
 }
 
 void FSkillEndTicket::Execute(UWorld* InWorld)
@@ -61,4 +65,6 @@ void FSkillEndTicket::Execute(UWorld* InWorld)
 			InstigatorActor->GetWorld()->GetSubsystem<UWorldStatusSubsystem>()->UnfreezeSpawnedNPCsBT();
 		}
 	}
+	
+	SetDisposed();
 }

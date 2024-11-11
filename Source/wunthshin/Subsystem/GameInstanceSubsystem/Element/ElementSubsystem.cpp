@@ -5,6 +5,8 @@
 #include "wunthshin/Data/Elements/ElementTableRow/ElementTableRow.h"
 #include "wunthshin/Data/Elements/O_WSElementReactor.h"
 #include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
+#include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
+#include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/EventTicket/ElementTicket/ElementReactTicket.h"
 
 DEFINE_LOG_CATEGORY(LogElementSubsystem);
 
@@ -50,7 +52,15 @@ void UElementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UElementSubsystem::ApplyElement(AActor* InTarget, AActor* InInstigator, const FElementRowHandle& InElementRow)
 {
-	
+	if (UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+	{
+		TSharedPtr<FElementReactTicket> ReactTicket = MakeShared<FElementReactTicket>();
+		ReactTicket->Instigator = InInstigator;
+		ReactTicket->ElementHandle = InElementRow;
+		ReactTicket->TargetActor = InTarget;
+
+		WorldStatusSubsystem->PushTicket(ReactTicket);
+	}
 }
 
 UO_WSElementReactor* UElementSubsystem::GetReactor(const FElementRowHandle& InLeft, const FElementRowHandle& InRight) const

@@ -17,9 +17,9 @@ class WUNTHSHIN_API UO_WSElementReactor : public UObject
 public:
 	/**
 	 * @brief 원소 작용이 발생했을때 호출되는 함수
-	 * @param InReactionInstigator 작용하기 전 마지막에 짝이 되는 원소를 제공한 대상
+	 * @param InReactionGiver 작용하기 전 마지막에 짝이 되는 원소를 제공한 대상
 	 * @param InReactionAssist 가장 첫번째로 짝이 되는 원소를 적용한 대상
 	 * @param InReactionOrigin 작용의 대상이 된 대상
 	 */
-	virtual void React(AActor* InReactionInstigator, AActor* InReactionAssist, AActor* InReactionOrigin) {};
+	virtual void React(AActor* InReactionGiver, AActor* InReactionAssist, AActor* InReactionOrigin) {};
 };
