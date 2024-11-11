@@ -50,66 +50,7 @@ void UElementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UElementSubsystem::ApplyElement(AActor* InTarget, AActor* InInstigator, const FElementRowHandle& InElementRow)
 {
-	// 빈 요청
-	if (InElementRow.Handle.IsNull())
-	{
-		return;
-	}
 	
-	UE_LOG(LogElementSubsystem, Log, TEXT("Applying the element %s to %s by %s"), *InElementRow.Handle.RowName.ToString(), *InTarget->GetName(), *InInstigator->GetName());
-
-	if (TrackingObjects.Contains(InTarget)) 
-	{
-		FElementTrackingMap& Map = TrackingObjects[InTarget];
-		
-		// 중복된 원소효과는 해당 원소의 타이머를 갱신
-		if (Map.Contains(InElementRow))
-		{
-			UE_LOG(LogElementSubsystem, Log, TEXT("Element %s exists, extending the timer"), *InElementRow.Handle.RowName.ToString());
-			Map.ResetTimer(InInstigator->GetWorld(), InElementRow);
-		}
-		
-		Map.Add(InInstigator->GetWorld(), InInstigator, InElementRow);
-
-		if (IElementTracked* Interface = Cast<IElementTracked>(InTarget))
-		{
-			Interface->OnElementApplied.Broadcast(InElementRow);	
-		}
-
-		if (Map.IsFull()) 
-		{
-			const FElementReactionPair& Pair = Map.ExtractElement();
-			UO_WSElementReactor* Reactor = GetReactor(Pair.Elements[0], Pair.Elements[1]);
-
-			if (!Reactor)
-			{
-				// 매칭되는 요소의 반응이 없는 경우
-				ensure(false);
-				return;
-			}
-			
-			if (Pair.Instigators.Num() != 2) 
-			{
-				// element를 적용한 대상이 두명이 아닌 경우 
-				// (둘 다 같은 instigator는 예외, 같은 Instigator가 다른 속성 두개를 부여할 수 있음)
-				ensure(false);
-				return;
-			}
-			
-			AActor* OtherInstigator = Pair.Instigators[0] == InInstigator ? Pair.Instigators[1] : Pair.Instigators[0];
-			UE_LOG(LogElementSubsystem, Log, TEXT("%s effect triggered by %s and %s!"), *Reactor->GetName(), *InInstigator->GetName(), *OtherInstigator->GetName());
-			Reactor->React(InInstigator, OtherInstigator, InTarget);
-
-			// 지금까지 추적하던 원소 상태 초기화
-			TrackingObjects.Remove(InTarget);
-		}
-	}
-	else
-	{
-		// 처음 부여된 상태이면 효과가 발생할 수 없음 (2개의 다른 조합으로 효과 발생)
-		FElementTrackingMap& NewMap = TrackingObjects.Add(InTarget);
-		NewMap.Add(InInstigator->GetWorld(), InInstigator, InElementRow);
-	}
 }
 
 UO_WSElementReactor* UElementSubsystem::GetReactor(const FElementRowHandle& InLeft, const FElementRowHandle& InRight) const

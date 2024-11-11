@@ -4,11 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "LevelSequenceActor.h"
+#include "EventTicket/EventTicket.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "wunthshin/Components/Weapon/C_WSWeapon.h"
 #include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
+#include "wunthshin/Data/Elements/ElementTracking/ElementTracking.h"
 #include "WorldStatusSubsystem.generated.h"
 
+struct FItemTicket;
 class AA_WSNPCPawn;
 class ULevelSequence;
 class ALevelSequenceActor;
@@ -17,30 +20,6 @@ class UC_WSWeapon;
 class AA_WSCharacter;
 class USG_WSItemMetadata;
 class AA_WSItem;
-
-struct FItemTicket 
-{
-	friend class UWorldStatusSubsystem;
-
-	const USG_WSItemMetadata* Item;
-	AActor* Instigator;
-	AActor* Target;
-	float Rate = -1.f;
-	
-	bool IsValid() const { return !bDisposed; }
-
-	FTimerHandle& GetTimerHandle() { return TimerHandle; }
-
-private:
-	static void ExecuteAndAdjustLifetime(const UWorld* InWorld, FItemTicket& InTicket);
-
-	bool bDisposed = false;
-
-	FTimerHandle TimerHandle;
-
-	uint32 ExecuteCount = 0;
-	uint32 MaxExecuteCount = 0;
-};
 
 USTRUCT(BlueprintType)
 struct FDamageTakenArray
@@ -88,8 +67,11 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pawn", meta = (AllowPrivateAccess = "true"))
 	TSet<AA_WSNPCPawn*> NPCPawns;
 
+	UPROPERTY(VisibleAnywhere, Category = "Stack", meta = (AllowPrivateAccess = "true"))
+	TMap<UObject*, FElementTrackingMap> ElementTrackingObjects;
+
 	TFunction<void()> OnLevelSequenceEnded;
-	TArray<FItemTicket> ItemQueue;
+	TArray<TSharedPtr<FEventTicket>> EventQueue;
 
 public:
 	FOnWeaponAttackEnded OnWeaponAttackEnded;
@@ -188,7 +170,18 @@ public:
 	}
 
 	void PushItem(const USG_WSItemMetadata* InItem, AActor* InInstigator, AActor* InTarget);
-	void PushItem(FItemTicket InItemTicket);
+
+	void PushTicket(TWeakPtr<FEventTicket> Ticket);
+	bool IsElementalTracking(const AActor* InTarget) const { return ElementTrackingObjects.Contains(InTarget); }
+	FElementTrackingMap& AddElementTracking(AActor* InTarget) { return ElementTrackingObjects.Add(InTarget); }
+	FElementTrackingMap& GetElementTracking(const AActor* InTarget) { return ElementTrackingObjects[InTarget]; }
+	void RemoveElementTracking(const AActor* InTarget)
+	{
+		if (ElementTrackingObjects.Contains(InTarget))
+		{
+			ElementTrackingObjects.Remove(InTarget);
+		}
+	}
 
 	virtual TStatId GetStatId() const override
 	{

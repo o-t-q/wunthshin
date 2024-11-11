@@ -9,6 +9,7 @@
 #include "wunthshin/Data/Skills/SkillTableRow/SkillTableRow.h"
 #include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
+#include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/EventTicket/SkillTicket/SkillTickets.h"
 
 DEFINE_LOG_CATEGORY(LogSkillSubsystem);
 
@@ -42,51 +43,20 @@ bool USkillSubsystem::CastSkill(
 	const FSkillRowHandle& InSkill, ICommonPawn* InInstigator, const FVector& InTargetLocation, AActor* InTargetActor
 )
 {
-	if (const FSkillTableRow* Skill = InSkill.Handle.GetRow<FSkillTableRow>(TEXT("")))
+	if (UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
 	{
-		UO_WSBaseSkill* SkillProcessor = PreinstantiatedSkillProcessor[Skill->SkillProcessor];
-		// 미리 스킬 처리기가 생성되지 않은 경우
-		check(SkillProcessor);
-
-		const TFunction<void()> SkillProcessorFunction = [Skill, InInstigator, SkillProcessor, InTargetLocation, InTargetActor]()
+		if (WorldStatusSubsystem->IsLevelSequencePlaying())
 		{
-			if (AActor* InstigatorActor = Cast<AActor>(InInstigator))
-			{
-				UE_LOG(LogSkillSubsystem, Log, TEXT("Take effect of skill! %s and %s -> %s, %s"), *SkillProcessor->GetName(), *InstigatorActor->GetName(), *InTargetLocation.ToString(), *InTargetActor->GetName());
+			return false;
+		}
 
-				SkillProcessor->DoSkill(Skill->Parameter, InInstigator, InTargetLocation, InTargetActor);
-				if (IElementTracked* ElementTracked = Cast<IElementTracked>(InTargetActor))
-				{
-					if (!Skill->Element.IsNull())
-					{
-						ElementTracked->ApplyElement(InstigatorActor, FElementRowHandle{Skill->Element});
-					}
-				}
-				
-				InstigatorActor->GetWorld()->GetSubsystem<UWorldStatusSubsystem>()->UnfreezeSpawnedNPCsBT();
-			}
-		};
+		TSharedPtr<FSkillStartTicket> SkillTicket = MakeShared<FSkillStartTicket>();
+		SkillTicket->SkillHandle = InSkill;
+		SkillTicket->Instigator = InInstigator;
+		SkillTicket->TargetLocation = InTargetLocation;
+		SkillTicket->TargetActor = InTargetActor;
 		
-		if (Skill->Parameter.CastingSequence)
-		{
-			UE_LOG(LogSkillSubsystem, Log, TEXT("Skill level sequence found, playing: %s"), *Skill->Parameter.CastingSequence->GetName());
-			if (UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
-			{
-				WorldStatusSubsystem->SetSkillVictimPawn(Cast<APawn>(InInstigator));
-				
-				if (WorldStatusSubsystem->IsLevelSequencePlaying())
-				{
-					return false;
-				}
-
-				WorldStatusSubsystem->FreezeSpawnedNPCsBT();
-				WorldStatusSubsystem->PlayLevelSequence(Skill->Parameter.CastingSequence, SkillProcessorFunction);
-			}
-		}
-		else
-		{
-			SkillProcessorFunction();
-		}
+		WorldStatusSubsystem->PushTicket(SkillTicket);
 
 		return true;
 	}
