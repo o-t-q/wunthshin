@@ -9,6 +9,7 @@
 
 #include "SG_WSItemMetadata.generated.h"
 
+enum class ERarity : uint8;
 class UO_WSBaseEffect;
 enum class EItemType : uint8;
 

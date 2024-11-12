@@ -32,7 +32,7 @@ struct FCharacterStats : public FTableRowBase
 {
     GENERATED_BODY()
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character Stats", meta=(ClampMin = 0))
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character Stats", meta=(ClampMin = 0))
     float HP;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Stats", meta=(ClampMin = 0))

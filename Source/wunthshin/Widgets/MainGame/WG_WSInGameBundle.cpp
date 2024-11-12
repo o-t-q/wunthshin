@@ -4,10 +4,12 @@
 #include "WG_WSInGameBundle.h"
 
 #include "FCTween.h"
+#include "FCTweenUObject.h"
 #include "wunthshin/Widgets/Inventory/WG_WSInventory.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/NamedSlot.h"
 
 UImage* UWG_WSInGameBundle::FadeImageStatic = nullptr;
 
@@ -25,6 +27,8 @@ void UWG_WSInGameBundle::NativeConstruct()
 	{
 		Widget.Value->OnHideWidget();
 	}
+
+	
 }
 
 void UWG_WSInGameBundle::NativeOnInitialized()
@@ -41,13 +45,18 @@ FCTweenInstance* UWG_WSInGameBundle::FadeInOut(bool bIsIn, float InDuration)
 {
 	float Start = bIsIn ? 1.0f : 0.0f;
 	float End = 1.f - Start;
-
+	
 	return FCTween::Play(Start, End, [&](float t) { FadeImageStatic->SetOpacity(t); }, InDuration);
 }
 
 void UWG_WSInGameBundle::OpenWindow(FName InWindowName)
 {
-	FadeInOut(false)->SetOnComplete([&] () { ChildWidgets[InWindowName]->OnVisibleWidget();});
+	FadeInOut(false)->SetOnComplete([=, this] ()
+	{
+		ChildWidgets[InWindowName]->OnVisibleWidget();
+	})->CreateUObject(this);
+
+	FadeInOut(true);
 }
 
 void UWG_WSInGameBundle::OpenWindowInventory()

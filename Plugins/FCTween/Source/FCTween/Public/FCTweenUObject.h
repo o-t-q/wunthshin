@@ -8,7 +8,7 @@
  * @brief Use this to wrap an FCTweenInstance inside a UObject, so that it's destroyed when its outer object is destroyed
  */
 UCLASS()
-class UFCTweenUObject : public UObject
+class FCTWEEN_API UFCTweenUObject : public UObject
 {
 	GENERATED_BODY()
 

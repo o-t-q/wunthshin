@@ -80,6 +80,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetHP() const { return CurrentStats.HP; }
 
+	UFUNCTION(BlueprintCallable)
+	FCharacterStats GetCurrentStats() const { return CurrentStats; }
+	
 	// 이동 속성 getter
 	UFUNCTION(BlueprintCallable)
 	const FCharacterMovementStats& GetMovementStats() const { return MovementStats; }

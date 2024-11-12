@@ -36,7 +36,7 @@ protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 public:
-	static FCTweenInstance* FadeInOut(bool bIsIn, float InDuration = 1.f);
+	static FCTweenInstance* FadeInOut(bool bIsIn = false, float InDuration = 1.f);
 
 protected:
 	UFUNCTION()
