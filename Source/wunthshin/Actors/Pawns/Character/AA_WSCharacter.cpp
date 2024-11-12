@@ -28,9 +28,10 @@
 #include "wunthshin/Components/Stats/StatsComponent.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 #include "wunthshin/Subsystem/Utility.h"
-#ifdef WITH_EDITOR
-#include "wunthshin/Subsystem/EditorSubsystem/Character/CharacterEditorSubsystem.h"
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
+#include "wunthshinEditorModule/Subsystem/EditorSubsystem/Character/CharacterEditorSubsystem.h"
 #endif
+#include "wunthshin/Components/Skill/C_WSSkill.h"
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
 
@@ -71,7 +72,6 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
         ADD_INPUT_ACTION(ZoomWheelAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_ZoomWheel.IA_ZoomWheel'");
         ADD_INPUT_ACTION(ClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Climb.IA_Climb'");
         ADD_INPUT_ACTION(CancelClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_CancelClimb.IA_CancelClimb'");
-    
     }
 
 
@@ -128,11 +128,12 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
     Shield->SetupAttachment(GetMesh());
     
     RightHandWeapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("RightHandWeapon"));
-
+    
 	CameraBoom->bEnableCameraLag = true;
 
     CilmMovementComponent = Cast<UClimCharacterMovementComponent>(GetCharacterMovement());
 
+    Skill = CreateDefaultSubobject<UC_WSSkill>(TEXT("SkillComponent"));
 }
 
 void AA_WSCharacter::HandleStaminaDepleted()
@@ -252,12 +253,6 @@ void AA_WSCharacter::BeginPlay()
             FAttachmentTransformRules::SnapToTargetNotIncludingScale,
             RightHandWeaponSocketName
         ));
-
-    {
-        // todo/test: 효과 적용이 된 경우를 테스트, 무기/몹등이 구현되고 나서 지워야 함
-        ApplyElement(this, UElementSubsystem::GetElementHandle(GetWorld(), "Rock"));
-        ApplyElement(this, UElementSubsystem::GetElementHandle(GetWorld(), "Fire"));
-    }
 }
 
 void AA_WSCharacter::OnConstruction(const FTransform& Transform)
@@ -275,6 +270,12 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
         UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
         CustomEvent.SetFirstHit(this);
         PlayHitMontage();
+
+        // 무기를 맞았을 경우 무기의 원소 효과를 부여
+        if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
+        {
+            ApplyElement(EventInstigator, Weapon->GetElement());
+        }
         return Damage;   
     }
 

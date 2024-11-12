@@ -8,8 +8,8 @@
 #include "wunthshin/Components/Weapon/C_WSWeapon.h"
 #include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
 
-#ifdef WITH_EDITOR
-#include "wunthshin/Subsystem/EditorSubsystem/Weapon/WeaponEditorSubsystem.h"
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
+#include "wunthshinEditorModule/Subsystem/EditorSubsystem/Weapon/WeaponEditorSubsystem.h"
 #endif
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Weapon/WeaponSubsystem.h"
 
@@ -56,6 +56,6 @@ void AA_WSWeapon::ApplyAsset(const FTableRowBase* InRowPointer)
 	const FWeaponTableRow* TableRow = reinterpret_cast<const FWeaponTableRow*>(InRowPointer);
 	
 	AttackMontages = TableRow->AttackMontages;
-
 	WeaponComponent->SetDamage(TableRow->Damage);
+	WeaponElement = FElementRowHandle(TableRow->Element);
 }

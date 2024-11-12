@@ -74,7 +74,7 @@ bool UC_WSWeapon::AttackDefault()
 			}
 			
 			PushAttackToWorldStatus();
-			BasicAnimInstance->Montage_Play(AttackMontages[NextAttackIndex]);
+			BasicAnimInstance->Montage_Play(AttackMontages[NextAttackIndex], AttackSpeed);
 			NextAttackIndex = (NextAttackIndex + 1) % AttackMontages.Num();
 		}
 		else

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "wunthshin/Data/Effects/EffectRowHandle/EffectRowHandle.h"
 
 #include "wunthshin/Data/Effects/EffectTableRow/EffectTableRow.h"
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"

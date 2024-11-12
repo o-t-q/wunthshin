@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "wunthshin/Actors/Item/A_WSItem.h"
+#include "wunthshin/Data/Elements/ElementRowHandle/ElementRowHandle.h"
 #include "A_WSWeapon.generated.h"
 
 struct FWeaponTableRow;
@@ -23,6 +24,9 @@ class WUNTHSHIN_API AA_WSWeapon : public AA_WSItem
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta=(AllowPrivateAccess = "true"))
 	TArray<UAnimMontage*> AttackMontages;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Element", meta=(AllowPrivateAccess = "true"))
+	FElementRowHandle WeaponElement;
 	
 public:	
 	// 자식 클래스가 Weapon Component를 override할 수 있도록 ObjectInitializer 생성자로
@@ -36,6 +40,7 @@ public:
 #endif
 	
 	virtual void ApplyAsset(const FTableRowBase* InRowPointer) override;
+	const FElementRowHandle& GetElement() const { return WeaponElement; }
 
 	// 공격 모션 몽타주 getter
 	UFUNCTION(BlueprintCallable)

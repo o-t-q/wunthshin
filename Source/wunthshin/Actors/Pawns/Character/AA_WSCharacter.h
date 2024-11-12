@@ -9,9 +9,11 @@
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 #include "wunthshin/Interfaces/ElementTracked/ElementTracked.h"
 #include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
+#include "wunthshin/Interfaces/SkillCast/SkillCast.h"
 
 #include "AA_WSCharacter.generated.h"
 
+class UC_WSSkill;
 class UPawnMovementComponent;
 class UStatsComponent;
 class UC_WSShield;
@@ -33,7 +35,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGlide);
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game, Blueprintable)
-class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFetcher, public IElementTracked, public ICommonPawn
+class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFetcher, public IElementTracked, public ICommonPawn, public ISkillCast
 {
 	GENERATED_BODY()
 	
@@ -97,6 +99,9 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UC_WSShield* Shield;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	UC_WSSkill* Skill;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UStatsComponent* CharacterStatsComponent;
 
@@ -249,7 +254,8 @@ public:
 	virtual UStatsComponent* GetStatsComponent() const override { return CharacterStatsComponent; }
 	virtual UChildActorComponent* GetRightHandComponent() const override { return RightHandWeapon; }
 	virtual UPawnMovementComponent* GetPawnMovementComponent() const override { return ACharacter::GetMovementComponent(); }
-
+	virtual UC_WSSkill* GetSkillComponent() const override { return Skill; }
+	
 	virtual void HandleStaminaDepleted() override;
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
@@ -273,8 +279,4 @@ protected:
 public:
 	UFUNCTION(BlueprintPure)
 	FORCEINLINE UClimCharacterMovementComponent* GetCustomCharacterMovement() const { return CilmMovementComponent; }
-
-
-
-
 };

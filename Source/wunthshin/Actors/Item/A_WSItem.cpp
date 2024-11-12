@@ -17,8 +17,8 @@
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Item/ItemSubsystem.h"
 #include "wunthshin/Widgets/ItemNotify/WG_WSItemNotify.h"
 
-#ifdef WITH_EDITOR
-#include "wunthshin/Subsystem/EditorSubsystem/Item/ItemEditorSubsystem.h"
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
+#include "wunthshinEditorModule/Subsystem/EditorSubsystem/Item/ItemEditorSubsystem.h"
 #endif
 
 class USphereComponent;

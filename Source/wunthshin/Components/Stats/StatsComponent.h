@@ -45,6 +45,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void IncreaseHP(const float InValue);
 
+	// 체력감소, 입력 값은 양수로
+	UFUNCTION(BlueprintCallable)
+	void DecreaseStamina(const float InValue);
+
+	// 체력증가, 입력 값은 양수로
+	UFUNCTION(BlueprintCallable)
+	void IncreaseStamina(const float InValue);
+
 	// 전체 체력과 현재 체력 비율
 	UFUNCTION(BlueprintCallable)
 	float GetHPRatio() const
@@ -56,6 +64,9 @@ public:
         
 		return CurrentStats.HP / CurrentStats.MaxHP;
 	}
+
+	UFUNCTION(BlueprintCallable)
+	float GetStamina() const { return CurrentStats.Stamina; }
 
 	// 스탯 초기화 함수
 	UFUNCTION(BlueprintCallable, Category = "Stats")

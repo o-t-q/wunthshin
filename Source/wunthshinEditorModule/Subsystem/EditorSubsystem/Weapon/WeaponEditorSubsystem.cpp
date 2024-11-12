@@ -3,6 +3,7 @@
 
 #include "WeaponEditorSubsystem.h"
 
+#include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
 #include "wunthshin/Subsystem/Utility.h"
 
@@ -27,6 +28,5 @@ void UWeaponEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	FItemSubsystemUtility::UpdateTable<FWeaponTableRow>(DataTable, Metadata);
-
 	DataTableMapping.Emplace(FWeaponTableRow::StaticStruct(), DataTable);
 }

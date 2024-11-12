@@ -2,14 +2,31 @@
 
 #include "WorldStatusSubsystem.h"
 
+#include "LevelSequencePlayer.h"
+
+#include "BehaviorTree/BehaviorTreeComponent.h"
+
 #include "wunthshin/Actors/Item/A_WSItem.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Data/Effects/O_WSBaseEffect.h"
 #include "Engine/OverlapResult.h"
 #include "Components/WidgetComponent.h"
+#include "EventTicket/EventTicket.h"
+#include "EventTicket/ItemTicket/ItemTicket.h"
 
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
+#include "wunthshin/Actors/Pawns/NPC/A_WSNPCPawn.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
+
+void UWorldStatusSubsystem::PushTicket_Internal(TSharedPtr<FEventTicket> InTicket)
+{
+    EventQueue.Push(InTicket);
+}
+
+UWorldStatusSubsystem::UWorldStatusSubsystem()
+    : CurrentLevelSequence(nullptr), LevelSequenceActor(nullptr), SkillVictimPawn(nullptr)
+{
+}
 
 void UWorldStatusSubsystem::Tick(float InDeltaTime)
 {
@@ -68,74 +85,125 @@ void UWorldStatusSubsystem::Tick(float InDeltaTime)
 		}
 	}
 
-    for (FItemTicket& Ticket : ItemQueue) 
+    // 레벨 시퀀스가 시작되어 있지 않다면 지속적으로 이벤트 처리
+    while (!EventQueue.IsEmpty()) 
     {
-        FItemTicket::ExecuteAndAdjustLifetime(GetWorld(), Ticket);
-
-        if (Ticket.IsValid()) 
+        if (GetCurrentLevelSequence())
         {
+            break;
+        }
+
+        if (TSharedPtr<FEventTicket> Ticket = EventQueue.Pop();
+            Ticket->IsValid()) 
+        {
+            Ticket->Execute(GetWorld());
+            
             FTimerDelegate Delegate;
             FTimerManagerTimerParameters Params;
             Params.bLoop = false;
             Params.FirstDelay = -1.f;
             Params.bMaxOncePerFrame = false;
 
-            Delegate.BindUObject(this, &UWorldStatusSubsystem::PushItem, Ticket);
+            Delegate.BindUObject
+            (
+                this,
+                &UWorldStatusSubsystem::PushTicket_Internal,
+                Ticket
+            );
 
             GetWorld()->GetTimerManager().SetTimer
             (
-                Ticket.GetTimerHandle(),
+                Ticket->GetTimerHandle(),
                 Delegate,
-                Ticket.Rate,
+                Ticket->GetRate(),
                 Params
             );
         }
     }
+}
 
-    ItemQueue.Empty();
+void UWorldStatusSubsystem::PlayLevelSequence(ULevelSequence* InSequence, const TFunction<void()>& OnEndedFunction)
+{
+    FMovieSceneSequencePlaybackSettings PlaybackSettings;
+    PlaybackSettings.bAutoPlay = true;
+    PlaybackSettings.LoopCount.Value = 0;
+    PlaybackSettings.bHideHud = true;
+    PlaybackSettings.bDisableLookAtInput = true;
+    PlaybackSettings.bDisableMovementInput = true;
+				
+    CurrentLevelSequence = ULevelSequencePlayer::CreateLevelSequencePlayer
+    (
+        GetWorld(),
+        InSequence,
+        PlaybackSettings,
+        LevelSequenceActor
+    );
+    
+    OnLevelSequenceEnded = OnEndedFunction;
+    CurrentLevelSequence->OnFinished.AddUniqueDynamic(this, &UWorldStatusSubsystem::ClearLevelSequence);
+}
+
+void UWorldStatusSubsystem::FreezeSpawnedNPCsBT()
+{
+    for (const AA_WSNPCPawn* Pawn : NPCPawns)
+    {
+        Pawn->GetController()->GetComponentByClass<UBehaviorTreeComponent>()->PauseLogic("By world status subsystem");
+    }
+}
+
+void UWorldStatusSubsystem::UnfreezeSpawnedNPCsBT()
+{
+    for (const AA_WSNPCPawn* Pawn : NPCPawns)
+    {
+        Pawn->GetController()->GetComponentByClass<UBehaviorTreeComponent>()->ResumeLogic("By world status subsystem");
+    }
+}
+
+void UWorldStatusSubsystem::PushTicket(TWeakPtr<FEventTicket> Ticket)
+{
+    if (Ticket.IsValid())
+    {
+        EventQueue.Add(Ticket.Pin());
+    }
+}
+
+void UWorldStatusSubsystem::PushTicketScheduled(TWeakPtr<FEventTicket> Ticket, FTimerHandle& InTimerHandle, const float InDuration)
+{
+    if (Ticket.IsValid())
+    {
+        FTimerDelegate TimerDelegate;
+        TimerDelegate.BindUObject(this, &UWorldStatusSubsystem::PushTicket_Internal, Ticket.Pin());
+        
+        GetWorld()->GetTimerManager().SetTimer
+        (
+            InTimerHandle,
+            TimerDelegate,
+            InDuration,
+            false,
+            -1
+        );
+    }
 }
 
 void UWorldStatusSubsystem::PushItem(const USG_WSItemMetadata* InItem, AActor* InInstigator, AActor* InTarget)
 {
     if (InItem && InInstigator && InTarget) 
     {
-        FItemTicket ItemTicket;
+        const TSharedPtr<FItemTicket> ItemTicket = MakeShared<FItemTicket>();
 
-        ItemTicket.Item = InItem;
-        ItemTicket.Instigator = InInstigator;
-        ItemTicket.Target = InTarget;
+        ItemTicket->Item = InItem;
+        ItemTicket->Instigator = InInstigator;
+        ItemTicket->Target = InTarget;
 
         const FEffectParameter& Parameter = InItem->GetItemParameter();
-        ItemTicket.Rate = Parameter.PerTime;
+        ItemTicket->SetRate(Parameter.PerTime);
 
         // 아이템의 최종 시전 횟수 초기화 (아이템에 지정된 시간이 있을 경우)
         if (InItem->GetItemParameter().Duration != 0.f)
         {
-            ItemTicket.MaxExecuteCount = Parameter.Duration * Parameter.PerTime;
+            ItemTicket->MaxExecuteCount = Parameter.Duration * Parameter.PerTime;
         }
         
-        PushItem(ItemTicket);
-    }
-}
-
-void UWorldStatusSubsystem::PushItem(FItemTicket InItemTicket)
-{
-    ItemQueue.Push(InItemTicket);
-}
-
-void FItemTicket::ExecuteAndAdjustLifetime(const UWorld* InWorld, FItemTicket& InTicket)
-{
-    InTicket.ExecuteCount++;
-    
-    const UO_WSBaseEffect*  Effect     = InTicket.Item->GetItemEffect(InWorld);
-    const FEffectParameter& ItemParams = InTicket.Item->GetItemParameter();
-    
-    // 아이템 효과 호출
-    Effect->Effect(ItemParams, InTicket.Instigator, InTicket.Target);
-    
-    // 아이템 효과 만료시
-    if (InTicket.ExecuteCount >= InTicket.MaxExecuteCount)
-    {
-        InTicket.bDisposed = true;
+        PushTicket(ItemTicket);
     }
 }

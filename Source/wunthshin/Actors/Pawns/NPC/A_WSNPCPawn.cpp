@@ -12,15 +12,17 @@
 #include "wunthshin/Data/NPCs/NPCTableRow/NPCTableRow.h"
 #include "wunthshin/Subsystem/Utility.h"
 #include "wunthshin/Subsystem/GameInstanceSubsystem/NPC/NPCSubsystem.h"
-#ifdef WITH_EDITOR
-#include "wunthshin/Subsystem/EditorSubsystem/NPC/NPCEditorSubsystem.h"
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
+#include "wunthshinEditorModule/Subsystem/EditorSubsystem/NPC/NPCEditorSubsystem.h"
 #endif
 #include "GameFramework/FloatingPawnMovement.h"
 #include "wunthshin/Actors/Item/A_WSItem.h"
 #include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
+#include "wunthshin/Components/Skill/C_WSSkill.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
+#include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogNPCPawn);
 
@@ -37,9 +39,11 @@ AA_WSNPCPawn::AA_WSNPCPawn()
 	Shield = CreateDefaultSubobject<UC_WSShield>(TEXT("Shield"));
 	StatsComponent = CreateDefaultSubobject<UStatsComponent>(TEXT("StatsComponent"));
 	RightHandWeapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("RightHandWeapon"));
-
+	Skill = CreateDefaultSubobject<UC_WSSkill>(TEXT("SkillComponent"));
+	
 	SetRootComponent(CapsuleComponent);
 	CapsuleComponent->InitCapsuleSize(42.f, 96.f);
+	CapsuleComponent->SetCollisionProfileName("Pawn");
 
 	MeshComponent->SetupAttachment(CapsuleComponent);
 	MeshComponent->SetRelativeLocation({ 0.f, 0.f, -96.f });
@@ -101,7 +105,7 @@ UClass* AA_WSNPCPawn::GetEditorSubsystemType() const
 void AA_WSNPCPawn::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	BLUEPRINT_REFRESH_EDITOR
 
 	ensure(
@@ -110,6 +114,30 @@ void AA_WSNPCPawn::BeginPlay()
 			MeshComponent,
 			FAttachmentTransformRules::SnapToTargetNotIncludingScale
 	));
+
+	// 월드에 스폰된 NPC들 리스트에 추가
+	if (const UWorld* World = GetWorld())
+	{
+		if (UWorldStatusSubsystem* WorldStatusSubsystem = World->GetSubsystem<UWorldStatusSubsystem>())
+		{
+			WorldStatusSubsystem->AddNPCPawn(this);
+		}
+	}
+	
+}
+
+void AA_WSNPCPawn::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	// 월드에 스폰된 NPC들 리스트에서 제거
+	if (const UWorld* World = GetWorld())
+	{
+		if (UWorldStatusSubsystem* WorldStatusSubsystem = World->GetSubsystem<UWorldStatusSubsystem>())
+		{
+			WorldStatusSubsystem->RemoveNPCPawn(this);
+		}
+	}
 }
 
 void AA_WSNPCPawn::PossessedBy(AController* NewController)
@@ -156,6 +184,12 @@ float AA_WSNPCPawn::TakeDamage(float DamageAmount, struct FDamageEvent const& Da
 		UE_LOG(LogNPCPawn, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), DamageAmount, *DamageCauser->GetName(), *GetName());
 		CustomEvent.SetFirstHit(this);
 		PlayHitMontage();
+
+		// 무기를 맞았을 경우 무기의 원소 효과를 부여
+		if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
+		{
+			ApplyElement(EventInstigator, Weapon->GetElement());
+		}
 		return DamageAmount;
 	}
 

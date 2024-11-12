@@ -3,39 +3,23 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelSequenceActor.h"
+#include "EventTicket/EventTicket.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "wunthshin/Components/Weapon/C_WSWeapon.h"
 #include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
+#include "wunthshin/Data/Elements/ElementTracking/ElementTracking.h"
 #include "WorldStatusSubsystem.generated.h"
 
+struct FItemTicket;
+class AA_WSNPCPawn;
+class ULevelSequence;
+class ALevelSequenceActor;
+class ULevelSequencePlayer;
 class UC_WSWeapon;
 class AA_WSCharacter;
 class USG_WSItemMetadata;
 class AA_WSItem;
-
-struct FItemTicket 
-{
-	friend class UWorldStatusSubsystem;
-
-	const USG_WSItemMetadata* Item;
-	AActor* Instigator;
-	AActor* Target;
-	float Rate = -1.f;
-	
-	bool IsValid() const { return !bDisposed; }
-
-	FTimerHandle& GetTimerHandle() { return TimerHandle; }
-
-private:
-	static void ExecuteAndAdjustLifetime(const UWorld* InWorld, FItemTicket& InTicket);
-
-	bool bDisposed = false;
-
-	FTimerHandle TimerHandle;
-
-	uint32 ExecuteCount = 0;
-	uint32 MaxExecuteCount = 0;
-};
 
 USTRUCT(BlueprintType)
 struct FDamageTakenArray
@@ -56,40 +40,97 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 {
 	GENERATED_BODY()
 
+	// 레벨 시퀀스 플레이어 (스킬, 씬 등..)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sequence", meta = (AllowPrivateAccess = "true"))
+	ULevelSequencePlayer* CurrentLevelSequence;
+
+	// 현재 실행중인 레벨 시퀀스 액터
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Sequence", meta = (AllowPrivateAccess = "true"))
+	ALevelSequenceActor* LevelSequenceActor;
+
+	// 스킬에 씬에 대상이 되는 폰
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill", meta = (AllowPrivateAccess = "true"))
+	APawn* SkillVictimPawn;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
 	TArray<AActor*> ItemsNearbyCharacter;
 
 	// 현재 진행중인 모든 공격들
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = "true"))
-	TMap<const UC_WSWeapon*, FGuid> AttacksInProgress;
+	TMap<const UObject*, FGuid> AttacksInProgress;
 
 	// 공격이 피해를 준 Pawn들
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attack", meta = (AllowPrivateAccess = "true"))
 	TMap<FGuid, FDamageTakenArray> DamageTaken;
-	
-	TArray<FItemTicket> ItemQueue;
+
+	// 월드에 스폰된 NPC Pawn들
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pawn", meta = (AllowPrivateAccess = "true"))
+	TSet<AA_WSNPCPawn*> NPCPawns;
+
+	UPROPERTY(VisibleAnywhere, Category = "Stack", meta = (AllowPrivateAccess = "true"))
+	TMap<UObject*, FElementTrackingMap> ElementTrackingObjects;
+
+	TFunction<void()> OnLevelSequenceEnded;
+	TArray<TSharedPtr<FEventTicket>> EventQueue;
+
+	// WeakPtr로 넘김에 따라 객체 소멸이 발생할 경우,
+	// FTimerDelegate 등 임시변수에 공유 포인터를 저장, 소멸하지 않을 경우 사용
+	void PushTicket_Internal(TSharedPtr<FEventTicket> InTicket);
 
 public:
 	FOnWeaponAttackEnded OnWeaponAttackEnded;
+
+	UWorldStatusSubsystem();
 	
 	virtual void Tick(float InDeltaTime) override;
 
+	void AddNPCPawn(AA_WSNPCPawn* InNewNPCPawn) { NPCPawns.Add(InNewNPCPawn); }
+	void RemoveNPCPawn(const AA_WSNPCPawn* InPawnToRemove) { NPCPawns.Remove(InPawnToRemove); }
+
+	void PlayLevelSequence(ULevelSequence* InSequence, const TFunction<void()>& OnEndedFunction = {});
+	bool IsLevelSequencePlaying() const { return CurrentLevelSequence != nullptr; }
+	void SetSkillVictimPawn(APawn* InSkillVictimPawn) { SkillVictimPawn = InSkillVictimPawn; }
+
+	UFUNCTION(BlueprintCallable)
+	AActor* GetSkillVictimPawn() const { return SkillVictimPawn; }
+
+	UFUNCTION()
+	ULevelSequencePlayer* GetCurrentLevelSequence() const { return CurrentLevelSequence; }
+
+	void FreezeSpawnedNPCsBT();
+	void UnfreezeSpawnedNPCsBT();
+
+	UFUNCTION()
+	void ClearLevelSequence()
+	{
+		if (OnLevelSequenceEnded)
+		{
+			OnLevelSequenceEnded();	
+		}
+		
+		LevelSequenceActor->Destroy();
+		CurrentLevelSequence = nullptr;
+		LevelSequenceActor = nullptr;
+		SetSkillVictimPawn(nullptr);
+		OnLevelSequenceEnded = {};
+	}
+
 	// 추적할 공격을 추가
-	void PushAttack(const UC_WSWeapon* InWeapon)
+	void PushAttack(const UObject* InGiver)
 	{
 		const FGuid NewAttack = FGuid::NewGuid();
-		AttacksInProgress.Add(InWeapon);
-		AttacksInProgress[InWeapon] = NewAttack;
+		AttacksInProgress.Add(InGiver);
+		AttacksInProgress[InGiver] = NewAttack;
 	}
 	// 추적이 끝난 공격을 제거
-	void PopAttack(const UC_WSWeapon* InWeapon)
+	void PopAttack(const UObject* InGiver)
 	{
-		if (AttacksInProgress.Contains(InWeapon))
+		if (AttacksInProgress.Contains(InGiver))
 		{
-			const FGuid ID = AttacksInProgress[InWeapon];
+			const FGuid ID = AttacksInProgress[InGiver];
 			OnWeaponAttackEnded.Broadcast(ID);
 			DamageTaken.Remove(ID);
-			AttacksInProgress.Remove(InWeapon);
+			AttacksInProgress.Remove(InGiver);
 		}
 	}
 
@@ -116,28 +157,40 @@ public:
 
 		return false;
 	}
-	bool IsDamageTakenBy(const ICommonPawn* InPawn, const UC_WSWeapon* InWeapon) const
+	bool IsDamageTakenBy(const ICommonPawn* InPawn, const UObject* InGiver) const
 	{
-		if (AttacksInProgress.Contains(InWeapon))
+		if (AttacksInProgress.Contains(InGiver))
 		{
-			return IsDamageTakenBy(InPawn, AttacksInProgress[InWeapon]);
+			return IsDamageTakenBy(InPawn, AttacksInProgress[InGiver]);
 		}
 
 		return false;
 	}
 
-	FGuid GetCurrentAttackID(const UC_WSWeapon* InWeapon) const
+	FGuid GetCurrentAttackID(const UObject* InGiver) const
 	{
-		if (AttacksInProgress.Contains(InWeapon))
+		if (AttacksInProgress.Contains(InGiver))
 		{
-			return AttacksInProgress[InWeapon];
+			return AttacksInProgress[InGiver];
 		}
 
 		return {};
 	}
 
 	void PushItem(const USG_WSItemMetadata* InItem, AActor* InInstigator, AActor* InTarget);
-	void PushItem(FItemTicket InItemTicket);
+
+	void PushTicket(TWeakPtr<FEventTicket> Ticket);
+	void PushTicketScheduled(TWeakPtr<FEventTicket> Ticket, FTimerHandle& InTimerHandle, const float InDuration);
+	bool IsElementalTracking(const AActor* InTarget) const { return ElementTrackingObjects.Contains(InTarget); }
+	FElementTrackingMap& AddElementTracking(AActor* InTarget) { return ElementTrackingObjects.Add(InTarget); }
+	FElementTrackingMap& GetElementTracking(const AActor* InTarget) { return ElementTrackingObjects[InTarget]; }
+	void RemoveElementTracking(const AActor* InTarget)
+	{
+		if (ElementTrackingObjects.Contains(InTarget))
+		{
+			ElementTrackingObjects.Remove(InTarget);
+		}
+	}
 
 	virtual TStatId GetStatId() const override
 	{

@@ -8,6 +8,7 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
+#include "wunthshin/Components/Skill/C_WSSkill.h"
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "wunthshin/Interfaces/Taker/Taker.h"
@@ -66,11 +67,16 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
             SpawnedWeapon->SetAssetName(InData->Weapon.RowName);
             SpawnedWeapon->FinishSpawning(FTransform::Identity);
 
-            if (I_WSTaker* Taker = Cast<I_WSTaker>(PawnCasting))
+            if (const UC_WSPickUp* PickupComponent = SpawnedWeapon->GetComponentByClass<UC_WSPickUp>())
             {
-                Taker->Take(SpawnedWeapon->GetComponentByClass<UC_WSPickUp>());
+                PickupComponent->OnPickUp.Broadcast(PawnCasting);
             }
         }
+    }
+
+    if (!InData->Skill.IsNull())
+    {
+        GetSkillComponent()->SetCharacterSkill(FSkillRowHandle(InData->Skill));
     }
 
     IDataTableFetcher* Casting = Cast<IDataTableFetcher>(this);

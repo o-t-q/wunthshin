@@ -17,6 +17,12 @@ class WUNTHSHIN_API UC_WSWeapon : public UActorComponent
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	float Damage;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	float DamageModifier = 1.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	float AttackSpeed = 1.f;
 	
 	UFUNCTION()
 	void UpdateCache(TScriptInterface<I_WSTaker> InTaker);
@@ -50,8 +56,14 @@ public:
 
 	bool IsAttackInProgress() const;
 
-	float GetDamage() const { return Damage; }
+	float GetDamage() const { return Damage * DamageModifier; }
 	void SetDamage(const float InDamage) { Damage = InDamage; }
+	// 공격 속도 배수, 1이면 기본 속도
+	void SetAttackSpeed(const float InAttackSpeed) { AttackSpeed = InAttackSpeed; }
+	void ResetAttackSpeed() { AttackSpeed = 1.f; }
+	// 공격 데미지 배수, 1이면 기본 데미지
+	void SetDamageModifier(const float InDamageModifier) { DamageModifier = InDamageModifier; }
+	void ResetDamageModifier() { DamageModifier = 1.f; }
 
 protected: 
 	// Owner

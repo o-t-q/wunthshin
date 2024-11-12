@@ -1,6 +1,7 @@
 #pragma once
 
 #include "wunthshin/Enums.h"
+#include "wunthshin/Data/Effects/EffectParameter/EffectParameter.h"
 #include "wunthshin/Data/Effects/EffectTableRow/EffectTableRow.h"
 
 #include "ItemTableRow.generated.h"
@@ -81,6 +82,9 @@ struct WUNTHSHIN_API FWeaponTableRow : public FItemTableRow
 	
 	UPROPERTY(EditAnywhere)
 	int32 Damage;
+
+	UPROPERTY(EditAnywhere, meta = (RowType = "/Script/wunthshin.ElementTableRow"))
+	FDataTableRowHandle Element;
 
 	UPROPERTY(EditAnywhere)
 	TArray<UAnimMontage*> AttackMontages;

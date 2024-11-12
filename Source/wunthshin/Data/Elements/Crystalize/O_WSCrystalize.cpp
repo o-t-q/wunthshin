@@ -13,4 +13,11 @@ void UO_WSCrystalize::React(AActor* InReactionInstigator, AActor* InReactionAssi
         ShieldComponent->SetShieldTime(5.f);
         ShieldComponent->SetActive(true);
 	}
+
+	if (UC_WSShield* ShieldComponent = InReactionAssist->GetComponentByClass<UC_WSShield>())
+	{
+		// todo: 쉴드 시간 조정 (레벨, 아이템 비례?)
+		ShieldComponent->SetShieldTime(5.f);
+		ShieldComponent->SetActive(true);
+	}
 }
