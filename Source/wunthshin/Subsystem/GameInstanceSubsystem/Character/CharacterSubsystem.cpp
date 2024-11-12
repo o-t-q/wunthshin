@@ -23,6 +23,15 @@ void UCharacterSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 	DataTableMapping.Emplace(FCharacterTableRow::StaticStruct(), AssetDataTable);
 	DataTableMapping.Emplace(FCharacterStats::StaticStruct(), StatDataTable);
+
+	if (!PossibleCharacters.Contains(1))
+	{
+		AA_WSCharacter* Character = GetWorld()->SpawnActorDeferred<AA_WSCharacter>(AA_WSCharacter::StaticClass(), FTransform::Identity);
+		Character->SetAssetName("Yeonmu");
+		Character->FinishSpawning(FTransform::Identity);
+		SaveCharacterState(Character, 1);
+		Character->Destroy();
+	}
 }
 
 void UCharacterSubsystem::SaveCharacterState()
@@ -64,14 +73,23 @@ void UCharacterSubsystem::SpawnAsCharacter(const int32 InIndex)
 
 		AA_WSCharacter* CurrentCharacter = Cast<AA_WSCharacter>(PlayerController->GetPawn());
 		SaveCharacterState(CurrentCharacter, CurrentSpawnedIndex);
+		
+		AA_WSCharacter* Cloned = GetWorld()->SpawnActorDeferred<AA_WSCharacter>
+		(
+			AA_WSCharacter::StaticClass(),
+			FTransform::Identity,
+			nullptr,
+			 nullptr,
+			 ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+		);
 
-		AA_WSCharacter* SpawnedEmpty = GetWorld()->SpawnActorDeferred<AA_WSCharacter>(AA_WSCharacter::StaticClass(), FTransform::Identity);
-		PossibleCharacters[InIndex].ApplyCharacterState(SpawnedEmpty);
-		SpawnedEmpty->FinishSpawning(PreviousTransform);
+		Cloned->SetAssetName(PossibleCharacters[InIndex].GetCharacterName());
+		Cloned->FinishSpawning(PreviousTransform);
+		PossibleCharacters[InIndex].ReloadCharacterState(Cloned);
 
 		PlayerController->UnPossess();
 		CurrentCharacter->Destroy();
-		PlayerController->Possess(SpawnedEmpty);
+		PlayerController->Possess(Cloned);
 		
 		CurrentSpawnedIndex = InIndex;
 	}

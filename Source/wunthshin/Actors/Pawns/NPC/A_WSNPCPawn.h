@@ -104,6 +104,7 @@ public:
 	virtual UChildActorComponent* GetRightHandComponent() const override;
 	virtual UPawnMovementComponent* GetPawnMovementComponent() const override;
 	virtual UC_WSSkill* GetSkillComponent() const override { return Skill; }
+	virtual void Serialize(FWSArchive& Ar) override;
 	
 	virtual void HandleStaminaDepleted() override;
 

@@ -167,4 +167,3 @@ void UC_WSInventory::UseItem(uint32 Index, AActor* InTarget, int Count)
 		}
 	}
 }
-

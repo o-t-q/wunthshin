@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "../../../../Source/wunthshin/AnimInstance/BaseAnimInstance.h"
+#include "wunthshin/Data/Items/WeaponContext/WeaponContext.h"
 
 #include "C_WSWeapon.generated.h"
 
+class I_WSTaker;
 class UInputMappingContext;
 struct FEnhancedInputActionEventBinding;
 
@@ -16,13 +18,7 @@ class WUNTHSHIN_API UC_WSWeapon : public UActorComponent
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	float Damage;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	float DamageModifier = 1.f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	float AttackSpeed = 1.f;
+	FWeaponContext WeaponContext;
 	
 	UFUNCTION()
 	void UpdateCache(TScriptInterface<I_WSTaker> InTaker);
@@ -56,14 +52,14 @@ public:
 
 	bool IsAttackInProgress() const;
 
-	float GetDamage() const { return Damage * DamageModifier; }
-	void SetDamage(const float InDamage) { Damage = InDamage; }
+	float GetDamage() const { return WeaponContext.Damage * WeaponContext.DamageModifier; }
+	void SetDamage(const float InDamage) { WeaponContext.Damage = InDamage; }
 	// 공격 속도 배수, 1이면 기본 속도
-	void SetAttackSpeed(const float InAttackSpeed) { AttackSpeed = InAttackSpeed; }
-	void ResetAttackSpeed() { AttackSpeed = 1.f; }
+	void SetAttackSpeed(const float InAttackSpeed) { WeaponContext.AttackSpeed = InAttackSpeed; }
+	void ResetAttackSpeed() { WeaponContext.AttackSpeed = 1.f; }
 	// 공격 데미지 배수, 1이면 기본 데미지
-	void SetDamageModifier(const float InDamageModifier) { DamageModifier = InDamageModifier; }
-	void ResetDamageModifier() { DamageModifier = 1.f; }
+	void SetDamageModifier(const float InDamageModifier) { WeaponContext.DamageModifier = InDamageModifier; }
+	void ResetDamageModifier() { WeaponContext.DamageModifier = 1.f; }
 
 protected: 
 	// Owner

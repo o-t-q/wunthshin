@@ -236,6 +236,12 @@ UPawnMovementComponent* AA_WSNPCPawn::GetPawnMovementComponent() const
 	return APawn::GetMovementComponent(); // == FindComponentByClass...
 }
 
+void AA_WSNPCPawn::Serialize(FWSArchive& Ar)
+{
+	Ar << AssetName;
+	StatsComponent->Serialize(Ar);
+}
+
 void AA_WSNPCPawn::HandleStaminaDepleted()
 {
 	// todo: 스태미나가 다 떨어진 경우 뛰기를 멈춤

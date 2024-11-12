@@ -97,3 +97,4 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
         }
     }
 }
+

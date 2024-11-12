@@ -13,15 +13,4 @@ void AwunthshinPlayerState::BeginPlay()
 void AwunthshinPlayerState::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-
-	if (APlayerController* PlayerController = GetPlayerController())
-	{
-		TScriptDelegate<> Delegate;
-		Delegate.BindUFunction
-		(
-			GetWorld()->GetGameInstance()->GetSubsystem<UCharacterSubsystem>(),
-			"SaveCharacterState"
-		);
-		PlayerController->OnPossessedPawnChanged.AddUnique(Delegate);
-	}
 }

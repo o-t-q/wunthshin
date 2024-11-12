@@ -25,5 +25,5 @@ public:
 	void  SetHP(float InHP);
 	
 	void SaveCharacterState(AA_WSCharacter* Character);
-	void ApplyCharacterState(AA_WSCharacter* Character) const;
+	void ReloadCharacterState(AA_WSCharacter* Character) const;
 };

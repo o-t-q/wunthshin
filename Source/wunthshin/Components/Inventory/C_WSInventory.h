@@ -4,19 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Elements/Framework/TypedElementQueryBuilder.h"
 #include "C_WSInventory.generated.h"
 
 class UListView;
+class UInventoryEntryData;
 class USG_WSItemMetadata;
 class AA_WSItem;
 class UImage;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogInventory, Log, All);
-
-
-
-
 
 USTRUCT()
 struct FInventoryPair
@@ -35,8 +31,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	uint32 Count;
-
-	bool operator==(const FInventoryPair& InOther) 
+	
+	bool operator==(const FInventoryPair& InOther) const
 	{
 		// 테이블로부터 생성된 포인터 비교, unique하다 가정
 		return Metadata == InOther.Metadata && 

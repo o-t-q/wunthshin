@@ -4,14 +4,14 @@
 #include "Engine/DataTable.h"
 #include "Logging/LogMacros.h"
 
-#include "wunthshin/Data/Characters/CharacterContext/CharacterContext.h"
 #include "wunthshin/Data/Characters/CharacterStats/CharacterStats.h"
+#include "wunthshin/Interfaces/SerializeClass/WSSerializeClass.h"
 #include "StatsComponent.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogStatsComponent, Log, All);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class WUNTHSHIN_API UStatsComponent : public UActorComponent
+class WUNTHSHIN_API UStatsComponent : public UActorComponent, public IWSSerializeClass
 {
 	GENERATED_BODY()
 	
@@ -91,4 +91,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetHP(const float HP);
+
+	virtual void Serialize(FWSArchive& Ar) override;
 };

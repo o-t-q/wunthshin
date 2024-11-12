@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "wunthshin/Data/Archive/CharacterArchive/CharacterArchive.h"
+#include "wunthshin/Interfaces/SerializeClass/WSSerializeClass.h"
 #include "CommonPawn.generated.h"
 
 class USkeletalMeshComponent;
@@ -28,7 +30,7 @@ class UCommonPawn : public UInterface
 /**
  * 
  */
-class WUNTHSHIN_API ICommonPawn
+class WUNTHSHIN_API ICommonPawn : public IWSSerializeClass
 {
 	GENERATED_BODY()
 

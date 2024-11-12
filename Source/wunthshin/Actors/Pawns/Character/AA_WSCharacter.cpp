@@ -72,6 +72,8 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
         ADD_INPUT_ACTION(ZoomWheelAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_ZoomWheel.IA_ZoomWheel'");
         ADD_INPUT_ACTION(ClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Climb.IA_Climb'");
         ADD_INPUT_ACTION(CancelClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_CancelClimb.IA_CancelClimb'");
+        ADD_INPUT_ACTION(CharacterSwapOneAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Character1.IA_Character1'");
+        ADD_INPUT_ACTION(CharacterSwapTwoAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Character2.IA_Character2'")
     }
 
 
@@ -134,6 +136,12 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
     CilmMovementComponent = Cast<UClimCharacterMovementComponent>(GetCharacterMovement());
 
     Skill = CreateDefaultSubobject<UC_WSSkill>(TEXT("SkillComponent"));
+}
+
+void AA_WSCharacter::Serialize(FWSArchive& Ar)
+{
+    Ar << AssetName;
+    CharacterStatsComponent->Serialize(Ar);
 }
 
 void AA_WSCharacter::HandleStaminaDepleted()
@@ -419,8 +427,9 @@ void AA_WSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
         EnhancedInputComponent->BindAction(CancelClimAction, ETriggerEvent::Started, this, &AA_WSCharacter::CancelClimb);
 
-        
-        
+        // 캐릭터 변경
+        EnhancedInputComponent->BindAction(CharacterSwapOneAction, ETriggerEvent::Started, this, &AA_WSCharacter::SwapCharacterOne);
+        EnhancedInputComponent->BindAction(CharacterSwapTwoAction, ETriggerEvent::Started, this, &AA_WSCharacter::SwapCharacterTwo);
     }
     else
     {
@@ -432,7 +441,7 @@ void AA_WSCharacter::Move(const FInputActionValue& Value)
 {
     // input is a Vector2D
     FVector MovementVector = Value.Get<FVector>();
-    
+
 
    
        if (Controller != nullptr)
@@ -490,6 +499,22 @@ void AA_WSCharacter::Look(const FInputActionValue& Value)
         // add yaw and pitch input to controller
         AddControllerYawInput(LookAxisVector.X);
         AddControllerPitchInput(LookAxisVector.Y);
+    }
+}
+
+void AA_WSCharacter::SwapCharacterOne()
+{
+    if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
+    {
+        CharacterSubsystem->SpawnAsCharacter(0);
+    }
+}
+
+void AA_WSCharacter::SwapCharacterTwo()
+{
+    if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
+    {
+        CharacterSubsystem->SpawnAsCharacter(1);
     }
 }
 
@@ -755,8 +780,6 @@ void AA_WSCharacter::CancelClimb()
 {
     CilmMovementComponent->CancelClimbing();
 }
-
-
 
 
 

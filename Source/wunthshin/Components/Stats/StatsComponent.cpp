@@ -1,8 +1,6 @@
 #include "StatsComponent.h"
 #include "Engine/DataTable.h"
 
-#include "GameFramework/PawnMovementComponent.h"
-
 #include "Logging/LogMacros.h"
 
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
@@ -150,4 +148,11 @@ void UStatsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActor
 void UStatsComponent::SetHP(const float HP)
 {
     CurrentStats.HP = FMath::Clamp(HP, 0, CurrentStats.MaxHP);
+}
+
+void UStatsComponent::Serialize(FWSArchive& Ar)
+{
+    Ar << StaminaDepletionRate;
+    Ar << StaminaDepletionRate;
+    Ar << CurrentStats;
 }

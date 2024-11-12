@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputActionValue.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 
@@ -13,6 +14,7 @@
 
 #include "AA_WSCharacter.generated.h"
 
+class UClimCharacterMovementComponent;
 class UC_WSSkill;
 class UPawnMovementComponent;
 class UStatsComponent;
@@ -93,6 +95,12 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* DropAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* CharacterSwapOneAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* CharacterSwapTwoAction;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UC_WSInventory* Inventory;
 
@@ -192,6 +200,9 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	void SwapCharacterOne();
+	void SwapCharacterTwo();
+
 	void OnCrouch();
 	void UnOnCrouch();
 
@@ -256,6 +267,7 @@ public:
 	virtual UChildActorComponent* GetRightHandComponent() const override { return RightHandWeapon; }
 	virtual UPawnMovementComponent* GetPawnMovementComponent() const override { return ACharacter::GetMovementComponent(); }
 	virtual UC_WSSkill* GetSkillComponent() const override { return Skill; }
+	virtual void Serialize(FWSArchive& Ar) override;
 	
 	virtual void HandleStaminaDepleted() override;
 	UInputMappingContext* GetMappingContext() const { return DefaultMappingContext; }
@@ -281,6 +293,7 @@ private:
 
 public:
 	virtual void PlayHitMontage() override;
+	
 protected:
 	UPROPERTY(Category=Character , VisibleAnywhere,BlueprintReadOnly)
 	UClimCharacterMovementComponent* CilmMovementComponent;
