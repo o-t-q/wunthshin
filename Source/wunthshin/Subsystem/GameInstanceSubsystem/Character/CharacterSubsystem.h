@@ -8,6 +8,7 @@
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "CharacterSubsystem.generated.h"
 
+struct FCharacterTableRow;
 /**
  * 
  */
@@ -26,5 +27,5 @@ public:
 	UCharacterSubsystem();
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-
+	FCharacterTableRow* GetTableRow(FName AssetName) const { return AssetDataTable->FindRow<FCharacterTableRow>(AssetName,TEXT(""));}
 };

@@ -7,13 +7,11 @@
 #include "wunthshin/Widgets/WG_WSUserWidgetBase.h"
 #include "WG_WSInGameBundle.generated.h"
 
+class UListView;
+class UVerticalBox;
 class FCTween;
-class FCTweenInstanceFloat;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnClickMenuButton, FName, WindowName);
-
 class UImage;
 class UButton;
-class FCTweenInstance;
 class UWG_WSInventory;
 /**
  * 
@@ -39,12 +37,13 @@ public:
 	static FCTweenInstance* FadeInOut(bool bIsIn = false, float InDuration = 1.f);
 
 protected:
-	UFUNCTION()
 	void OpenWindow(FName InWindowName);
 
-protected:
 	UFUNCTION()
-	void OpenWindowInventory();
+	void OpenWindowInventory() { OpenWindow("Window_Inventory"); };
+
+protected:
+	void InitCharacterSlots();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
@@ -54,7 +53,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 	UButton* Button_OpenInventory;
 
-protected:
-	UPROPERTY()
-	FOnClickMenuButton OnClickMenuButton;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+	UListView* CharacterRoot;
 };

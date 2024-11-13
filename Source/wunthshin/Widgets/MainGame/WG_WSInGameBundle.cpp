@@ -9,7 +9,10 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/HorizontalBox.h"
 #include "Components/NamedSlot.h"
+#include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
+#include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 
 UImage* UWG_WSInGameBundle::FadeImageStatic = nullptr;
 
@@ -19,16 +22,18 @@ void UWG_WSInGameBundle::NativeConstruct()
 	InitializeWidget();
 	
 	FadeImageStatic = FadeImage;
-	OnClickMenuButton.AddDynamic(this,&ThisClass::OpenWindow);
-	
-	Button_OpenInventory->OnClicked.AddDynamic(this,&ThisClass::OpenWindowInventory);
 
+	// 시작할 때 메뉴가 열려있으면 다 닫음
 	for(auto& Widget : ChildWidgets)
 	{
 		Widget.Value->OnHideWidget();
 	}
-
 	
+	// 메뉴버튼 이벤트 바인딩
+	Button_OpenInventory->OnClicked.AddDynamic(this,&ThisClass::OpenWindowInventory);
+
+	// 우측 캐릭터 변경 슬롯 초기화
+	InitCharacterSlots();
 }
 
 void UWG_WSInGameBundle::NativeOnInitialized()
@@ -59,10 +64,14 @@ void UWG_WSInGameBundle::OpenWindow(FName InWindowName)
 	FadeInOut(true);
 }
 
-void UWG_WSInGameBundle::OpenWindowInventory()
+void UWG_WSInGameBundle::InitCharacterSlots()
 {
-	OpenWindow("Window_Inventory");
+	//auto test = ULocalPlayer::GetSubsystem<UCharacterSubsystem>()->GetRowValue<FCharacterTableRow>(TEXT("YinLin"));
+	TArray<UObject*> Objects;
+	Objects.Add(NewObject<UObject>(this,FName("YinLin")));
+	CharacterRoot->SetListItems(Objects);
 }
+
 
 
 

@@ -257,7 +257,8 @@ public:
 	virtual UC_WSSkill* GetSkillComponent() const override { return Skill; }
 	
 	virtual void HandleStaminaDepleted() override;
-
+	UInputMappingContext* GetMappingContext() const { return DefaultMappingContext; }
+	
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	virtual bool IsFastRunning() const override { return bIsFastRunning; }
 
