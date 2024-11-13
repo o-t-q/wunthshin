@@ -39,6 +39,7 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
@@ -47,19 +48,10 @@ public:
 	UFUNCTION()
 	virtual bool AttackSecondary();
 
+	FWeaponContext& GetWeaponContext() { return WeaponContext; }
+	const FWeaponContext& GetWeaponContext() const { return WeaponContext; }
 	void ResetCounter();
-	virtual void BeginDestroy() override;
-
 	bool IsAttackInProgress() const;
-
-	float GetDamage() const { return WeaponContext.Damage * WeaponContext.DamageModifier; }
-	void SetDamage(const float InDamage) { WeaponContext.Damage = InDamage; }
-	// 공격 속도 배수, 1이면 기본 속도
-	void SetAttackSpeed(const float InAttackSpeed) { WeaponContext.AttackSpeed = InAttackSpeed; }
-	void ResetAttackSpeed() { WeaponContext.AttackSpeed = 1.f; }
-	// 공격 데미지 배수, 1이면 기본 데미지
-	void SetDamageModifier(const float InDamageModifier) { WeaponContext.DamageModifier = InDamageModifier; }
-	void ResetDamageModifier() { WeaponContext.DamageModifier = 1.f; }
 
 protected: 
 	// Owner
@@ -76,12 +68,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UInputMappingContext* IMC_Weapon = nullptr;
 
-	FEnhancedInputActionEventBinding* AttackActionBinding;
-
 	// MTG
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<UAnimMontage*> AttackMontages;
-
 
 	//연속 공격 카운트
 	int32 NextAttackIndex = 0;

@@ -52,6 +52,27 @@ void UC_WSWeapon::BeginPlay()
 	
 }
 
+void UC_WSWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	
+	if (OwningPawn) 
+	{
+		if (APlayerController* PC = Cast<APlayerController>(OwningPawn->GetController()))
+		{
+			if (AActor* Weapon = Cast<AActor>(GetOwner());
+				Weapon && Weapon->InputComponent)
+			{
+				UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Weapon->InputComponent);
+				ensure(EnhancedInputComponent);
+
+				EnhancedInputComponent->ClearBindingsForObject(this);
+				Weapon->DisableInput(PC);
+			}
+		}
+	}
+}
+
 void UC_WSWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	
@@ -74,7 +95,7 @@ bool UC_WSWeapon::AttackDefault()
 			}
 			
 			PushAttackToWorldStatus();
-			BasicAnimInstance->Montage_Play(AttackMontages[NextAttackIndex], WeaponContext.AttackSpeed);
+			BasicAnimInstance->Montage_Play(AttackMontages[NextAttackIndex], WeaponContext.GetAttackSpeed());
 			NextAttackIndex = (NextAttackIndex + 1) % AttackMontages.Num();
 		}
 		else
@@ -149,7 +170,7 @@ void UC_WSWeapon::SetupInputComponent()
 				if (It.Action->GetFName() == TEXT("IA_Attack"))
 				{
 					InputAction = It.Action.Get();
-					AttackActionBinding = &EnhancedInputComponent->BindAction(InputAction, ETriggerEvent::Started, this, "AttackDefault");
+					EnhancedInputComponent->BindAction(InputAction, ETriggerEvent::Started, this, "AttackDefault");
 					break;
 				}
 			}
@@ -187,36 +208,6 @@ void UC_WSWeapon::ResetCounter()
 	NextAttackIndex = 0;
 	UE_LOG(LogTemp, Warning, TEXT("Attack Counter Reset"));
 
-}
-
-void UC_WSWeapon::BeginDestroy()
-{
-	Super::BeginDestroy();
-
-	if (OwningPawn) 
-	{
-		if (APlayerController* PC = Cast<APlayerController>(OwningPawn->GetController()))
-		{
-			UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
-
-			// todo: 무기가 여러개인 경우?
-			if (Subsystem->HasMappingContext(IMC_Weapon))
-			{
-				Subsystem->RemoveMappingContext(IMC_Weapon);
-			}
-
-			AActor* hi = Cast<AActor>(GetOwner());
-
-			if (hi->InputComponent)
-			{
-				UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(hi->InputComponent);
-				ensure(EnhancedInputComponent);
-
-				EnhancedInputComponent->RemoveBinding(*AttackActionBinding);
-				hi->DisableInput(PC);
-			}
-		}
-	}
 }
 
 bool UC_WSWeapon::IsAttackInProgress() const
