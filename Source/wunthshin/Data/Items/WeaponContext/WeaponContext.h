@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "wunthshin/Data/Modifiers/WeaponModifier/WeaponModifier.h"
 #include "wunthshin/Data/SerializeStruct/WSSerializeStruct.h"
 
 #include "WeaponContext.generated.h"
@@ -8,12 +9,17 @@ struct FWeaponContext : public FWSSerializeStruct
 {
 	GENERATED_BODY()
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	float Damage;
+	float GetDamage() const { return (BaseDamage + WeaponModifier.FixedDamage) * WeaponModifier.DamageModifier; }
+	float GetAttackSpeed() const { return WeaponModifier.AttackSpeed; }
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	float DamageModifier = 1.f;
+	void SetBaseDamage(const float Damage) { BaseDamage = Damage; }
+	void SetModifier(const FWeaponModifier& Modifier) { WeaponModifier = Modifier; }
+	void ResetModifier() { WeaponModifier = {}; }
+	
+private:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	float BaseDamage = 0.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	float AttackSpeed = 1.f;
+	UPROPERTY(BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	FWeaponModifier WeaponModifier;
 };

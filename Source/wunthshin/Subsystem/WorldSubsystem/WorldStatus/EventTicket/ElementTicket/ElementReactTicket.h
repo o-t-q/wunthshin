@@ -14,7 +14,7 @@ public:
 	virtual void Execute(UWorld* InWorld) override;
 };
 
-struct FElementReactFinishTicket : public FEventTicket
+struct FElementReactRevokeTicket : public FEventTicket
 {
 public:
 	AActor* TargetActor;

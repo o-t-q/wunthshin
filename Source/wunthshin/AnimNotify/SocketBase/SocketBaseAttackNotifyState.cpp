@@ -101,7 +101,7 @@ void USocketBaseAttackNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, 
 	{
 		// 데미지를 가한다
 		AActor* HitActor = OverlapResult.GetActor();
-		HitActor->TakeDamage(WeaponComponent->GetDamage(), DamageEvent, Self->GetController(), WeaponActor);
+		HitActor->TakeDamage(WeaponComponent->GetWeaponContext().GetDamage(), DamageEvent, Self->GetController(), WeaponActor);
 	}
 }
 

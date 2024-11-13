@@ -235,11 +235,10 @@ void AA_WSCharacter::ApplyAsset(const FTableRowBase* InRowPointer)
         if (const UStatsComponent* StatsComponent = GetStatsComponent())
         {
             const FCharacterMovementStats& MovementStats = StatsComponent->GetMovementStats();
-            MovementComponent->MaxWalkSpeed = MovementStats.NormalMaxSpeed;
-            MovementComponent->MaxFlySpeed = MovementStats.MaxFlyingSpeed;
-            MovementComponent->MaxWalkSpeedCrouched = MovementStats.CrouchMaxSpeed;
-            MovementComponent->JumpZVelocity = MovementStats.InitialJumpVelocity;
-            
+            MovementComponent->MaxWalkSpeed = MovementStats.GetNormalMaxSpeed();
+            MovementComponent->MaxFlySpeed = MovementStats.GetFlyingMaxSpeed();
+            MovementComponent->MaxWalkSpeedCrouched = MovementStats.GetCrouchMaxSpeed();
+            MovementComponent->JumpZVelocity = MovementStats.GetInitialJumpVelocity();
         }
     }
 }
@@ -560,7 +559,7 @@ void AA_WSCharacter::FastRun()
 
     bIsFastRunning = true;
 	OnFastRun.Broadcast();
-    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().FastMaxSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().GetFastMaxSpeed();
 }
 
 void AA_WSCharacter::UnFastRun()
@@ -574,7 +573,7 @@ void AA_WSCharacter::UnFastRun()
 
     bIsFastRunning = false;
 	OffFastRun.Broadcast();
-    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().NormalMaxSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().GetNormalMaxSpeed();
 
     if (bIsWalkingPressing) 
     {
@@ -599,7 +598,7 @@ void AA_WSCharacter::GoOnWalk()
 
     OnWalk.Broadcast();
     bIsWalking = true;
-    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().WalkMaxSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().GetWalkSpeed();
 }
 
 void AA_WSCharacter::GoOffWalk() 
@@ -613,7 +612,7 @@ void AA_WSCharacter::GoOffWalk()
 
     OffWalk.Broadcast();
     bIsWalking = false;
-    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().NormalMaxSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().GetNormalMaxSpeed();
 
     // 상충되는 빠르게 달리기가 눌려있다면 빠르게 달리기로 상태변환
     if (bIsFastRunningPressing) 

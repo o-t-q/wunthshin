@@ -85,7 +85,7 @@ void AA_WSNPCPawn::ApplyAsset(const FTableRowBase* InRowPointer)
 
 	if (UFloatingPawnMovement* FloatingPawnMovement = Cast<UFloatingPawnMovement>(MovementComponent))
 	{
-		FloatingPawnMovement->MaxSpeed = GetStatsComponent()->GetMovementStats().NormalMaxSpeed;
+		FloatingPawnMovement->MaxSpeed = GetStatsComponent()->GetMovementStats().GetNormalMaxSpeed();
 	}
 }
 

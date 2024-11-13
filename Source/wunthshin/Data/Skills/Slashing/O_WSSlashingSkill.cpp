@@ -31,8 +31,12 @@ void UO_WSSlashingSkill::DoSkillImpl(const FSkillParameter& InParameter, ICommon
 
 				const TSharedPtr<FWeaponModifierTicket> ModifierTicket = MakeShared<FWeaponModifierTicket>();
 				ModifierTicket->WeaponComponent = Weapon->GetComponentByClass<UC_WSWeapon>();
-				ModifierTicket->AttackSpeed = 1.5f;
-				ModifierTicket->DamageModifier = 1.2f;
+				ModifierTicket->WeaponModifier =
+					{
+					.DamageModifier = 1.2f,
+					.AttackSpeed = 1.5f,
+					.FixedDamage = 0.f
+					};
 
 				WorldStatusSubsystem->PushTicket(ModifierTicket);
 			}

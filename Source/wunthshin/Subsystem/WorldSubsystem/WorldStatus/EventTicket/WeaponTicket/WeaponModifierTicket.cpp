@@ -9,28 +9,28 @@ void FWeaponModifierTicket::Execute(UWorld* InWorld)
 {
 	if (WeaponComponent)
 	{
-		UE_LOG(LogWeaponModifier, Log, TEXT("Weapon %s modifier: Damage %f, Speed %f"), *WeaponComponent->GetOwner()->GetName(), DamageModifier, AttackSpeed);
-		WeaponComponent->SetDamageModifier(DamageModifier);
-		WeaponComponent->SetAttackSpeed(AttackSpeed);
-
+		UE_LOG(LogWeaponModifier, Log, TEXT("Weapon %s modifier"), *WeaponComponent->GetOwner()->GetName());
+		WeaponComponent->GetWeaponContext().SetModifier(WeaponModifier);
+		
 		if (UWorldStatusSubsystem* WorldStatusSubsystem = InWorld->GetSubsystem<UWorldStatusSubsystem>())
 		{
-			TSharedPtr<FWeaponModifierFinishTicket> EndTicket = MakeShared<FWeaponModifierFinishTicket>();
+			TSharedPtr<FWeaponModifierRevokeTicket> EndTicket = MakeShared<FWeaponModifierRevokeTicket>();
 			EndTicket->WeaponComponent = WeaponComponent;
 			WorldStatusSubsystem->PushTicketScheduled(EndTicket, BuffTimerHandle, BuffDuration);
+			return;
 		}
 	}
 
 	SetDisposed();
 }
 
-void FWeaponModifierFinishTicket::Execute(UWorld* InWorld)
+void FWeaponModifierRevokeTicket::Execute(UWorld* InWorld)
 {
 	if (WeaponComponent)
 	{
 		UE_LOG(LogWeaponModifier, Log, TEXT("Reset weapon modifier for %s"), *WeaponComponent->GetOwner()->GetName())
-		WeaponComponent->ResetAttackSpeed();
-		WeaponComponent->ResetDamageModifier();
+		WeaponComponent->GetWeaponContext().ResetModifier();
+		return;
 	}
 
 	SetDisposed();

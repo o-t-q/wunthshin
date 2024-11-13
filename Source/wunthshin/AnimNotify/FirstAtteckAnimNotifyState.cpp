@@ -91,7 +91,7 @@ void UFirstAtteckAnimNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, U
 #endif
 				
 				// 데미지를 가한다
-				HitActor->TakeDamage(WeaponComponent->GetDamage(), DamageEvent, Self->GetController(), Weapon);
+				HitActor->TakeDamage(WeaponComponent->GetWeaponContext().GetDamage(), DamageEvent, Self->GetController(), Weapon);
 			}
 		}
 	}
