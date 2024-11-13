@@ -39,13 +39,19 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-	virtual void BeginDestroy() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	
 	UFUNCTION()
 	void CastSkill();
 
-	void SetupInputComponent();
-	void RemoveInputComponent();
+	// 초기 입력 컴포넌트 설정 함수
+	// BeginPlay보다 OnPossessedPawnChanged이 먼저 발생함에 따라
+	// 시작 캐릭터의 입력 컴포넌트 설정이 누락됨
+	void InitializeInputComponent();
+
+	// 캐릭터 변경에 따른 스킬 바인딩 Delegate 추가/삭제
+	UFUNCTION()
+	void ReconfigureInputComponent(APawn* OldPawn, APawn* NewPawn);
 
 public:
 	void SetCharacterSkill(const FSkillRowHandle& InCharacterSkill) { CharacterSkill = InCharacterSkill; }

@@ -87,9 +87,8 @@ void UCharacterSubsystem::SpawnAsCharacter(const int32 InIndex)
 		Cloned->FinishSpawning(PreviousTransform);
 		PossibleCharacters[InIndex].ReloadCharacterState(Cloned);
 
-		PlayerController->UnPossess();
-		CurrentCharacter->Destroy();
 		PlayerController->Possess(Cloned);
+		CurrentCharacter->Destroy();
 		
 		CurrentSpawnedIndex = InIndex;
 	}

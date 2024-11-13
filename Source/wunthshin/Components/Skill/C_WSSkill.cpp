@@ -7,6 +7,7 @@
 #include "InputAction.h"
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
+#include "Kismet/GameplayStatics.h"
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Components/Stats/StatsComponent.h"
 #include "wunthshin/Data/Skills/SkillTableRow/SkillTableRow.h"
@@ -39,15 +40,24 @@ UC_WSSkill::UC_WSSkill()
 void UC_WSSkill::BeginPlay()
 {
 	Super::BeginPlay();
-	SetupInputComponent();
+	InitializeInputComponent();
+	
+	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	{
+		PlayerController->OnPossessedPawnChanged.AddUniqueDynamic(this, &UC_WSSkill::ReconfigureInputComponent);
+	}
+	
 	// ...
 	
 }
 
-void UC_WSSkill::BeginDestroy()
+void UC_WSSkill::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::BeginDestroy();
-	RemoveInputComponent();
+	Super::EndPlay(EndPlayReason);
+	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	{
+		PlayerController->OnPossessedPawnChanged.RemoveAll(this);
+	}
 }
 
 void UC_WSSkill::CastSkill()
@@ -60,6 +70,12 @@ void UC_WSSkill::CastSkill()
 	if (ICommonPawn* CommonPawn = Cast<ICommonPawn>(GetOwner()))
 	{
 		const FSkillTableRow* SkillDescription = CharacterSkill.Handle.GetRow<FSkillTableRow>(TEXT(""));
+		if (!SkillDescription)
+		{
+			UE_LOG(LogSkillComponent, Log, TEXT("No skill has been bind to this character"));
+			return;
+		}
+		
 		AActor* Actor = Cast<AActor>(CommonPawn);
 		UStatsComponent* StatsComponent = CommonPawn->GetStatsComponent();
 		
@@ -129,76 +145,55 @@ void UC_WSSkill::CastSkill()
 	}
 }
 
-void UC_WSSkill::SetupInputComponent()
+void UC_WSSkill::InitializeInputComponent()
+{
+	if (const APawn* Owner = Cast<APawn>(GetOwner()))
+	{
+		if (const AController* Controller = Owner->GetController();
+			Controller && !Controller->IsA<APlayerController>())
+		{
+			return;
+		}
+	}
+	
+	if (const APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
+			!Subsystem->HasMappingContext(SkillMappingContext))
+		{
+			Subsystem->AddMappingContext(SkillMappingContext, 0);
+		}
+
+		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(GetOwner()->InputComponent))
+		{
+			UE_LOG(LogSkillComponent, Log, TEXT("Binding the skill input"));
+			EnhancedInputComponent->BindAction(SkillAction, ETriggerEvent::Started, this, &UC_WSSkill::CastSkill);
+		}
+	}
+}
+
+void UC_WSSkill::ReconfigureInputComponent(APawn* OldPawn, APawn* NewPawn)
 {
 	if (!IsValid(GetWorld()))
 	{
 		return;
 	}
-	
-	if (APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController()))
+
+	if (NewPawn)
 	{
-		// 입력은 플레이어만 가능하게
-		if (PC->GetPawn() != GetOwner())
+		UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(NewPawn->InputComponent);
+		ensure(EnhancedInputComponent);
+
+		if (OldPawn)
 		{
-			return;
+			UE_LOG(LogSkillComponent, Log, TEXT("Unbinding skill input"));
+			EnhancedInputComponent->ClearBindingsForObject(this);
 		}
-
-		UE_LOG(LogSkillComponent, Log, TEXT("Binding the skill input"));
-
-		if (const AA_WSCharacter* Character = Cast<AA_WSCharacter>(GetOwner()))
+		
+		if (GetOwner() == NewPawn)
 		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
-				!Subsystem->HasMappingContext(SkillMappingContext))
-			{
-				Subsystem->AddMappingContext(SkillMappingContext, 0);
-			}
-
-			if (!SkillKeyBinding)
-			{
-				UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Character->InputComponent);
-				ensure(EnhancedInputComponent);
-
-				SkillKeyBinding = &EnhancedInputComponent->BindAction(SkillAction, ETriggerEvent::Started, this, &UC_WSSkill::CastSkill);
-			}
+			UE_LOG(LogSkillComponent, Log, TEXT("Binding the skill input"));
+			EnhancedInputComponent->BindAction(SkillAction, ETriggerEvent::Started, this, &UC_WSSkill::CastSkill);
 		}
 	}
 }
-
-void UC_WSSkill::RemoveInputComponent()
-{
-	if (!IsValid(GetWorld()))
-	{
-		return;
-	}
-	
-	if (APlayerController* PC = Cast<APlayerController>(GetWorld()->GetFirstPlayerController()))
-	{
-		// 입력은 플레이어만 가능하게
-		if (PC->GetPawn() != GetOwner())
-		{
-			return;
-		}
-
-		UE_LOG(LogSkillComponent, Log, TEXT("Unbinding the skill input"));
-
-		if (const AA_WSCharacter* Character = Cast<AA_WSCharacter>(GetOwner()))
-		{
-			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
-				Subsystem->HasMappingContext(SkillMappingContext))
-			{
-				Subsystem->RemoveMappingContext(SkillMappingContext);
-			}
-
-			if (SkillKeyBinding)
-			{
-				UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Character->InputComponent);
-				ensure(EnhancedInputComponent);
-
-				EnhancedInputComponent->RemoveBinding(*SkillKeyBinding);
-				SkillKeyBinding = nullptr;
-			}
-		}
-	}
-}
-
