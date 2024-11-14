@@ -27,10 +27,10 @@ public:
 	UPROPERTY()
 	ERarity ItemRarity;
 
-private:
 	UPROPERTY()
 	EItemType ItemType;
-
+	
+private:
 	UPROPERTY(VisibleAnywhere)
 	FName AssetName;
 

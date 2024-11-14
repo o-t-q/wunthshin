@@ -31,7 +31,7 @@ void UWG_WSInGameBundle::NativeConstruct()
 	
 	// 메뉴버튼 이벤트 바인딩
 	Button_OpenInventory->OnClicked.AddDynamic(this,&ThisClass::OpenWindowInventory);
-
+	//Button_NormalAttack->OnClicked.AddUniqueDynamic()
 	// 우측 캐릭터 변경 슬롯 초기화
 	InitCharacterSlots();
 }
