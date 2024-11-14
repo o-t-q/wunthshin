@@ -7,6 +7,8 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Perception/AIPerceptionComponent.h"
+#include "wunthshin/wunthshinPlayerState.h"
+#include "wunthshin/Actors/Pawns/NPC/A_WSNPCPawn.h"
 #include "wunthshin/Components/BlueprintAIPerception/BlueprintAIPerceptionComponent.h"
 
 const FName AA_WSNPCAIController::BBPlayerVariable("PlayerActor");
@@ -15,6 +17,7 @@ AA_WSNPCAIController::AA_WSNPCAIController()
 {
 	BehaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
 	BlackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackboardComponent"));
+	bWantsPlayerState = true;
 }
 
 void AA_WSNPCAIController::SetBehaviorTree(UBehaviorTree* InAsset)
@@ -34,6 +37,44 @@ void AA_WSNPCAIController::HandleTargetPerceptionUpdated(AActor* Actor, FAIStimu
 		{
 			BlackboardComponent->ClearValue(BBPlayerVariable);
 		}
+	}
+}
+
+void AA_WSNPCAIController::PasueAIByAlive(const bool bInbAlive)
+{
+	if (bInbAlive)
+	{
+		BehaviorTreeComponent->ResumeLogic("Alive");
+	}
+	else
+	{
+		BehaviorTreeComponent->StopLogic("Dead");
+	}
+}
+
+void AA_WSNPCAIController::InitPlayerState()
+{
+	Super::InitPlayerState();
+	GetPlayerState<AwunthshinPlayerState>()->OnPlayerAlivenessChanged.AddUniqueDynamic(this, &AA_WSNPCAIController::PasueAIByAlive);
+}
+
+void AA_WSNPCAIController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	if (AA_WSNPCPawn* NPCPawn = Cast<AA_WSNPCPawn>(InPawn))
+	{
+		NPCPawn->OnTakeAnyDamage.AddUniqueDynamic(GetPlayerState<AwunthshinPlayerState>(), &AwunthshinPlayerState::CheckCharacterDeath);
+	}
+}
+
+void AA_WSNPCAIController::OnUnPossess()
+{
+	Super::OnUnPossess();
+
+	if (AA_WSNPCPawn* NPCPawn = GetPawn<AA_WSNPCPawn>())
+	{
+		NPCPawn->OnTakeAnyDamage.RemoveAll(GetPlayerState<AwunthshinPlayerState>());
 	}
 }
 

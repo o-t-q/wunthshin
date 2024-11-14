@@ -1,5 +1,4 @@
 #pragma once
-#include "wunthshin/Data/SerializeStruct/WSSerializeStruct.h"
 
 #include "CharacterStats.generated.h"
 
@@ -30,10 +29,11 @@ struct FCharacterMovementModifier
 };
 
 USTRUCT(BlueprintType)
-struct FCharacterMovementStats : public FWSSerializeStruct
+struct FCharacterMovementStats
 {
 	GENERATED_BODY()
-
+	virtual ~FCharacterMovementStats() = default;
+	
 	float GetWalkSpeed() const { return WalkMaxSpeed * MovementModifier.WalkMaxSpeed; }
 	float GetNormalMaxSpeed() const { return NormalMaxSpeed * MovementModifier.NormalMaxSpeed; }
 	float GetFastMaxSpeed() const { return FastMaxSpeed * MovementModifier.FastMaxSpeed; }
@@ -43,16 +43,6 @@ struct FCharacterMovementStats : public FWSSerializeStruct
 
 	void SetModifier(const FCharacterMovementModifier& Modifier) { MovementModifier = Modifier; }
 	void ResetModifier() { MovementModifier = {}; }
-	
-	virtual void Serialize(FWSArchive& Ar) override
-	{
-		Ar << WalkMaxSpeed;
-		Ar << NormalMaxSpeed;
-		Ar << FastMaxSpeed;
-		Ar << CrouchMaxSpeed;
-		Ar << InitialJumpVelocity;
-		Ar << FlyingMaxSpeed;
-	}
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Movement", meta = (ClampMin = "0"))
@@ -79,7 +69,7 @@ private:
 
 // 캐릭터의 스탯을 정의하는 구조체
 USTRUCT(BlueprintType)
-struct FCharacterStats : public FTableRowBase, public FWSSerializeStruct
+struct FCharacterStats : public FTableRowBase
 {
     GENERATED_BODY()
 	
@@ -96,11 +86,4 @@ struct FCharacterStats : public FTableRowBase, public FWSSerializeStruct
 	FCharacterMovementStats Movement;
     
     // 추가적인 스탯을 여기서 정의할 수 있습니다.
-
-	virtual void Serialize(FWSArchive& Ar) override
-	{
-		Ar << HP;
-		Ar << Stamina;
-		Ar << Movement;
-	}
 };

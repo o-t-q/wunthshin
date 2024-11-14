@@ -5,13 +5,12 @@
 #include "Logging/LogMacros.h"
 
 #include "wunthshin/Data/Characters/CharacterStats/CharacterStats.h"
-#include "wunthshin/Interfaces/SerializeClass/WSSerializeClass.h"
 #include "StatsComponent.generated.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogStatsComponent, Log, All);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class WUNTHSHIN_API UStatsComponent : public UActorComponent, public IWSSerializeClass
+class WUNTHSHIN_API UStatsComponent : public UActorComponent
 {
 	GENERATED_BODY()
 	
@@ -83,14 +82,14 @@ public:
 	float GetHP() const { return CurrentStats.HP; }
 
 	UFUNCTION(BlueprintCallable)
-	FCharacterStats GetCurrentStats() const { return CurrentStats; }
+	const FCharacterStats& GetStats() const { return CurrentStats; }
 	
 	// 이동 속성 getter
 	UFUNCTION(BlueprintCallable)
-	const FCharacterMovementStats& GetMovementStats() const { return MovementStats; }
+	const FCharacterMovementStats& GetMovementStats() const { return CurrentStats.Movement; }
 
 	UFUNCTION(BlueprintCallable)
 	void SetHP(const float HP);
 
-	virtual void Serialize(FWSArchive& Ar) override;
+	void CopyStats(const FCharacterStats& CharacterStats);
 };

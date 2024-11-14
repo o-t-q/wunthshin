@@ -5,10 +5,10 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 
-#include "wunthshin/Data/Characters/CharacterContext/CharacterContext.h"
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "CharacterSubsystem.generated.h"
 
+class AA_WSCharacter;
 /**
  * 
  */
@@ -26,15 +26,31 @@ class WUNTHSHIN_API UCharacterSubsystem : public UGameInstanceSubsystem, public 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
 	int32 CurrentSpawnedIndex = 0;
 
-	TMap<int32, FCharacterContext> PossibleCharacters;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
+	TMap<int32, AA_WSCharacter*> OwnedCharacters;
+	
+	TMap<int32, TArray<uint8>> CharacterSnapshots;
+	
 public:
 	UCharacterSubsystem();
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-
-	void SaveCharacterState(AA_WSCharacter* InCharacter, int32 InIndex);
 	
 	UFUNCTION()
-	void SaveCharacterState();
+	void TakeCharacterLevelSnapshot();
+	UFUNCTION()
+	void LoadCharacterLevelSnapshot();
+	
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	
+	int32 GetAvailableCharacter() const;
+	AA_WSCharacter* GetCurrentCharacter() const
+	{
+		if (OwnedCharacters.Contains(CurrentSpawnedIndex))
+		{
+			return OwnedCharacters[CurrentSpawnedIndex];
+		}
+
+		return nullptr;
+	}
+	void AddCharacter(AA_WSCharacter* Character, int32 InIndex);
 	void SpawnAsCharacter(const int32 InIndex);
 };

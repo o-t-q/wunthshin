@@ -4,21 +4,22 @@
 
 #include "CoreMinimal.h"
 #include "Engine/LevelScriptActor.h"
-#include "MyClass.generated.h"
+#include "A_WSLevelScript.generated.h"
 
 UCLASS()
-class WUNTHSHIN_API AMyClass : public ALevelScriptActor
+class WUNTHSHIN_API AA_WSLevelScript : public ALevelScriptActor
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this actor's properties
-	AMyClass();
+	AA_WSLevelScript();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;

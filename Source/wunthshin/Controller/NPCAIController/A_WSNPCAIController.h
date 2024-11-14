@@ -35,6 +35,15 @@ class WUNTHSHIN_API AA_WSNPCAIController : public AAIController
 	// Perception 업데이트 결과 블루프린트로 반영하기
 	UFUNCTION()
 	void HandleTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
+
+protected:
+	UFUNCTION()
+	void PasueAIByAlive(const bool bInbAlive);
+
+	virtual void InitPlayerState() override;
+
+	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnUnPossess() override;
 	
 public:
 	AA_WSNPCAIController();

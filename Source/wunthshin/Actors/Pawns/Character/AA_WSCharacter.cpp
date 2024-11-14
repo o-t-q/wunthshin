@@ -22,7 +22,6 @@
 #include "wunthshin/Components/Shield/C_WSShield.h"
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
-#include "wunthshin/Subsystem/GameInstanceSubsystem/Element/ElementSubsystem.h"
 #include "wunthshin/Components/ClimCharacterMovementComponent.h"
 
 #include "wunthshin/Components/Stats/StatsComponent.h"
@@ -136,12 +135,6 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
     CilmMovementComponent = Cast<UClimCharacterMovementComponent>(GetCharacterMovement());
 
     Skill = CreateDefaultSubobject<UC_WSSkill>(TEXT("SkillComponent"));
-}
-
-void AA_WSCharacter::Serialize(FWSArchive& Ar)
-{
-    Ar << AssetName;
-    CharacterStatsComponent->Serialize(Ar);
 }
 
 void AA_WSCharacter::HandleStaminaDepleted()
@@ -283,17 +276,22 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
     if (FWSDamageEvent const& CustomEvent = reinterpret_cast<FWSDamageEvent const&>(DamageEvent);
         CustomEvent.IsFirstHit(this))
     {
-        CharacterStatsComponent->DecreaseHP(Damage);
-        UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
-        CustomEvent.SetFirstHit(this);
-        PlayHitMontage();
-
-        // 무기를 맞았을 경우 무기의 원소 효과를 부여
-        if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
+        if (CharacterStatsComponent->GetHP() > 0)
         {
-            ApplyElement(EventInstigator, Weapon->GetElement());
+            CharacterStatsComponent->DecreaseHP(Damage);
+            UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
+            CustomEvent.SetFirstHit(this);
+            PlayHitMontage();
+
+            // 무기를 맞았을 경우 무기의 원소 효과를 부여
+            if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
+            {
+                ApplyElement(EventInstigator, Weapon->GetElement());
+            }
+
+            Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+            return Damage;
         }
-        return Damage;   
     }
 
     return 0.f;
@@ -302,23 +300,20 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
 void AA_WSCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
-    UCharacterMovementComponent* CharacterComponent = GetCharacterMovement();
-    if (bCanGlide)
+
+    if (bIsGliding)
     {
-        //GetCharacterMovement()->GravityScale = 0.05f;
-        GetCharacterMovement()->Velocity.Z = FMath::Clamp(GetCharacterMovement()->Velocity.Z, -100.f, 0.0f);
+        if (!GetCharacterMovement()->IsFalling())
+        {
+            bIsGliding = false;
+            StopJumping();
+        }
+        else
+        {
+            //GetCharacterMovement()->GravityScale = 0.05f;
+            GetCharacterMovement()->Velocity.Z = FMath::Clamp(GetCharacterMovement()->Velocity.Z, -100.f, 0.0f);   
+        }
     }
-    
-
-    if (!CharacterComponent->IsFalling())
-    {
-        bCanGlide = false;
-        StopJumping();
-    }
-  
-
-
-
 }
 
 bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
@@ -503,6 +498,11 @@ void AA_WSCharacter::Look(const FInputActionValue& Value)
 
 void AA_WSCharacter::SwapCharacterOne()
 {
+    if (bIsClimbing || bIsGliding || GetCharacterMovement()->IsFalling())
+    {
+        return;
+    }
+    
     if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
     {
         CharacterSubsystem->SpawnAsCharacter(0);
@@ -511,6 +511,11 @@ void AA_WSCharacter::SwapCharacterOne()
 
 void AA_WSCharacter::SwapCharacterTwo()
 {
+    if (bIsClimbing || bIsGliding || GetCharacterMovement()->IsFalling())
+    {
+        return;
+    }
+    
     if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
     {
         CharacterSubsystem->SpawnAsCharacter(1);
@@ -638,13 +643,12 @@ void AA_WSCharacter::OnJump()
     {
         if (CanGlide())
         {
-            bCanGlide = !bCanGlide;
-
+            bIsGliding = !bIsGliding;
             
         }
-        else if (bCanGlide)
+        else if (bIsGliding)
         {
-            bCanGlide = !bCanGlide;
+            bIsGliding = !bIsGliding;
             
         }
     }
@@ -770,9 +774,7 @@ void AA_WSCharacter::CheckItemAndDrop()
 void AA_WSCharacter::Climb()
 {
     
-    
-     CilmMovementComponent->TryClimbing();
-    
+    CilmMovementComponent->TryClimbing();
 }
 
 void AA_WSCharacter::CancelClimb()

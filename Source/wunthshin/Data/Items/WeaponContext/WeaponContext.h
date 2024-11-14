@@ -1,11 +1,10 @@
 ﻿#pragma once
 #include "wunthshin/Data/Modifiers/WeaponModifier/WeaponModifier.h"
-#include "wunthshin/Data/SerializeStruct/WSSerializeStruct.h"
 
 #include "WeaponContext.generated.h"
 
 USTRUCT(BlueprintType)
-struct FWeaponContext : public FWSSerializeStruct
+struct FWeaponContext
 {
 	GENERATED_BODY()
 	

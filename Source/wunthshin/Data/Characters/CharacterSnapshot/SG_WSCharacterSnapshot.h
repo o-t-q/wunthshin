@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CharacterContext/CharacterContext.h"
 #include "GameFramework/SaveGame.h"
+#include "wunthshin/Data/Characters/CharacterContext/CharacterContext.h"
 #include "SG_WSCharacterSnapshot.generated.h"
 
 class AA_WSCharacter;

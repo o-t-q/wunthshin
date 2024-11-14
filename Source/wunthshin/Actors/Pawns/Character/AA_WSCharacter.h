@@ -130,10 +130,10 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	bool bIsWalking;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-	bool bCanGlide = false;
+	bool bIsGliding = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-	bool bCanClim;
+	bool bIsClimbing;
 
 	// 빠르게 달리는 키가 눌려있는가?
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
@@ -267,7 +267,6 @@ public:
 	virtual UChildActorComponent* GetRightHandComponent() const override { return RightHandWeapon; }
 	virtual UPawnMovementComponent* GetPawnMovementComponent() const override { return ACharacter::GetMovementComponent(); }
 	virtual UC_WSSkill* GetSkillComponent() const override { return Skill; }
-	virtual void Serialize(FWSArchive& Ar) override;
 	
 	virtual void HandleStaminaDepleted() override;
 	UInputMappingContext* GetMappingContext() const { return DefaultMappingContext; }

@@ -17,4 +17,7 @@ class WUNTHSHIN_API AwunthshinPlayerController : public APlayerController
 public:
 	AwunthshinPlayerController();
 
+	virtual void OnPossess(APawn* InPawn) override;
+	virtual void OnUnPossess() override;
+
 };

@@ -3,7 +3,11 @@
 
 #include "CharacterSubsystem.h"
 
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
+#include "wunthshin/Components/Stats/StatsComponent.h"
+#include "wunthshin/Data/Characters/CharacterSnapshot/SG_WSCharacterSnapshot.h"
 #include "wunthshin/Data/Characters/CharacterStats/CharacterStats.h"
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 
@@ -18,41 +22,62 @@ UCharacterSubsystem::UCharacterSubsystem()
 	StatDataTable = StatTable.Object;
 }
 
+void UCharacterSubsystem::TakeCharacterLevelSnapshot()
+{
+	for (auto& [Index, Character] : OwnedCharacters)
+	{
+		USG_WSCharacterSnapshot* Snapshot = Cast<USG_WSCharacterSnapshot>(UGameplayStatics::CreateSaveGameObject(USG_WSCharacterSnapshot::StaticClass()));
+		Snapshot->SetCharacter(FCharacterContext(Character));
+
+		if (!CharacterSnapshots.Contains(Index))
+		{
+			CharacterSnapshots.Add(Index);
+		}
+		
+		UGameplayStatics::SaveGameToMemory(Snapshot,CharacterSnapshots[Index]); 
+	}
+}
+
+void UCharacterSubsystem::LoadCharacterLevelSnapshot()
+{
+	for (auto& [Index, Character] : CharacterSnapshots)
+	{
+		if (const USG_WSCharacterSnapshot* Snapshot = Cast<USG_WSCharacterSnapshot>(UGameplayStatics::LoadGameFromMemory(CharacterSnapshots[Index])))
+		{
+			OwnedCharacters[Index] = Snapshot->SpawnCharacter(GetWorld(), FTransform::Identity, nullptr);
+			OwnedCharacters[Index]->SetActorEnableCollision(false);
+			OwnedCharacters[Index]->SetActorHiddenInGame(true);
+		}
+	}
+}
+
 void UCharacterSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 	DataTableMapping.Emplace(FCharacterTableRow::StaticStruct(), AssetDataTable);
 	DataTableMapping.Emplace(FCharacterStats::StaticStruct(), StatDataTable);
-
-	if (!PossibleCharacters.Contains(1))
-	{
-		AA_WSCharacter* Character = GetWorld()->SpawnActorDeferred<AA_WSCharacter>(AA_WSCharacter::StaticClass(), FTransform::Identity);
-		Character->SetAssetName("Yeonmu");
-		Character->FinishSpawning(FTransform::Identity);
-		SaveCharacterState(Character, 1);
-		Character->Destroy();
-	}
 }
 
-void UCharacterSubsystem::SaveCharacterState()
+int32 UCharacterSubsystem::GetAvailableCharacter() const
 {
-	if (const APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
+	for (const auto& [Index, Character] : OwnedCharacters)
 	{
-		if (AA_WSCharacter* Character = Cast<AA_WSCharacter>(PlayerController->GetPawn()))
+		if (Character->GetStatsComponent()->GetHP() > 0)
 		{
-			SaveCharacterState(Character, CurrentSpawnedIndex);
+			return Index;
 		}
 	}
+
+	return -1;
 }
 
-void UCharacterSubsystem::SaveCharacterState(AA_WSCharacter* InCharacter, const int32 InIndex)
+void UCharacterSubsystem::AddCharacter(AA_WSCharacter* Character, const int32 InIndex)
 {
-	if (!PossibleCharacters.Contains(InIndex))
+	if (!OwnedCharacters.Contains(InIndex))
 	{
-		PossibleCharacters.Add(InIndex);
+		OwnedCharacters.Add(InIndex);
+		OwnedCharacters[InIndex] = Character;
 	}
-
-	PossibleCharacters[InIndex].SaveCharacterState(InCharacter);
 }
 
 void UCharacterSubsystem::SpawnAsCharacter(const int32 InIndex)
@@ -62,33 +87,36 @@ void UCharacterSubsystem::SpawnAsCharacter(const int32 InIndex)
 		return;
 	}
 
-	if (!PossibleCharacters.Contains(InIndex))
+	if (!OwnedCharacters.Contains(InIndex))
+	{
+		return;
+	}
+
+	if (OwnedCharacters[InIndex]->GetStatsComponent()->GetHP() < 0)
 	{
 		return;
 	}
 	
 	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
 	{
-		const FTransform& PreviousTransform = GetWorld()->GetFirstPlayerController()->GetPawn()->GetTransform();
-
 		AA_WSCharacter* CurrentCharacter = Cast<AA_WSCharacter>(PlayerController->GetPawn());
-		SaveCharacterState(CurrentCharacter, CurrentSpawnedIndex);
-		
-		AA_WSCharacter* Cloned = GetWorld()->SpawnActorDeferred<AA_WSCharacter>
-		(
-			AA_WSCharacter::StaticClass(),
-			FTransform::Identity,
-			nullptr,
-			 nullptr,
-			 ESpawnActorCollisionHandlingMethod::AlwaysSpawn
-		);
+		const FTransform PreviousTransform = CurrentCharacter->GetActorTransform();
+			
+		if (!OwnedCharacters.Contains(CurrentSpawnedIndex))
+		{
+			OwnedCharacters.Add(CurrentSpawnedIndex);
+			OwnedCharacters[CurrentSpawnedIndex] = CurrentCharacter;
+		}
 
-		Cloned->SetAssetName(PossibleCharacters[InIndex].GetCharacterName());
-		Cloned->FinishSpawning(PreviousTransform);
-		PossibleCharacters[InIndex].ReloadCharacterState(Cloned);
+		CurrentCharacter->GetCharacterMovement()->StopMovementImmediately();
+		CurrentCharacter->SetActorEnableCollision(false);
+		CurrentCharacter->SetActorHiddenInGame(true);
+		CurrentCharacter->SetActorTransform(FTransform::Identity);
 
-		PlayerController->Possess(Cloned);
-		CurrentCharacter->Destroy();
+		PlayerController->Possess(OwnedCharacters[InIndex]);
+		OwnedCharacters[InIndex]->SetActorEnableCollision(true);
+		OwnedCharacters[InIndex]->SetActorHiddenInGame(false);
+		OwnedCharacters[InIndex]->SetActorTransform(PreviousTransform);
 		
 		CurrentSpawnedIndex = InIndex;
 	}

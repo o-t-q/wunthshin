@@ -150,9 +150,7 @@ void UStatsComponent::SetHP(const float HP)
     CurrentStats.HP = FMath::Clamp(HP, 0, CurrentStats.MaxHP);
 }
 
-void UStatsComponent::Serialize(FWSArchive& Ar)
+void UStatsComponent::CopyStats(const FCharacterStats& CharacterStats)
 {
-    Ar << StaminaDepletionRate;
-    Ar << StaminaDepletionRate;
-    Ar << CurrentStats;
+    CurrentStats = CharacterStats;
 }

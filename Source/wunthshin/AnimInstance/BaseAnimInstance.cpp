@@ -5,8 +5,7 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "wunthshin/Interfaces/CommonPawn/CommonPawn.h"
 #include "Kismet/KismetMathLibrary.h"
-
-
+#include "wunthshin/wunthshinPlayerState.h"
 
 
 void UBaseAnimInstance::NativeInitializeAnimation()
@@ -78,6 +77,10 @@ void UBaseAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	bIsCrouch = MovementComponent->IsCrouching();
 	bIsFalling = MovementComponent->IsFalling();
 
+	if (const AwunthshinPlayerState* PlayerState = CharaterComponentRef->GetPlayerState())
+	{
+		bIsAlive = PlayerState->IsAlive();
+	}
 }
 
 

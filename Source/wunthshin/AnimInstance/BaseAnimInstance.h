@@ -78,6 +78,8 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	bool bwallHighthHigh = false;
 
+	UPROPERTY(BlueprintReadOnly)
+	bool bIsAlive = true;
 	
 
 	UPROPERTY()

@@ -6,6 +6,7 @@
 #include "wunthshin/Components/Stats/StatsComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "wunthshin/wunthshinPlayerState.h"
 #include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Components/Skill/C_WSSkill.h"
@@ -14,6 +15,11 @@
 #include "wunthshin/Interfaces/Taker/Taker.h"
 
 // Add default functionality here for any ICommonPawn functions that are not pure virtual.
+
+AwunthshinPlayerState* ICommonPawn::GetPlayerState() const
+{
+    return Cast<APawn>(this)->GetPlayerState<AwunthshinPlayerState>();
+}
 
 void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
 {

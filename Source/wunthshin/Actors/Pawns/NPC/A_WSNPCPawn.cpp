@@ -180,17 +180,22 @@ float AA_WSNPCPawn::TakeDamage(float DamageAmount, struct FDamageEvent const& Da
 	if (FWSDamageEvent const& CustomEvent = reinterpret_cast<FWSDamageEvent const&>(DamageEvent);
 		CustomEvent.IsFirstHit(this))
 	{
-		StatsComponent->DecreaseHP(DamageAmount);
-		UE_LOG(LogNPCPawn, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), DamageAmount, *DamageCauser->GetName(), *GetName());
-		CustomEvent.SetFirstHit(this);
-		PlayHitMontage();
-
-		// 무기를 맞았을 경우 무기의 원소 효과를 부여
-		if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
+		if (StatsComponent->GetHP() > 0)
 		{
-			ApplyElement(EventInstigator, Weapon->GetElement());
+			StatsComponent->DecreaseHP(DamageAmount);
+			UE_LOG(LogNPCPawn, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), DamageAmount, *DamageCauser->GetName(), *GetName());
+			CustomEvent.SetFirstHit(this);
+			PlayHitMontage();
+
+			// 무기를 맞았을 경우 무기의 원소 효과를 부여
+			if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
+			{
+				ApplyElement(EventInstigator, Weapon->GetElement());
+			}
+
+			Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+			return DamageAmount;
 		}
-		return DamageAmount;
 	}
 
 	return 0.f;
@@ -234,12 +239,6 @@ UChildActorComponent* AA_WSNPCPawn::GetRightHandComponent() const
 UPawnMovementComponent* AA_WSNPCPawn::GetPawnMovementComponent() const
 {
 	return APawn::GetMovementComponent(); // == FindComponentByClass...
-}
-
-void AA_WSNPCPawn::Serialize(FWSArchive& Ar)
-{
-	Ar << AssetName;
-	StatsComponent->Serialize(Ar);
 }
 
 void AA_WSNPCPawn::HandleStaminaDepleted()
