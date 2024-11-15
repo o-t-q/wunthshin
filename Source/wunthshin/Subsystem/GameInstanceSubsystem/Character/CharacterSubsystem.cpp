@@ -56,6 +56,25 @@ void UCharacterSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 	DataTableMapping.Emplace(FCharacterTableRow::StaticStruct(), AssetDataTable);
 	DataTableMapping.Emplace(FCharacterStats::StaticStruct(), StatDataTable);
+	
+	// todo: 캐릭터 추가 테스트 코드
+	{
+		AA_WSCharacter* Character = GetWorld()->SpawnActorDeferred<AA_WSCharacter>
+		(
+			AA_WSCharacter::StaticClass(),
+			FTransform::Identity,
+			nullptr,
+			nullptr,
+			ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+		);
+		Character->SetAssetName("Yeonmu");
+		Character->FinishSpawning(FTransform::Identity);
+		Character->SetActorEnableCollision(false);
+		Character->SetActorHiddenInGame(true);
+
+		UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>();
+		CharacterSubsystem->AddCharacter(Character, 1);
+	}
 }
 
 int32 UCharacterSubsystem::GetAvailableCharacter() const
