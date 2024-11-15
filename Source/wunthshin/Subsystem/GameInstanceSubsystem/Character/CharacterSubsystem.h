@@ -27,7 +27,7 @@ class WUNTHSHIN_API UCharacterSubsystem : public UGameInstanceSubsystem, public 
 	int32 CurrentSpawnedIndex = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
-	TMap<int32, AA_WSCharacter*> OwnedCharacters;
+	TMap<int32, TObjectPtr<AA_WSCharacter>> OwnedCharacters;
 	
 	TMap<int32, TArray<uint8>> CharacterSnapshots;
 	
@@ -42,6 +42,17 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	
 	int32 GetAvailableCharacter() const;
+
+	AA_WSCharacter* GetCharacter(const int32 InIndex) const
+	{
+		if (OwnedCharacters.Contains(InIndex))
+		{
+			return OwnedCharacters[InIndex];
+		}
+
+		return nullptr;
+	}
+	
 	AA_WSCharacter* GetCurrentCharacter() const
 	{
 		if (OwnedCharacters.Contains(CurrentSpawnedIndex))
