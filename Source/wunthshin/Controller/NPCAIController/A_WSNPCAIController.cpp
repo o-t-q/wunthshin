@@ -8,6 +8,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "wunthshin/wunthshinPlayerState.h"
+#include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Actors/Pawns/NPC/A_WSNPCPawn.h"
 #include "wunthshin/Components/BlueprintAIPerception/BlueprintAIPerceptionComponent.h"
 

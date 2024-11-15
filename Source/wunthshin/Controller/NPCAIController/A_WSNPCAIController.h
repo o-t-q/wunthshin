@@ -18,9 +18,7 @@ UCLASS()
 class WUNTHSHIN_API AA_WSNPCAIController : public AAIController
 {
 	GENERATED_BODY()
-
-	static const FName BBPlayerVariable;
-
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BehaivorTree", meta = (AllowPrivateAccess = "true"))
 	UBehaviorTreeComponent* BehaviorTreeComponent;
 
@@ -46,6 +44,8 @@ protected:
 	virtual void OnUnPossess() override;
 	
 public:
+	static const FName BBPlayerVariable;
+	
 	AA_WSNPCAIController();
 
 	UFUNCTION(BlueprintCallable)

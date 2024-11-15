@@ -10,6 +10,26 @@ AwunthshinPlayerController::AwunthshinPlayerController()
 {
 }
 
+void AwunthshinPlayerController::UpdateByAlive(const bool bInbAlive)
+{
+	StopMovement();
+	
+	if (!bInbAlive)
+	{
+		GetPawn()->DisableInput(this);
+	}
+	else
+	{
+		GetPawn()->EnableInput(this);
+	}
+}
+
+void AwunthshinPlayerController::BeginPlay()
+{
+	Super::BeginPlay();
+	GetPlayerState<AwunthshinPlayerState>()->OnPlayerAlivenessChanged.AddUniqueDynamic(this, &AwunthshinPlayerController::UpdateByAlive);
+}
+
 void AwunthshinPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
