@@ -633,7 +633,7 @@ void AA_WSCharacter::OnJump()
     {
         CilmMovementComponent->TryClimbDashing();
     }
-    else if (!bCanGlide && !CharacterComponent->IsFalling())
+    else if (!bIsGliding && !CharacterComponent->IsFalling())
     {
         Jump();
     }
