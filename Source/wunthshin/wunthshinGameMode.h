@@ -15,7 +15,6 @@ public:
 	AwunthshinGameMode();
 
 	virtual void BeginPlay() override;
-	virtual void OnConstruction(const FTransform& Transform) override;
 	
 	virtual APawn* SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform) override;
 };
