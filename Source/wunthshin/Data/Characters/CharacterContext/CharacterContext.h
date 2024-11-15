@@ -14,10 +14,10 @@ struct FCharacterContext
 	explicit FCharacterContext(const AA_WSCharacter* InCharacter);
 	
 	UPROPERTY()
-	FName AssetName;
+	FName AssetName = NAME_None;
 
 	UPROPERTY()
-	FName WeaponName;
+	FName WeaponName = NAME_None;
 
 	UPROPERTY()
 	FCharacterStats CharacterStats;
