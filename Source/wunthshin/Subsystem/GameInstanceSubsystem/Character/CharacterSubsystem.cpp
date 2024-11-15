@@ -44,9 +44,12 @@ void UCharacterSubsystem::LoadCharacterLevelSnapshot()
 	{
 		if (const USG_WSCharacterSnapshot* Snapshot = Cast<USG_WSCharacterSnapshot>(UGameplayStatics::LoadGameFromMemory(CharacterSnapshots[Index])))
 		{
-			OwnedCharacters[Index] = Snapshot->SpawnCharacter(GetWorld(), FTransform::Identity, nullptr);
-			OwnedCharacters[Index]->SetActorEnableCollision(false);
-			OwnedCharacters[Index]->SetActorHiddenInGame(true);
+			if (OwnedCharacters[Index] == nullptr)
+			{
+				OwnedCharacters[Index] = Snapshot->SpawnCharacter(GetWorld(), FTransform::Identity, nullptr);
+				OwnedCharacters[Index]->SetActorEnableCollision(false);
+				OwnedCharacters[Index]->SetActorHiddenInGame(true);
+			}
 		}
 	}
 }
@@ -88,6 +91,25 @@ int32 UCharacterSubsystem::GetAvailableCharacter() const
 	}
 
 	return -1;
+}
+
+void UCharacterSubsystem::AddCharacter(AA_WSCharacter* InCharacter)
+{
+	for (int i = 0; i < 4; ++i)
+	{
+		if (OwnedCharacters.Contains(i))
+		{
+			if (OwnedCharacters[i] == InCharacter)
+			{
+				return;
+			}
+			
+			continue;
+		}
+
+		AddCharacter(InCharacter, i);
+		return;
+	}
 }
 
 void UCharacterSubsystem::AddCharacter(AA_WSCharacter* Character, const int32 InIndex)

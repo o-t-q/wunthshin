@@ -51,6 +51,8 @@ public:
 
 		return nullptr;
 	}
+	
+	void AddCharacter(AA_WSCharacter* InCharacter);
 	void AddCharacter(AA_WSCharacter* Character, int32 InIndex);
 	void SpawnAsCharacter(const int32 InIndex);
 };
