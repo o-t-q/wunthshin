@@ -11,6 +11,8 @@ class WUNTHSHIN_API AA_WSLevelScript : public ALevelScriptActor
 {
 	GENERATED_BODY()
 
+	void TakeSnapshotProxy(ULevel* InLevel, UWorld* InWorld);
+	
 public:
 	// Sets default values for this actor's properties
 	AA_WSLevelScript();
