@@ -318,7 +318,6 @@ void AA_WSCharacter::Tick(float DeltaSeconds)
 
 bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
 {
-    // 아이템을 저장
     AA_WSItem* Item = Cast<AA_WSItem>(InTakenComponent->GetOwner());
     ensure(Item);
     UE_LOG(LogTemplateCharacter, Log, TEXT("Pick up item: %s"), *Item->GetName());
