@@ -135,6 +135,9 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
     CilmMovementComponent = Cast<UClimCharacterMovementComponent>(GetCharacterMovement());
 
     Skill = CreateDefaultSubobject<UC_WSSkill>(TEXT("SkillComponent"));
+
+    AutoPossessPlayer = EAutoReceiveInput::Type::Disabled;
+    AutoPossessAI = EAutoPossessAI::Disabled;
 }
 
 void AA_WSCharacter::HandleStaminaDepleted()
