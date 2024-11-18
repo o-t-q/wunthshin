@@ -12,15 +12,7 @@
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 
 UCharacterSubsystem::UCharacterSubsystem()
-{
-	static ConstructorHelpers::FObjectFinder<UDataTable> AssetTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterTable.DT_CharacterTable'"));
-	check(AssetTable.Object);
-	AssetDataTable = AssetTable.Object;
-	
-	static ConstructorHelpers::FObjectFinder<UDataTable> StatTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterStatsTable.DT_CharacterStatsTable'"));
-	check(StatTable.Object);
-	StatDataTable = StatTable.Object;
-}
+	: AssetDataTable(nullptr), StatDataTable(nullptr) {}
 
 void UCharacterSubsystem::TakeCharacterLevelSnapshot()
 {
@@ -57,6 +49,12 @@ void UCharacterSubsystem::LoadCharacterLevelSnapshot()
 void UCharacterSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+	AssetDataTable = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterTable.DT_CharacterTable'")));
+	check(AssetDataTable);
+	StatDataTable = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterStatsTable.DT_CharacterStatsTable'")));
+	check(StatDataTable);
+	
 	DataTableMapping.Emplace(FCharacterTableRow::StaticStruct(), AssetDataTable);
 	DataTableMapping.Emplace(FCharacterStats::StaticStruct(), StatDataTable);
 }
