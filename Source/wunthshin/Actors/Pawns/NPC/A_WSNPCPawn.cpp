@@ -23,6 +23,7 @@
 #include "wunthshin/Components/Skill/C_WSSkill.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
+#include "wunthshin/Widgets/DamageIndicator/WG_WSDamageIndicator.h"
 
 DEFINE_LOG_CATEGORY(LogNPCPawn);
 
@@ -59,6 +60,8 @@ AA_WSNPCPawn::AA_WSNPCPawn()
 	bUseControllerRotationPitch = true;
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = true;
+	
+	DamageIndicators = CreateDefaultSubobject<UDamageIndicatorPool>(TEXT("DamageIndicators"));
 }
 
 void AA_WSNPCPawn::OnConstruction(const FTransform& Transform)
@@ -126,9 +129,9 @@ void AA_WSNPCPawn::BeginPlay()
 	
 }
 
-void AA_WSNPCPawn::BeginDestroy()
+void AA_WSNPCPawn::EndPlay(EEndPlayReason::Type EndPlayReason)
 {
-	Super::BeginDestroy();
+	Super::EndPlay(EndPlayReason);
 
 	// 월드에 스폰된 NPC들 리스트에서 제거
 	if (const UWorld* World = GetWorld())
@@ -186,6 +189,7 @@ float AA_WSNPCPawn::TakeDamage(float DamageAmount, struct FDamageEvent const& Da
 			UE_LOG(LogNPCPawn, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), DamageAmount, *DamageCauser->GetName(), *GetName());
 			CustomEvent.SetFirstHit(this);
 			PlayHitMontage();
+            DamageIndicators->Allocate(DamageAmount);
 
 			// 무기를 맞았을 경우 무기의 원소 효과를 부여
 			if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))

@@ -48,6 +48,9 @@ class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, publi
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	UChildActorComponent* RightHandWeapon;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget", meta = (AllowPrivateAccess = "true"))
+	UDamageIndicatorPool* DamageIndicators;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
 	FName AssetName;
 
@@ -81,7 +84,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void BeginDestroy() override;
+	virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 	virtual void PossessedBy(AController* NewController) override;
 
 public:	
@@ -104,6 +107,7 @@ public:
 	virtual UChildActorComponent* GetRightHandComponent() const override;
 	virtual UPawnMovementComponent* GetPawnMovementComponent() const override;
 	virtual UC_WSSkill* GetSkillComponent() const override { return Skill; }
+	virtual UDamageIndicatorPool* GetDamageIndicators() const override { return DamageIndicators; }
 	
 	virtual void HandleStaminaDepleted() override;
 

@@ -33,6 +33,7 @@
 #include "wunthshin/Components/Skill/C_WSSkill.h"
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
+#include "wunthshin/Widgets/DamageIndicator/WG_WSDamageIndicator.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -135,6 +136,8 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
     CilmMovementComponent = Cast<UClimCharacterMovementComponent>(GetCharacterMovement());
 
     Skill = CreateDefaultSubobject<UC_WSSkill>(TEXT("SkillComponent"));
+    
+    DamageIndicators = CreateDefaultSubobject<UDamageIndicatorPool>(TEXT("DamageIndicators"));
 
     AutoPossessPlayer = EAutoReceiveInput::Type::Disabled;
     AutoPossessAI = EAutoPossessAI::Disabled;
@@ -285,6 +288,7 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
             UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
             CustomEvent.SetFirstHit(this);
             PlayHitMontage();
+            DamageIndicators->Allocate(Damage);
 
             // 무기를 맞았을 경우 무기의 원소 효과를 부여
             if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
