@@ -11,6 +11,10 @@
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Actors/Pawns/NPC/A_WSNPCPawn.h"
 #include "wunthshin/Components/BlueprintAIPerception/BlueprintAIPerceptionComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/BlockingVolume.h"
+#include "GameFramework/Actor.h"  
+#include "Components/PrimitiveComponent.h"
 
 const FName AA_WSNPCAIController::BBPlayerVariable("PlayerActor");
 
@@ -50,8 +54,32 @@ void AA_WSNPCAIController::PasueAIByAlive(const bool bInbAlive)
 	else
 	{
 		BehaviorTreeComponent->StopLogic("Dead");
+
+		DisableOutBlockingVolumeCollision();
 	}
 }
+
+void AA_WSNPCAIController::DisableOutBlockingVolumeCollision()
+{
+	// 레벨에 있는 모든 ABlockingVolume을 찾아서 "OutBlockingVolume"을 찾음
+	TArray<AActor*> FoundVolumes;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ABlockingVolume::StaticClass(), FoundVolumes);
+
+	for (AActor* Actor : FoundVolumes)
+	{
+		// Label을 비교하여 "OutBlockingVolume"인지 확인
+		if (Actor->GetActorLabel() == "OutBlockingVolume")
+		{
+			UPrimitiveComponent* VolumeComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
+			if (VolumeComponent)
+			{
+				// 충돌 비활성화
+				VolumeComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			}
+		}
+	}
+}
+
 
 void AA_WSNPCAIController::InitPlayerState()
 {

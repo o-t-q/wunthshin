@@ -38,6 +38,9 @@ protected:
 	UFUNCTION()
 	void PasueAIByAlive(const bool bInbAlive);
 
+	UFUNCTION(BlueprintCallable, Category = "AI")
+	void DisableOutBlockingVolumeCollision();
+
 	virtual void InitPlayerState() override;
 
 	virtual void OnPossess(APawn* InPawn) override;
