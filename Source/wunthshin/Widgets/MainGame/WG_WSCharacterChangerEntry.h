@@ -8,6 +8,8 @@
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 #include "WG_WSCharacterChangerEntry.generated.h"
 
+class AA_WSCharacter;
+class UProgressBar;
 struct FCharacterTableRow;
 class UTextBlock;
 class UImage;
@@ -31,27 +33,23 @@ protected:
 public:
 	// 캐릭터 변경시 호출
 	UFUNCTION()
-	void RefreshEntry();
+	void BindKey();
 
 protected:
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 
 protected:
-	UPROPERTY()
-	FCharacterTableRow Data;
-
-protected:
-	// UPROPERTY(meta = (BindWidget))
-	// UMaterial* CharacterIcon;
-	
 	UPROPERTY(meta = (BindWidget))
 	UImage* CharacterIcon;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* KeyText;
 
-	// UPROPERTY(meta = (BindWidget))
-	// UProgressBar* CurrentHP;
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* CurrentHP;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TWeakObjectPtr<const AA_WSCharacter> WeakCharacterPtr;
 
 protected:
 	FOnClick OnClick;

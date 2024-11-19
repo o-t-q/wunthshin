@@ -16,24 +16,22 @@ UCharacterSubsystem::UCharacterSubsystem()
 
 void UCharacterSubsystem::TakeCharacterLevelSnapshot()
 {
-	for (auto& [Index, Character] : OwnedCharacters)
+	CharacterSnapshots.SetNumZeroed(OwnedCharacters.Num());
+	
+	for (auto It = OwnedCharacters.CreateIterator(); It; ++It)
 	{
 		USG_WSCharacterSnapshot* Snapshot = Cast<USG_WSCharacterSnapshot>(UGameplayStatics::CreateSaveGameObject(USG_WSCharacterSnapshot::StaticClass()));
-		Snapshot->SetCharacter(FCharacterContext(Character));
-
-		if (!CharacterSnapshots.Contains(Index))
-		{
-			CharacterSnapshots.Add(Index);
-		}
-		
-		UGameplayStatics::SaveGameToMemory(Snapshot,CharacterSnapshots[Index]); 
+		Snapshot->SetCharacter(FCharacterContext(*It));
+		UGameplayStatics::SaveGameToMemory(Snapshot,CharacterSnapshots[It.GetIndex()]); 
 	}
 }
 
 void UCharacterSubsystem::LoadCharacterLevelSnapshot()
 {
-	for (auto& [Index, Character] : CharacterSnapshots)
+	for (auto It = CharacterSnapshots.CreateIterator(); It; ++It)
 	{
+		const int32 Index = It.GetIndex();
+		
 		if (const USG_WSCharacterSnapshot* Snapshot = Cast<USG_WSCharacterSnapshot>(UGameplayStatics::LoadGameFromMemory(CharacterSnapshots[Index])))
 		{
 			if (OwnedCharacters[Index] == nullptr)
@@ -61,57 +59,85 @@ void UCharacterSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 int32 UCharacterSubsystem::GetAvailableCharacter() const
 {
-	for (const auto& [Index, Character] : OwnedCharacters)
+	for (auto It = OwnedCharacters.CreateConstIterator(); It; ++It)
 	{
-		if (Character->GetStatsComponent()->GetHP() > 0)
+		if ((*It)->GetStatsComponent()->GetHP() > 0)
 		{
-			return Index;
+			return It.GetIndex();
 		}
 	}
 
-	return -1;
+	return INDEX_NONE;
+}
+
+int32 UCharacterSubsystem::GetIndexOfCharacter(const AA_WSCharacter* InCharacter) const
+{
+	return OwnedCharacters.IndexOfByPredicate([&InCharacter](const AA_WSCharacter* InItem)
+	{
+		return InItem == InCharacter;
+	});
 }
 
 void UCharacterSubsystem::AddCharacter(AA_WSCharacter* InCharacter)
 {
-	for (int i = 0; i < 4; ++i)
+	uint32 Index = 0;
+
+	// 최대 5개에
+	while (Index != 5)
 	{
-		if (OwnedCharacters.Contains(i))
+		// 같은 캐릭터가 없고
+		if (OwnedCharacters.IsValidIndex(Index) &&
+			OwnedCharacters[Index] == InCharacter)
 		{
-			if (OwnedCharacters[i] == InCharacter)
-			{
-				return;
-			}
-			
+			break;
+		}
+
+		// 이미 점유된 공간이 아니면
+		if (OwnedCharacters.IsValidIndex(Index) &&
+			OwnedCharacters[Index] != nullptr)
+		{
+			++Index;
 			continue;
 		}
 
-		AddCharacter(InCharacter, i);
-		return;
+		// 새로운 공간을 할당 후 추가
+		AddCharacter(InCharacter, Index);
 	}
 }
 
 void UCharacterSubsystem::AddCharacter(AA_WSCharacter* Character, const int32 InIndex)
 {
-	if (!OwnedCharacters.Contains(InIndex))
+	if (OwnedCharacters.Num() > InIndex)
 	{
-		OwnedCharacters.Add(InIndex);
 		OwnedCharacters[InIndex] = Character;
+
+		OnCharacterAdded.Broadcast();
+	}
+	else
+	{
+		OwnedCharacters.SetNum(InIndex + 1, EAllowShrinking::No);
+		CharacterSnapshots.SetNum(InIndex + 1, EAllowShrinking::No);
+		OwnedCharacters[InIndex] = Character;
+
+		OnCharacterAdded.Broadcast();
 	}
 }
 
 void UCharacterSubsystem::SpawnAsCharacter(const int32 InIndex)
 {
+	// 이미 스폰한 캐릭터가 아니면서
 	if (CurrentSpawnedIndex == InIndex)
 	{
 		return;
 	}
 
-	if (!OwnedCharacters.Contains(InIndex))
+	// 배열 범위 내에 있어야 하고
+	if (!OwnedCharacters.IsValidIndex(InIndex))
 	{
 		return;
 	}
 
+	// 체력이 남아있다면 전환
 	if (OwnedCharacters[InIndex]->GetStatsComponent()->GetHP() < 0)
 	{
 		return;
@@ -122,9 +148,8 @@ void UCharacterSubsystem::SpawnAsCharacter(const int32 InIndex)
 		AA_WSCharacter* CurrentCharacter = Cast<AA_WSCharacter>(PlayerController->GetPawn());
 		const FTransform PreviousTransform = CurrentCharacter->GetActorTransform();
 			
-		if (!OwnedCharacters.Contains(CurrentSpawnedIndex))
+		if (OwnedCharacters[CurrentSpawnedIndex] == nullptr)
 		{
-			OwnedCharacters.Add(CurrentSpawnedIndex);
 			OwnedCharacters[CurrentSpawnedIndex] = CurrentCharacter;
 		}
 

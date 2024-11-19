@@ -8,6 +8,8 @@
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "CharacterSubsystem.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterAdded);
+
 class AA_WSCharacter;
 /**
  * 
@@ -27,12 +29,14 @@ class WUNTHSHIN_API UCharacterSubsystem : public UGameInstanceSubsystem, public 
 	int32 CurrentSpawnedIndex = 0;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
-	TMap<int32, TObjectPtr<AA_WSCharacter>> OwnedCharacters;
+	TArray<TObjectPtr<AA_WSCharacter>> OwnedCharacters;
 	
-	TMap<int32, TArray<uint8>> CharacterSnapshots;
+	TArray<TArray<uint8>> CharacterSnapshots;
 	
 public:
 	UCharacterSubsystem();
+
+	FOnCharacterAdded OnCharacterAdded;
 	
 	UFUNCTION()
 	void TakeCharacterLevelSnapshot();
@@ -43,19 +47,23 @@ public:
 	
 	int32 GetAvailableCharacter() const;
 
+	const TArray<AA_WSCharacter*>& GetOwnedCharacters() const { return OwnedCharacters;}
+
 	AA_WSCharacter* GetCharacter(const int32 InIndex) const
 	{
-		if (OwnedCharacters.Contains(InIndex))
+		if (OwnedCharacters.Num() > InIndex)
 		{
 			return OwnedCharacters[InIndex];
 		}
 
 		return nullptr;
 	}
-	
+
+	int32 GetIndexOfCharacter(const AA_WSCharacter* InCharacter) const;
+
 	AA_WSCharacter* GetCurrentCharacter() const
 	{
-		if (OwnedCharacters.Contains(CurrentSpawnedIndex))
+		if (OwnedCharacters.Num() > CurrentSpawnedIndex)
 		{
 			return OwnedCharacters[CurrentSpawnedIndex];
 		}
