@@ -25,15 +25,7 @@ class WUNTHSHIN_API AwunthshinPlayerState : public APlayerState
 public:
 	FOnPlayerAliveChanged OnPlayerAlivenessChanged;
 	
-	void SetAlive(const bool InbAlive)
-	{
-		const bool TempBool = bAlive;
-		bAlive = InbAlive;
-		if (TempBool != InbAlive)
-		{
-			OnPlayerAlivenessChanged.Broadcast(bAlive);
-		}
-	}
+	void SetAlive(const bool InbAlive);
 	bool IsAlive() const { return bAlive; }
 	
 	UFUNCTION()

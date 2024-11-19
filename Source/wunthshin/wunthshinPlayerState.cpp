@@ -7,6 +7,22 @@
 #include "Components/Stats/StatsComponent.h"
 #include "Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 
+void AwunthshinPlayerState::SetAlive(const bool InbAlive)
+{
+	const bool TempBool = bAlive;
+	bAlive = InbAlive;
+	
+	if (TempBool != InbAlive)
+	{
+		OnPlayerAlivenessChanged.Broadcast(bAlive);
+	}
+
+	if (APawn* ThisPawn = GetPawn())
+	{
+		ThisPawn->SetActorEnableCollision(bAlive);
+	}
+}
+
 void AwunthshinPlayerState::CheckCharacterDeath(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
                                                 AController* InstigatedBy, AActor* DamageCauser)
 {
