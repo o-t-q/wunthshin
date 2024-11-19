@@ -6,7 +6,8 @@ UENUM()
 enum class EItemType : uint8 
 {
 	Consumable,
-	Weapon
+	Weapon,
+	Max,
 };
 
 UENUM()

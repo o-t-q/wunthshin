@@ -6,6 +6,7 @@
 #include "FCTween.h"
 #include "WG_WSInventoryEntry.h"
 #include "Components/Button.h"
+#include "Components/CheckBox.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Kismet/GameplayStatics.h"
@@ -43,10 +44,23 @@ void UWG_WSInventory::NativeConstruct()
 	AA_WSCharacter* Player = Cast<AA_WSCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	PlayerInventory = Player->GetComponentByClass<UC_WSInventory>();
 
+	// 값 초기화
+	CurrentCategory = EItemType::Weapon;
+	CheckBoxes.Add(Toggle_CategoryConsumable);
+	CheckBoxes.Add(Toggle_CategoryWeapon);
+	for (UCheckBox*	CheckBox : CheckBoxes)
+	{
+		CheckBox->SetCheckedState(ECheckBoxState::Unchecked);
+	}
+	ChangeCategory(CurrentCategory);
+	
 	// 각종 버튼 바인딩
 	Button_CloseInventory->OnClicked.AddDynamic(this, &ThisClass::OnClickButton_CloseInventory);
 	OnVisibilityChanged.AddDynamic(this, &ThisClass::OnRefreshListItem);
+	Toggle_CategoryWeapon->OnCheckStateChanged.AddUniqueDynamic(this, &ThisClass::OnToggleCategory_Weapon);
+	Toggle_CategoryConsumable->OnCheckStateChanged.AddUniqueDynamic(this, &ThisClass::OnToggleCategory_Consumable);
 
+	
 	// auto event = TileView->OnItemSelectionChanged();
 	// event.AddUObject(this, &ThisClass::OnRefreshListItemChangedItem);
 	// todo: 아이템 획득하는 delegate에 RefreshListItem() 바인딩
@@ -74,6 +88,10 @@ void UWG_WSInventory::RefreshListItem()
 
 	for (auto& Item : Items)
 	{
+		// Category가 0이면 모두출력, 아니면 해당 타입만 출력
+		auto Type = Item.Metadata->ItemType;
+		if(CurrentCategory != Type) continue;
+		
 		auto newItem = NewObject<UInventoryEntryData>(this);
 		newItem->Initialize(Item,TileView,this);
 		NewArray.Emplace(newItem);
@@ -122,13 +140,21 @@ void UWG_WSInventory::RefreshListItem()
 	ItemDescription->SetText(FText::FromName(itemDesc));
 }
 
+void UWG_WSInventory::ChangeCategory(EItemType InItemType)
+{
+	CurrentCategory = InItemType;
+	int Count = CheckBoxes.Num();
+	for(int i = 0; i< Count; ++i)
+	{
+		ECheckBoxState State = i == (int)CurrentCategory ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; 
+		CheckBoxes[i]->SetCheckedState(State);
+	}
+	
+	RefreshListItem();
+}
+
 void UWG_WSInventory::OnClickButton_CloseInventory()
 {
-	UWG_WSInGameBundle::FadeInOut(false)
-		->SetOnComplete(
-			[&]()
-			{
-				OnHideWidget();
-			}
-		);
+	UWG_WSInGameBundle::FadeInOut(false, 0.5f)
+		->SetOnComplete([&, this](){OnHideWidget(); UWG_WSInGameBundle::FadeInOut(true, 0.5f);});
 }
