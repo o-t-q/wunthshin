@@ -23,14 +23,14 @@ struct FEditorSubsystemBranching
 	template <typename EditorWorldType, typename GameWorldType>
 	static USubsystem* GetTemplate(const UWorld* InWorld)
 	{
+		if (InWorld->IsGameWorld() || InWorld->IsPlayInEditor())
+		{
+			return InWorld->GetGameInstance()->GetSubsystem<GameWorldType>();
+		}
 		// Inactive는 에디터에서 지금 수정하지 않는 상태에 들어간 경우에 발생함
 		if (InWorld->IsEditorWorld() || InWorld->WorldType == EWorldType::Inactive)
 		{
 			return GEditor->GetEditorSubsystem<EditorWorldType>();
-		}
-		if (InWorld->IsGameWorld())
-		{
-			return InWorld->GetGameInstance()->GetSubsystem<GameWorldType>();
 		}
 
 		return nullptr;
@@ -38,14 +38,14 @@ struct FEditorSubsystemBranching
 
 	static USubsystem* GetReflection(const UWorld* InWorld, UClass* InEditorType, UClass* InGameWorldType)
 	{
+		if (InWorld->IsGameWorld() || InWorld->IsPlayInEditor())
+		{
+			return InWorld->GetGameInstance()->GetSubsystemBase(InGameWorldType);
+		}
 		// Inactive는 에디터에서 지금 수정하지 않는 상태에 들어간 경우에 발생함
 		if (InWorld->IsEditorWorld() || InWorld->WorldType == EWorldType::Inactive)
 		{
 			return GEditor->GetEditorSubsystemBase(InEditorType);
-		}
-		if (InWorld->IsGameWorld())
-		{
-			return InWorld->GetGameInstance()->GetSubsystemBase(InGameWorldType);
 		}
 
 		return nullptr;

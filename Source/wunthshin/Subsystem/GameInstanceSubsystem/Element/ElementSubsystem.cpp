@@ -11,11 +11,7 @@
 DEFINE_LOG_CATEGORY(LogElementSubsystem);
 
 UElementSubsystem::UElementSubsystem()
-{
-	static ConstructorHelpers::FObjectFinder<UDataTable> Table(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_ElementTable.DT_ElementTable'"));
-	check(Table.Object);
-	DataTable = Table.Object;
-}
+	: DataTable(nullptr) {}
 
 FElementRowHandle UElementSubsystem::GetElementHandle(const UWorld* InWorld, const FName& ElementName)
 {
@@ -27,7 +23,11 @@ FElementRowHandle UElementSubsystem::GetElementHandle(const UWorld* InWorld, con
 
 void UElementSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	ensure(DataTable);
+	Super::Initialize(Collection);
+
+	DataTable = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), this, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_ElementTable.DT_ElementTable'")));
+	check(DataTable);
+	
 	DataTableMapping.Emplace(FElementTableRow::StaticStruct(), DataTable);
 
 	// reactor를 매번 사용할 때마다 instantiate하지 않고 한번 생성해서

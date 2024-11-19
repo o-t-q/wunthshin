@@ -31,12 +31,12 @@ void FSkillStartTicket::Execute(UWorld* InWorld)
 				WorldStatusSubsystem->PlayLevelSequence(Skill->Parameter.CastingSequence);
 			}
 
-			const TSharedPtr<FSkillEndTicket> SkillEndTicket = MakeShared<FSkillEndTicket>();
+			const TSharedPtr<FSkillRevokeTicket> SkillEndTicket = MakeShared<FSkillRevokeTicket>();
 			SkillEndTicket->Instigator = Instigator;
 			SkillEndTicket->SkillProcessor = SkillProcessor;
 			SkillEndTicket->SkillHandle = SkillHandle;
 			SkillEndTicket->TargetActor = TargetActor;
-			SkillEndTicket->TargetLocation;
+			SkillEndTicket->TargetLocation = TargetLocation;
 			
 			WorldStatusSubsystem->PushTicket(SkillEndTicket);
 		}
@@ -45,7 +45,7 @@ void FSkillStartTicket::Execute(UWorld* InWorld)
 	SetDisposed();
 }
 
-void FSkillEndTicket::Execute(UWorld* InWorld)
+void FSkillRevokeTicket::Execute(UWorld* InWorld)
 {
 	if (const FSkillTableRow* Skill = SkillHandle.Handle.GetRow<FSkillTableRow>(TEXT("")))
 	{

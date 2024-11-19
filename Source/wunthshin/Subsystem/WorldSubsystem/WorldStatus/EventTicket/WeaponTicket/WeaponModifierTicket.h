@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "wunthshin/Data/Modifiers/WeaponModifier/WeaponModifier.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/EventTicket/EventTicket.h"
 
 class UC_WSWeapon;
@@ -9,16 +10,14 @@ struct FWeaponModifierTicket : public FEventTicket
 {
 public:
 	UC_WSWeapon* WeaponComponent;
-	float DamageModifier = 1.f;
-	float AttackSpeed = 1.f;
+	FWeaponModifier WeaponModifier;
 	float BuffDuration = 5.f;
 
 	FTimerHandle BuffTimerHandle;
-
 	virtual void Execute(UWorld* InWorld) override;
 };
 
-struct FWeaponModifierFinishTicket : public FEventTicket
+struct FWeaponModifierRevokeTicket : public FEventTicket
 {
 public:
 	UC_WSWeapon* WeaponComponent;

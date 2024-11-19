@@ -6,6 +6,7 @@
 #include "wunthshin/Components/Stats/StatsComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
+#include "wunthshin/wunthshinPlayerState.h"
 #include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Components/Skill/C_WSSkill.h"
@@ -14,6 +15,11 @@
 #include "wunthshin/Interfaces/Taker/Taker.h"
 
 // Add default functionality here for any ICommonPawn functions that are not pure virtual.
+
+AwunthshinPlayerState* ICommonPawn::GetPlayerState() const
+{
+    return Cast<APawn>(this)->GetPlayerState<AwunthshinPlayerState>();
+}
 
 void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
 {
@@ -50,10 +56,11 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
     {
         SetHitMontages(InData->HitMontages);
     }
-
+    
     if (InData->bHasDefaultWeapon)
     {
-        if (APawn* PawnCasting = Cast<APawn>(this))
+        if (APawn* PawnCasting = Cast<APawn>(this);
+            PawnCasting && PawnCasting->GetWorld()->IsGameWorld())
         {
             // todo: 무기가 두번 스폰됨 (여기서 한번, ChildActorComponent에서 한번)
             AA_WSWeapon* SpawnedWeapon = PawnCasting->GetWorld()->SpawnActorDeferred<AA_WSWeapon>
@@ -96,3 +103,4 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
         }
     }
 }
+

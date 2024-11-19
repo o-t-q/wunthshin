@@ -66,7 +66,7 @@ void FElementReactTicket::Execute(UWorld* InWorld)
 				UE_LOG(LogElementTicket, Log, TEXT("%s effect triggered by %s and %s!"), *Reactor->GetName(), *Instigator->GetName(), *OtherInstigator->GetName());
 				Reactor->React(Instigator, OtherInstigator, TargetActor);
 
-				TSharedPtr<FElementReactFinishTicket> ReactFinishTicket = MakeShared<FElementReactFinishTicket>();
+				TSharedPtr<FElementReactRevokeTicket> ReactFinishTicket = MakeShared<FElementReactRevokeTicket>();
 				ReactFinishTicket->TargetActor = TargetActor;
 				WorldStatusSubsystem->PushTicket(ReactFinishTicket);
 			}
@@ -82,7 +82,7 @@ void FElementReactTicket::Execute(UWorld* InWorld)
 	SetDisposed();
 }
 
-void FElementReactFinishTicket::Execute(UWorld* InWorld)
+void FElementReactRevokeTicket::Execute(UWorld* InWorld)
 {
 	// 지금까지 추적하던 원소 상태 초기화
 	if (UWorldStatusSubsystem* WorldStatusSubsystem = InWorld->GetSubsystem<UWorldStatusSubsystem>())

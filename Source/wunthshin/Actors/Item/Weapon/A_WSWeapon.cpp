@@ -56,6 +56,6 @@ void AA_WSWeapon::ApplyAsset(const FTableRowBase* InRowPointer)
 	const FWeaponTableRow* TableRow = reinterpret_cast<const FWeaponTableRow*>(InRowPointer);
 	
 	AttackMontages = TableRow->AttackMontages;
-	WeaponComponent->SetDamage(TableRow->Damage);
+	WeaponComponent->GetWeaponContext().SetBaseDamage(TableRow->Damage);
 	WeaponElement = FElementRowHandle(TableRow->Element);
 }

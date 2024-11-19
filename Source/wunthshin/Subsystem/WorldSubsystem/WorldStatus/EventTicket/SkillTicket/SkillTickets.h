@@ -16,7 +16,7 @@ public:
 	virtual void Execute(UWorld* InWorld) override;
 };
 
-struct FSkillEndTicket : public FEventTicket
+struct FSkillRevokeTicket : public FEventTicket
 {
 public:
 	FSkillRowHandle SkillHandle;

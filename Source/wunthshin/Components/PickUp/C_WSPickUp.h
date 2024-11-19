@@ -42,6 +42,8 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
+	virtual void InitializeComponent() override;
+	
 	UFUNCTION()
 	void HandleOnPickUp(TScriptInterface<I_WSTaker> InTriggeredActor);
 };

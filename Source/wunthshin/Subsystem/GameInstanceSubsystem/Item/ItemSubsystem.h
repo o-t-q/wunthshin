@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
+#include "SharedInventory/SharedInventory.h"
+#include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "wunthshin/Interfaces/ItemMetadataGetter/ItemMetadataGetter.h"
@@ -23,6 +25,9 @@ class WUNTHSHIN_API UItemSubsystem : public UGameInstanceSubsystem, public IItem
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta=(AllowPrivateAccess = "true"))
 	TMap<FName, USG_WSItemMetadata*> Metadata;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	FSharedInventory SharedInventory;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
 	UDataTable* DataTable;
 
@@ -31,4 +36,5 @@ public:
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual USG_WSItemMetadata* GetMetadata(const FName& InAssetName) override;
+	FSharedInventory& GetSharedInventory() { return SharedInventory; }
 };

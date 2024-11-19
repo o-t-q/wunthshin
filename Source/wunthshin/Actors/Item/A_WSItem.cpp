@@ -74,7 +74,7 @@ AA_WSItem::AA_WSItem(const FObjectInitializer& ObjectInitializer) :
 	ItemNotifyWidget->SetWidgetSpace(EWidgetSpace::World);
 	ItemNotifyWidget->SetComponentTickEnabled(true);
 	ItemNotifyWidget->SetDrawSize(FVector2D{ 500.f, 45.f });
-	ItemNotifyWidget->SetAbsolute(true, true, true);
+	ItemNotifyWidget->SetAbsolute(false, true, true);
 	ItemNotifyWidget->SetCastShadow(false);
 
 	if (static ConstructorHelpers::FClassFinder<UUserWidget> DefaultItemNotifyWidgetClass(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/ThirdPerson/Blueprints/Widgets/BP_WG_WSItemNotify.BP_WG_WSItemNotify_C'"));

@@ -22,7 +22,6 @@
 #include "wunthshin/Components/Shield/C_WSShield.h"
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
-#include "wunthshin/Subsystem/GameInstanceSubsystem/Element/ElementSubsystem.h"
 #include "wunthshin/Components/ClimCharacterMovementComponent.h"
 
 #include "wunthshin/Components/Stats/StatsComponent.h"
@@ -72,6 +71,8 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
         ADD_INPUT_ACTION(ZoomWheelAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_ZoomWheel.IA_ZoomWheel'");
         ADD_INPUT_ACTION(ClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Climb.IA_Climb'");
         ADD_INPUT_ACTION(CancelClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_CancelClimb.IA_CancelClimb'");
+        ADD_INPUT_ACTION(CharacterSwapOneAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Character1.IA_Character1'");
+        ADD_INPUT_ACTION(CharacterSwapTwoAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Character2.IA_Character2'")
     }
 
 
@@ -102,7 +103,7 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
     GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
     GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
     GetCharacterMovement()->GravityScale = 1.0f;
-    GetCharacterMovement()->SetWalkableFloorAngle(70.f);
+    GetCharacterMovement()->SetWalkableFloorAngle(50.f);
 
     // Create a camera boom (pulls in towards the player if there is a collision)
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -134,6 +135,9 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
     CilmMovementComponent = Cast<UClimCharacterMovementComponent>(GetCharacterMovement());
 
     Skill = CreateDefaultSubobject<UC_WSSkill>(TEXT("SkillComponent"));
+
+    AutoPossessPlayer = EAutoReceiveInput::Type::Disabled;
+    AutoPossessAI = EAutoPossessAI::Disabled;
 }
 
 void AA_WSCharacter::HandleStaminaDepleted()
@@ -145,6 +149,16 @@ void AA_WSCharacter::HandleStaminaDepleted()
 bool AA_WSCharacter::CheckClimbState() const
 {
     return CilmMovementComponent->bWantsToClimbVeiw();
+}
+
+bool AA_WSCharacter::CheckClimbDashState() const
+{
+    return CilmMovementComponent->IsClimbDashing();
+}
+
+FVector AA_WSCharacter::ClimbDashDirection() const
+{
+    return CilmMovementComponent->GetClimbDashDirection();
 }
 
 void AA_WSCharacter::SetHitMontages(const TArray<UAnimMontage*>& InMontages)
@@ -217,11 +231,10 @@ void AA_WSCharacter::ApplyAsset(const FTableRowBase* InRowPointer)
         if (const UStatsComponent* StatsComponent = GetStatsComponent())
         {
             const FCharacterMovementStats& MovementStats = StatsComponent->GetMovementStats();
-            MovementComponent->MaxWalkSpeed = MovementStats.NormalMaxSpeed;
-            MovementComponent->MaxFlySpeed = MovementStats.MaxFlyingSpeed;
-            MovementComponent->MaxWalkSpeedCrouched = MovementStats.CrouchMaxSpeed;
-            MovementComponent->JumpZVelocity = MovementStats.InitialJumpVelocity;
-            
+            MovementComponent->MaxWalkSpeed = MovementStats.GetNormalMaxSpeed();
+            MovementComponent->MaxFlySpeed = MovementStats.GetFlyingMaxSpeed();
+            MovementComponent->MaxWalkSpeedCrouched = MovementStats.GetCrouchMaxSpeed();
+            MovementComponent->JumpZVelocity = MovementStats.GetInitialJumpVelocity();
         }
     }
 }
@@ -242,7 +255,7 @@ void AA_WSCharacter::BeginPlay()
 {
     // Call the base class  
     Super::BeginPlay();
-
+    
     BLUEPRINT_REFRESH_EDITOR
 
     // 무기를 소환하는 차일드 액터 컴포넌트가 매시에 제대로 부착되었는지 확인
@@ -266,17 +279,22 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
     if (FWSDamageEvent const& CustomEvent = reinterpret_cast<FWSDamageEvent const&>(DamageEvent);
         CustomEvent.IsFirstHit(this))
     {
-        CharacterStatsComponent->DecreaseHP(Damage);
-        UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
-        CustomEvent.SetFirstHit(this);
-        PlayHitMontage();
-
-        // 무기를 맞았을 경우 무기의 원소 효과를 부여
-        if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
+        if (CharacterStatsComponent->GetHP() > 0)
         {
-            ApplyElement(EventInstigator, Weapon->GetElement());
+            CharacterStatsComponent->DecreaseHP(Damage);
+            UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
+            CustomEvent.SetFirstHit(this);
+            PlayHitMontage();
+
+            // 무기를 맞았을 경우 무기의 원소 효과를 부여
+            if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
+            {
+                ApplyElement(EventInstigator, Weapon->GetElement());
+            }
+
+            Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+            return Damage;
         }
-        return Damage;   
     }
 
     return 0.f;
@@ -285,28 +303,24 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
 void AA_WSCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
-    UCharacterMovementComponent* CharacterComponent = GetCharacterMovement();
-    if (bCanGlide)
+
+    if (bIsGliding)
     {
-        //GetCharacterMovement()->GravityScale = 0.05f;
-        GetCharacterMovement()->Velocity.Z = FMath::Clamp(GetCharacterMovement()->Velocity.Z, -100.f, 0.0f);
+        if (!GetCharacterMovement()->IsFalling())
+        {
+            bIsGliding = false;
+            StopJumping();
+        }
+        else
+        {
+            //GetCharacterMovement()->GravityScale = 0.05f;
+            GetCharacterMovement()->Velocity.Z = FMath::Clamp(GetCharacterMovement()->Velocity.Z, -100.f, 0.0f);   
+        }
     }
-    
-
-    if (!CharacterComponent->IsFalling())
-    {
-        bCanGlide = false;
-        StopJumping();
-    }
-  
-
-
-
 }
 
 bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
 {
-    // 아이템을 저장
     AA_WSItem* Item = Cast<AA_WSItem>(InTakenComponent->GetOwner());
     ensure(Item);
     UE_LOG(LogTemplateCharacter, Log, TEXT("Pick up item: %s"), *Item->GetName());
@@ -405,10 +419,13 @@ void AA_WSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
         EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Started, this, &AA_WSCharacter::CheckItemAndDrop);
 
         // 등반
-        EnhancedInputComponent->BindAction(ClimAction, ETriggerEvent::Started, this, &AA_WSCharacter::Climb);
+        EnhancedInputComponent->BindAction(ClimAction, ETriggerEvent::Triggered, this, &AA_WSCharacter::Climb);
 
         EnhancedInputComponent->BindAction(CancelClimAction, ETriggerEvent::Started, this, &AA_WSCharacter::CancelClimb);
-        
+
+        // 캐릭터 변경
+        EnhancedInputComponent->BindAction(CharacterSwapOneAction, ETriggerEvent::Started, this, &AA_WSCharacter::SwapCharacterOne);
+        EnhancedInputComponent->BindAction(CharacterSwapTwoAction, ETriggerEvent::Started, this, &AA_WSCharacter::SwapCharacterTwo);
     }
     else
     {
@@ -481,6 +498,32 @@ void AA_WSCharacter::Look(const FInputActionValue& Value)
     }
 }
 
+void AA_WSCharacter::SwapCharacterOne()
+{
+    if (bIsClimbing || bIsGliding || GetCharacterMovement()->IsFalling())
+    {
+        return;
+    }
+    
+    if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
+    {
+        CharacterSubsystem->SpawnAsCharacter(0);
+    }
+}
+
+void AA_WSCharacter::SwapCharacterTwo()
+{
+    if (bIsClimbing || bIsGliding || GetCharacterMovement()->IsFalling())
+    {
+        return;
+    }
+    
+    if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
+    {
+        CharacterSubsystem->SpawnAsCharacter(1);
+    }
+}
+
 void AA_WSCharacter::OnCrouch()
 {
     bIsCrouchPressing = true;
@@ -523,7 +566,7 @@ void AA_WSCharacter::FastRun()
 
     bIsFastRunning = true;
 	OnFastRun.Broadcast();
-    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().FastMaxSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().GetFastMaxSpeed();
 }
 
 void AA_WSCharacter::UnFastRun()
@@ -537,7 +580,7 @@ void AA_WSCharacter::UnFastRun()
 
     bIsFastRunning = false;
 	OffFastRun.Broadcast();
-    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().NormalMaxSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().GetNormalMaxSpeed();
 
     if (bIsWalkingPressing) 
     {
@@ -562,7 +605,7 @@ void AA_WSCharacter::GoOnWalk()
 
     OnWalk.Broadcast();
     bIsWalking = true;
-    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().WalkMaxSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().GetWalkSpeed();
 }
 
 void AA_WSCharacter::GoOffWalk() 
@@ -576,7 +619,7 @@ void AA_WSCharacter::GoOffWalk()
 
     OffWalk.Broadcast();
     bIsWalking = false;
-    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().NormalMaxSpeed;
+    GetCharacterMovement()->MaxWalkSpeed = GetStatsComponent()->GetMovementStats().GetNormalMaxSpeed();
 
     // 상충되는 빠르게 달리기가 눌려있다면 빠르게 달리기로 상태변환
     if (bIsFastRunningPressing) 
@@ -588,20 +631,26 @@ void AA_WSCharacter::GoOffWalk()
 void AA_WSCharacter::OnJump()
 {
     UCharacterMovementComponent* CharacterComponent = GetCharacterMovement();
-    if (!bCanGlide && !CharacterComponent->IsFalling())
+    
+    if (CilmMovementComponent->IsClimbing())
+    {
+        CilmMovementComponent->TryClimbDashing();
+    }
+    else if (!bIsGliding && !CharacterComponent->IsFalling())
     {
         Jump();
     }
+    
     else if (CharacterComponent->IsFalling())
     {
         if (CanGlide())
         {
-            bCanGlide = !bCanGlide;
+            bIsGliding = !bIsGliding;
             
         }
-        else if (bCanGlide)
+        else if (bIsGliding)
         {
-            bCanGlide = !bCanGlide;
+            bIsGliding = !bIsGliding;
             
         }
     }

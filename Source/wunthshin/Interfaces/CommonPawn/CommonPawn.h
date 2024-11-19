@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+
 #include "CommonPawn.generated.h"
 
+class AwunthshinPlayerState;
 class USkeletalMeshComponent;
 class UCapsuleComponent;
 class UC_WSInventory;
@@ -53,8 +55,15 @@ public:
 	virtual bool IsWalking() const = 0;
 	// 등반하고 있는지 확인하는 함수
 	virtual bool CheckClimbState() const = 0;
+	// 등반중 대쉬하는지 확인하는 함수
+	virtual bool CheckClimbDashState() const = 0;
+	// 대쉬 할때 Direction을 가져옴
+	virtual FVector ClimbDashDirection() const = 0;
+	
 	// 스태미나가 다 떨어지면 호출되는 함수
 	virtual void HandleStaminaDepleted() = 0;
+	// 공통 PlayerState 참조 함수
+	AwunthshinPlayerState* GetPlayerState() const;
 
 	// Pawn 공통 업데이트 함수
 	void UpdatePawnFromDataTable(const FCharacterTableRow* InData);

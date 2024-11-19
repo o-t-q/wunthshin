@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputActionValue.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 
@@ -13,6 +14,7 @@
 
 #include "AA_WSCharacter.generated.h"
 
+class UClimCharacterMovementComponent;
 class UC_WSSkill;
 class UPawnMovementComponent;
 class UStatsComponent;
@@ -93,6 +95,12 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
 	UInputAction* DropAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* CharacterSwapOneAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input", meta = (AllowPrivateAccess = "true"))
+	UInputAction* CharacterSwapTwoAction;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UC_WSInventory* Inventory;
 
@@ -122,10 +130,10 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 	bool bIsWalking;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-	bool bCanGlide = false;
+	bool bIsGliding = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-	bool bCanClim;
+	bool bIsClimbing;
 
 	// 빠르게 달리는 키가 눌려있는가?
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
@@ -192,6 +200,9 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	void SwapCharacterOne();
+	void SwapCharacterTwo();
+
 	void OnCrouch();
 	void UnOnCrouch();
 
@@ -215,6 +226,7 @@ protected:
 
 	void Climb();
 	void CancelClimb();
+	
 
 	
 
@@ -268,11 +280,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	virtual bool CheckClimbState() const override;
 
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	virtual bool CheckClimbDashState() const override;
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	virtual FVector ClimbDashDirection() const override;
+	
+
 private:
 	virtual void SetHitMontages(const TArray<UAnimMontage*>& InMontages) override;
 
 public:
 	virtual void PlayHitMontage() override;
+	
 protected:
 	UPROPERTY(Category=Character , VisibleAnywhere,BlueprintReadOnly)
 	UClimCharacterMovementComponent* CilmMovementComponent;

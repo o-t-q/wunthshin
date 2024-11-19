@@ -11,8 +11,42 @@ void UClimCharacterMovementComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	AnimInstance = GetCharacterOwner()->GetMesh()->GetAnimInstance();
+
+	
+
 	ClimbQueryParams.AddIgnoredActor(GetOwner());
 }
+
+UClimCharacterMovementComponent::UClimCharacterMovementComponent()
+{
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> MontageObj(TEXT("/Script/Engine.AnimMontage'/Game/WawuCharacter/YinLin/AnimationSequence/Clim/Real/Climbing_ClimbUpAtTop_RM_Montage.Climbing_ClimbUpAtTop_RM_Montage'"));
+	if (MontageObj.Succeeded())
+	{
+		LedgeClimbMontage = MontageObj.Object;
+		
+		
+
+		UE_LOG(LogTemp, Warning, TEXT("Montage successfully loaded."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load Montage."));
+	}
+
+	static ConstructorHelpers::FObjectFinder<UCurveFloat> CurveFloat(TEXT("/Script/Engine.CurveFloat'/Game/WawuCharacter/YinLin/AnimationSequence/Clim/NewCurveBase.NewCurveBase'"));
+	if (CurveFloat.Succeeded())
+	{
+		ClimbDashCurve = CurveFloat.Object;
+
+		UE_LOG(LogTemp, Warning, TEXT("CurveFloat successfully loaded."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to load CurveFloat."));
+	}
+}
+
 
 void UClimCharacterMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -43,44 +77,44 @@ void UClimCharacterMovementComponent::SweepAndStoreWallHits()
 		ClimbQueryParams); 
 
 	// 디버그에서 확인
-	{
-		DrawDebugCapsule(
-			GetWorld(),
-			Start,
-			CollsionCapsuleHeight , // 캡슐의 반높이
-			CollsionCapsuleRadius, // 캡슐의 반지름
-			FQuat::Identity, // 회전
-			FColor::Green, // 색상
-			false, // 지속 시간 사용 여부 (false일 경우 한 프레임만 표시)
-			1.0f // 표시 지속 시간 (초 단위)
+	//{
+	//	DrawDebugCapsule(
+	//		GetWorld(),
+	//		Start,
+	//		CollsionCapsuleHeight , // 캡슐의 반높이
+	//		CollsionCapsuleRadius, // 캡슐의 반지름
+	//		FQuat::Identity, // 회전
+	//		FColor::Green, // 색상
+	//		false, // 지속 시간 사용 여부 (false일 경우 한 프레임만 표시)
+	//		1.0f // 표시 지속 시간 (초 단위)
 
-		);
-		
+	//	);
+	//	
 
-		for (const FHitResult& Hit : Hits)
-		{
-			// 충돌된 위치에 점을 표시
-			DrawDebugPoint(
-				GetWorld(),
-				Hit.ImpactPoint, // 충돌 위치
-				10.0f, // 점의 크기
-				FColor::Red, 
-				false, 
-				1.0f 
-			);
+	//	for (const FHitResult& Hit : Hits)
+	//	{
+	//		// 충돌된 위치에 점을 표시
+	//		DrawDebugPoint(
+	//			GetWorld(),
+	//			Hit.ImpactPoint, // 충돌 위치
+	//			10.0f, // 점의 크기
+	//			FColor::Red, 
+	//			false, 
+	//			1.0f 
+	//		);
 
-			// 충돌된 위치와 표면의 노멀을 표시 (선으로)
-			DrawDebugLine(
-				GetWorld(),
-				Hit.ImpactPoint, 
-				Hit.ImpactPoint + Hit.ImpactNormal * 50.0f, // 노멀 방향으로 선 그리기
-				FColor::Yellow, 
-				false,
-				1.0f
-			);
-		}
+	//		// 충돌된 위치와 표면의 노멀을 표시 (선으로)
+	//		DrawDebugLine(
+	//			GetWorld(),
+	//			Hit.ImpactPoint, 
+	//			Hit.ImpactPoint + Hit.ImpactNormal * 50.0f, // 노멀 방향으로 선 그리기
+	//			FColor::Yellow, 
+	//			false,
+	//			1.0f
+	//		);
+	//	}
 
-	}
+	//}
 
 
 	
@@ -124,19 +158,21 @@ bool UClimCharacterMovementComponent::CanStartClimbing()
 bool UClimCharacterMovementComponent::EyeHeightTrace(const float TraceDistance) const
 {
 	FHitResult UpperEdgeHit;
+	const float BaseEyeHeight = GetCharacterOwner()->BaseEyeHeight;
+	const float EyeHeightOffset = IsClimbing() ? BaseEyeHeight + ClimbingCollisionShrinkAmount : BaseEyeHeight;
 
-	const FVector Start = UpdatedComponent->GetComponentLocation() +
+	const FVector Start = UpdatedComponent->GetComponentLocation() + UpdatedComponent->GetUpVector() * EyeHeightOffset;
 		(UpdatedComponent->GetUpVector() * GetCharacterOwner()->BaseEyeHeight);
 	const FVector End = Start + (UpdatedComponent->GetForwardVector() * TraceDistance);
 	// 라인 트레이스를 시각화
-	DrawDebugLine(
-		GetWorld(),
-		Start,         // 시작 위치
-		End,           // 끝 위치
-		FColor::Green, // 선의 색상
-		false,         // 지속 시간 사용 여부
-		5.0f           // 지속 시간 (초 단위)
-	);
+	//DrawDebugLine(
+	//	GetWorld(),
+	//	Start,         // 시작 위치
+	//	End,           // 끝 위치
+	//	FColor::Green, // 선의 색상
+	//	false,         // 지속 시간 사용 여부
+	//	5.0f           // 지속 시간 (초 단위)
+	//);
 
 	
 
@@ -213,11 +249,13 @@ void UClimCharacterMovementComponent::PhysClimbing(float deltaTime, int32 Iterat
 
 	ComputeSurfaceInfo();
 
-	if (ShouldStopClimbing())
+	if (ShouldStopClimbing() || ClimbDownToFloor())
 	{
 		StopClimbing(deltaTime, Iterations);
 		return;
 	}
+
+	UpdateClimbDashState(deltaTime);
 
 	ComputeClimbingVelocity(deltaTime);
 
@@ -225,15 +263,11 @@ void UClimCharacterMovementComponent::PhysClimbing(float deltaTime, int32 Iterat
 
 	MoveAlongClimbingSurface(deltaTime);
 
+	TryClimbUpLedge();
+
 	if (!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
 	{
 		Velocity = (UpdatedComponent->GetComponentLocation() - OldLocation) / deltaTime;
-	}
-
-	if (ShouldStopClimbing() || ClimbDownToFloor()) // <--
-	{
-		StopClimbing(deltaTime, Iterations);
-		return;
 	}
 
 	SnapToClimbingSurface(deltaTime);
@@ -308,9 +342,19 @@ void UClimCharacterMovementComponent::ComputeClimbingVelocity(float deltaTime)
 
 	if (!HasAnimRootMotion() && !CurrentRootMotion.HasOverrideVelocity())
 	{
-		constexpr float Friction = 0.0f;
-		constexpr bool bFluid = false;
-		CalcVelocity(deltaTime, Friction, bFluid, BrakingDecelerationClimbing);
+		if (bIsClimbDashing)
+		{
+			AlignClimbDashDirection();
+
+			const float CurrentCurveSpeed = ClimbDashCurve->GetFloatValue(CurrentClimbDashTime);
+			Velocity = ClimbDashDirection * CurrentCurveSpeed;
+		}
+		else
+		{
+			constexpr float Friction = 0.0f;
+			constexpr bool bFluid = false;
+			CalcVelocity(deltaTime, Friction, bFluid, BrakingDecelerationClimbing);
+		}
 	}
 
 	ApplyRootMotionToVelocity(deltaTime);
@@ -325,6 +369,8 @@ bool UClimCharacterMovementComponent::ShouldStopClimbing()
 
 void UClimCharacterMovementComponent::StopClimbing(float deltaTime, int32 Iterations)
 {
+	StopClimbDashing();
+
 	bWantsToClimb = false;
 	SetMovementMode(EMovementMode::MOVE_Falling);
 	StartNewPhysics(deltaTime, Iterations);
@@ -355,7 +401,8 @@ void UClimCharacterMovementComponent::SnapToClimbingSurface(float deltaTime) con
 	const FVector Offset = -CurrentClimbingNormal * (ForwardDifference.Length() - DistanceFromSurface);
 
 	constexpr bool bSweep = true;
-	UpdatedComponent->MoveComponent(Offset * ClimbingSnapSpeed * deltaTime, Rotation, bSweep);
+	const float SnapSpeed = ClimbingSnapSpeed * FMath::Max(1, Velocity.Length() / MaxClimbingSpeed);
+	UpdatedComponent->MoveComponent(Offset * SnapSpeed * deltaTime, Rotation, bSweep);
 }
 
 float UClimCharacterMovementComponent::GetMaxSpeed() const
@@ -371,9 +418,17 @@ float UClimCharacterMovementComponent::GetMaxAcceleration() const
 FQuat UClimCharacterMovementComponent::GetClimbingRotation(float deltaTime) const
 {
 	const FQuat Current = UpdatedComponent->GetComponentQuat();
+
+	if (HasAnimRootMotion() || CurrentRootMotion.HasOverrideVelocity())
+	{
+		return Current;
+	}
+
 	const FQuat Target = FRotationMatrix::MakeFromX(-CurrentClimbingNormal).ToQuat();
 
-	return FMath::QInterpTo(Current, Target, deltaTime, ClimbingRotationSpeed);
+	const float RotationSpeed = ClimbingRotationSpeed * FMath::Max(1, Velocity.Length() / MaxClimbingSpeed);
+
+	return FMath::QInterpTo(Current, Target, deltaTime, RotationSpeed);
 }
 
 bool UClimCharacterMovementComponent::ClimbDownToFloor() const
@@ -399,7 +454,136 @@ bool UClimCharacterMovementComponent::CheckFloor(FHitResult& FloorHit) const
 	const FVector Start = UpdatedComponent->GetComponentLocation();
 	const FVector End = Start + FVector::DownVector * FloorCheckDistance;
 
+	DrawDebugLine(
+		GetWorld(),
+		Start,         // 시작 위치
+		End,           // 끝 위치
+		FColor::Green, // 선의 색상
+		false,         // 지속 시간 사용 여부
+		5.0f           // 지속 시간 (초 단위)
+	);
+
 	return GetWorld()->LineTraceSingleByChannel(FloorHit, Start, End, ECC_WorldStatic, ClimbQueryParams);
 }
+
+bool UClimCharacterMovementComponent::TryClimbUpLedge() const
+{
+	if (AnimInstance && LedgeClimbMontage && AnimInstance->Montage_IsPlaying(LedgeClimbMontage))
+	{
+		return false;
+	}
+
+	const float UpSpeed = FVector::DotProduct(Velocity, UpdatedComponent->GetUpVector());
+	const bool bIsMovingUp = UpSpeed >= MaxClimbingSpeed / 3;
+	if (bIsMovingUp && HasReachedEdge() && CanMoveToLedgeClimbLocation())
+	{
+		const FRotator StandRotation = FRotator(0, UpdatedComponent->GetComponentRotation().Yaw, 0);
+		UpdatedComponent->SetRelativeRotation(StandRotation);
+
+		AnimInstance->Montage_Play(LedgeClimbMontage);
+
+		return true;
+	}
+	return false;
+}
+
+bool UClimCharacterMovementComponent::HasReachedEdge() const
+{
+	const UCapsuleComponent* Capsule = CharacterOwner->GetCapsuleComponent();
+	const float TraceDistance = Capsule->GetUnscaledCapsuleRadius() * 2.5;
+
+	return !EyeHeightTrace(TraceDistance);
+}
+
+bool UClimCharacterMovementComponent::IsLocationWalkable(const FVector& CheckLocation) const
+{
+	const FVector CheckEnd = CheckLocation + (FVector::DownVector * 250.f);
+
+	FHitResult LedgeHit;
+	const bool bHitLedgeGround = GetWorld()->LineTraceSingleByChannel(LedgeHit, CheckLocation, CheckEnd,
+		ECC_WorldStatic, ClimbQueryParams);
+
+	return bHitLedgeGround && LedgeHit.Normal.Z >= GetWalkableFloorZ();
+}
+
+bool UClimCharacterMovementComponent::CanMoveToLedgeClimbLocation() const
+{
+	// Could use a property instead for fine-tuning.
+	const FVector VerticalOffset = FVector::UpVector * 120.f;  // 등반 도착위치 조정
+	const FVector HorizontalOffset = UpdatedComponent->GetForwardVector() * 120.f;
+
+	const FVector CheckLocation = UpdatedComponent->GetComponentLocation() + HorizontalOffset + VerticalOffset;
+
+	if (!IsLocationWalkable(CheckLocation))
+	{
+		return false;
+	}
+
+	FHitResult CapsuleHit;
+	const FVector CapsuleStartCheck = CheckLocation - HorizontalOffset;
+	const UCapsuleComponent* Capsule = CharacterOwner->GetCapsuleComponent();
+
+	const bool bBlocked = GetWorld()->SweepSingleByChannel(CapsuleHit, CapsuleStartCheck, CheckLocation,
+		FQuat::Identity, ECC_WorldStatic, Capsule->GetCollisionShape(), ClimbQueryParams);
+
+	return !bBlocked;
+}
+
+void UClimCharacterMovementComponent::TryClimbDashing()
+{
+	if (ClimbDashCurve && bIsClimbDashing == false)
+	{
+		bIsClimbDashing = true;
+		CurrentClimbDashTime = 0.f;
+
+		StoreClimbDashDirection();
+	}
+}
+
+void UClimCharacterMovementComponent::StoreClimbDashDirection()
+{
+	ClimbDashDirection = UpdatedComponent->GetUpVector();
+
+	const float AccelerationThreshold = MaxClimbingAcceleration / 10;
+	if (Acceleration.Length() > AccelerationThreshold)
+	{
+		ClimbDashDirection = Acceleration.GetSafeNormal();
+	}
+}
+
+void UClimCharacterMovementComponent::UpdateClimbDashState(float deltaTime)
+{
+	if (!bIsClimbDashing)
+	{
+		return;
+	}
+
+	CurrentClimbDashTime += deltaTime;
+
+	// Better to cache it when dash starts
+	float MinTime, MaxTime;
+	ClimbDashCurve->GetTimeRange(MinTime, MaxTime);
+
+	if (CurrentClimbDashTime >= MaxTime+0.5f)
+	{
+		StopClimbDashing();
+	}
+}
+
+void UClimCharacterMovementComponent::StopClimbDashing()
+{
+	bIsClimbDashing = false;
+	CurrentClimbDashTime = 0.f;
+	ClimbDashDirection = FVector::ZeroVector;
+}
+
+void UClimCharacterMovementComponent::AlignClimbDashDirection()
+{
+	const FVector HorizontalSurfaceNormal = GetClimbSurfaceNormal().GetSafeNormal2D();
+
+	ClimbDashDirection = FVector::VectorPlaneProject(ClimbDashDirection, HorizontalSurfaceNormal);
+}
+
+
 
 

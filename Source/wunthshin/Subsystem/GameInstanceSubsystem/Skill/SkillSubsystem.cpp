@@ -14,15 +14,15 @@
 DEFINE_LOG_CATEGORY(LogSkillSubsystem);
 
 USkillSubsystem::USkillSubsystem()
-{
-	static ConstructorHelpers::FObjectFinder<UDataTable> Table(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_SkillTable.DT_SkillTable'"));
-	check(Table.Object);
-	DataTable = Table.Object;
-}
+	: DataTable(nullptr) {}
 
 void USkillSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+	DataTable = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_SkillTable.DT_SkillTable'")));
+	check(DataTable);
+	
 	DataTableMapping.Emplace(FSkillTableRow::StaticStruct(), DataTable);
 
 	TArray<FSkillTableRow*> Rows;

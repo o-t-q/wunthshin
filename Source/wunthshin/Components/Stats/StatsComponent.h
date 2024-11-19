@@ -3,6 +3,7 @@
 #include "Components/ActorComponent.h"
 #include "Engine/DataTable.h"
 #include "Logging/LogMacros.h"
+
 #include "wunthshin/Data/Characters/CharacterStats/CharacterStats.h"
 #include "StatsComponent.generated.h"
 
@@ -81,9 +82,14 @@ public:
 	float GetHP() const { return CurrentStats.HP; }
 
 	UFUNCTION(BlueprintCallable)
-	FCharacterStats GetCurrentStats() const { return CurrentStats; }
+	const FCharacterStats& GetStats() const { return CurrentStats; }
 	
 	// 이동 속성 getter
 	UFUNCTION(BlueprintCallable)
-	const FCharacterMovementStats& GetMovementStats() const { return MovementStats; }
+	const FCharacterMovementStats& GetMovementStats() const { return CurrentStats.Movement; }
+
+	UFUNCTION(BlueprintCallable)
+	void SetHP(const float HP);
+
+	void CopyStats(const FCharacterStats& CharacterStats);
 };

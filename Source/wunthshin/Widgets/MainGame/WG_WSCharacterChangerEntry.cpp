@@ -20,7 +20,7 @@ void UWG_WSCharacterChangerEntry::NativeOnListItemObjectSet(UObject* ListItemObj
 	// 대기 중인 캐릭터 정보를 받아옴
 	auto AssetName = ListItemObject->GetFName();
 	auto Subsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>();
-	Data = *Subsystem->GetTableRow(AssetName);
+	Data = *Subsystem->GetRowValue<FCharacterTableRow>(AssetName);
 	if (Data.CharacterName.IsNone()) return;
 
 	RefreshEntry();

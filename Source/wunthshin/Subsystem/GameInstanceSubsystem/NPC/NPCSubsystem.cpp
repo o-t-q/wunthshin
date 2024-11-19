@@ -6,19 +6,19 @@
 #include "wunthshin/Data/NPCs/NPCStats/NPCStats.h"
 
 UNPCSubsystem::UNPCSubsystem()
-{
-	static ConstructorHelpers::FObjectFinder<UDataTable> AssetTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCTable.DT_NPCTable'"));
-	check(AssetTable.Object);
-	AssetDataTable = AssetTable.Object;
-	
-	static ConstructorHelpers::FObjectFinder<UDataTable> StatTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCStatsTable.DT_NPCStatsTable'"));
-	check(StatTable.Object);
-	StatDataTable = StatTable.Object;
-}
+	: AssetDataTable(nullptr),
+	  StatDataTable(nullptr) {}
 
 void UNPCSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+	AssetDataTable = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCTable.DT_NPCTable'")));
+	check(AssetDataTable);
+
+	StatDataTable = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCStatsTable.DT_NPCStatsTable'")));
+	check(StatDataTable);
+	
 	DataTableMapping.Emplace(FNPCTableRow::StaticStruct(), AssetDataTable);
 	DataTableMapping.Emplace(FNPCStats::StaticStruct(), StatDataTable);
 }

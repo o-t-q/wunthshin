@@ -14,6 +14,8 @@ class AwunthshinGameMode : public AGameModeBase
 public:
 	AwunthshinGameMode();
 
+	virtual void BeginPlay() override;
+	
 	virtual APawn* SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform) override;
 };
 

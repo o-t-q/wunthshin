@@ -9,12 +9,9 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 #include "Components/TileView.h"
-#include "wunthshin/Enums.h"
 #include "WG_WSInventory.generated.h"
 
 
-class UCheckBox;
-enum class EItemType : uint8;
 class UWG_WSInventoryEntry;
 class UC_WSInventory;
 class UButton;
@@ -34,29 +31,17 @@ class WUNTHSHIN_API UWG_WSInventory : public UWG_WSUserWidgetBase
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-
 public:
 	UFUNCTION()
 	void OnRefreshListItem(ESlateVisibility IsVisibility) { RefreshListItem(); }
-
 	UFUNCTION()
 	void OnRefreshListItemChangedItem(UWG_WSInventoryEntry* InObject)
 	{
 		SelectedEntry = InObject;
 		RefreshListItem();
 	}
-
 	UFUNCTION()
 	void RefreshListItem();
-
-	UFUNCTION()
-	void OnToggleCategory_Consumable(bool bIsActive) { ChangeCategory(EItemType::Consumable); }
-
-	UFUNCTION()
-	void OnToggleCategory_Weapon(bool bIsActive) { ChangeCategory(EItemType::Weapon); }
-
-	UFUNCTION()
-	void ChangeCategory(EItemType InItemType);
 
 protected:
 	UPROPERTY()
@@ -64,10 +49,6 @@ protected:
 
 	UPROPERTY()
 	UWG_WSInventoryEntry* SelectedEntry;
-
-	UPROPERTY(meta = (Bitmask, BitmaskEnum = EItemType))
-	EItemType CurrentCategory;
-
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
 	UTileView* TileView;
@@ -95,18 +76,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
 	UTextBlock* ItemDescription;
-
-	UPROPERTY()
-	UUserWidget* ToggleGroup_Category;
-
-	UPROPERTY()
-	TArray<UCheckBox*> CheckBoxes;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="InventoryCategory", meta=(BindWidget))
-	UCheckBox* Toggle_CategoryWeapon;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="InventoryCategory", meta=(BindWidget))
-	UCheckBox* Toggle_CategoryConsumable;
 
 public:
 	UFUNCTION()

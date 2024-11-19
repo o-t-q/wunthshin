@@ -6,16 +6,15 @@
 
 DEFINE_LOG_CATEGORY(LogEffectSubsystem);
 
-UEffectSubsystem::UEffectSubsystem()
-{
-	static ConstructorHelpers::FObjectFinder<UDataTable> Table(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_EffectTable.DT_EffectTable'"));
-	check(Table.Object);
-	DataTable = Table.Object;
-}
+UEffectSubsystem::UEffectSubsystem() : DataTable(nullptr) {}
 
 void UEffectSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	ensure(DataTable);
+	Super::Initialize(Collection);
+	
+	DataTable = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_EffectTable.DT_EffectTable'")));
+	check(DataTable);
+	
 	DataTableMapping.Emplace(FEffectTableRow::StaticStruct(), DataTable);
 
 	// effector를 매번 사용할 때마다 instantiate하지 않고 한번 생성해서

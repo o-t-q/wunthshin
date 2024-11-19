@@ -4,45 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Elements/Framework/TypedElementQueryBuilder.h"
+#include "wunthshin/Data/Items/InventoryPair/InventoryPair.h"
 #include "C_WSInventory.generated.h"
 
 class UListView;
+class UInventoryEntryData;
 class USG_WSItemMetadata;
 class AA_WSItem;
 class UImage;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogInventory, Log, All);
-
-
-
-
-
-USTRUCT()
-struct FInventoryPair
-{
-	GENERATED_BODY()
-
-	friend UInventoryEntryData;
-public:
-	FInventoryPair() : Metadata(nullptr), Count(0) {}
-
-	FInventoryPair(const USG_WSItemMetadata* InMetadata) :
-		Metadata(InMetadata), Count(1) {}
-
-	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))
-	const USG_WSItemMetadata* Metadata;
-
-	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))
-	uint32 Count;
-
-	bool operator==(const FInventoryPair& InOther) 
-	{
-		// 테이블로부터 생성된 포인터 비교, unique하다 가정
-		return Metadata == InOther.Metadata && 
-			Count == InOther.Count;
-	}
-};
 
 // ListView 동적 생성을 위해 UCLASS로 한번 랩핑함
 UCLASS()
@@ -84,19 +55,12 @@ UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class WUNTHSHIN_API UC_WSInventory : public UActorComponent
 {
 	GENERATED_BODY()
-	
-	UPROPERTY(VisibleAnywhere)
-	TArray<FInventoryPair> Items;
-
-	FInventoryPair* FindItem(const USG_WSItemMetadata* InMetadata);
 
 public:	
 	// Sets default values for this component's properties
 	UC_WSInventory();
 
-	int32 FindItemIndex(const USG_WSItemMetadata* InMetadata) const;
-
-	const TArray<FInventoryPair>& GetItems() const { return Items; }
+	const TArray<FInventoryPair>& GetItems() const;
 
 protected:
 	// Called when the game starts
@@ -110,5 +74,5 @@ public:
 	void AddItem(AA_WSItem* InItem, int InCount = 1);	// 아이템 추가
 	void RemoveItem(AA_WSItem* InItem, int InCount = 1); // 아이템 빼기
 	void UseItem(uint32 Index, AActor* InTarget, int InCount = 1);	// 아이템 사용
-
+	
 };
