@@ -57,7 +57,8 @@ void UFirstAtteckAnimNotifyState::NotifyTick(USkeletalMeshComponent* MeshComp, U
 		check(WeaponMesh->GetGenerateOverlapEvents());
 
 		// 무기와 충돌한 대상들을 찾고
-		const TArray<FOverlapInfo>& OverlapInfos = WeaponMesh->GetOverlapInfos();
+		// (중간에 폰의 생존 상태에 따라 충돌 반응이 꺼짐에 따라 배열이 변경될 수 있으므로 복사)
+		TArray<FOverlapInfo> OverlapInfos = WeaponMesh->GetOverlapInfos();
 
 		// 무기 고유의 데미지 이벤트를 생성한 후 
 		FWSDamageEvent DamageEvent{};

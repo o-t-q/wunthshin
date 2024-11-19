@@ -5,6 +5,7 @@
 #include "wunthshin/Data/Characters/CharacterStats/CharacterStats.h"
 #include "wunthshin/Components/Stats/StatsComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "wunthshin/wunthshinPlayerState.h"
 #include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
@@ -13,6 +14,7 @@
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "wunthshin/Interfaces/Taker/Taker.h"
+#include "wunthshin/Widgets/DamageIndicator/WG_WSDamageIndicator.h"
 
 // Add default functionality here for any ICommonPawn functions that are not pure virtual.
 
@@ -26,6 +28,12 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
     if (InData->SkeletalMesh)
     {
         GetSkeletalMeshComponent()->SetSkeletalMesh(InData->SkeletalMesh);
+        
+        if (APawn* PawnCasting = Cast<APawn>(this);
+            PawnCasting && (PawnCasting->GetWorld()->IsGameWorld() || PawnCasting->GetWorld()->IsPlayInEditor()))
+        {
+            GetDamageIndicators()->Initialize(PawnCasting, {}, GetSkeletalMeshComponent());
+        }
     }
 
     if (InData->AnimInstance)

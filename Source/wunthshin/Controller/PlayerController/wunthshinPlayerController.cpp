@@ -3,10 +3,9 @@
 
 #include "wunthshinPlayerController.h"
 
-#include "wunthshinPlayerState.h"
-#include "Actors/Pawns/Character/AA_WSCharacter.h"
-
-#include "Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
+#include "wunthshin/wunthshinPlayerState.h"
+#include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
+#include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 
 AwunthshinPlayerController::AwunthshinPlayerController()
 {
