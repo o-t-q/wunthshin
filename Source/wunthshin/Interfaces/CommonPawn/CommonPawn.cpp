@@ -14,9 +14,11 @@
 #include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "wunthshin/Interfaces/Taker/Taker.h"
-#include "wunthshin/Widgets/DamageIndicator/WG_WSDamageIndicator.h"
+#include "wunthshin/Widgets/DamageCounter/WG_WSDamageCounter.h"
 
 // Add default functionality here for any ICommonPawn functions that are not pure virtual.
+
+const FName ICommonPawn::InventoryComponentName = "InventoryComponent";
 
 AwunthshinPlayerState* ICommonPawn::GetPlayerState() const
 {
@@ -32,7 +34,7 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
         if (APawn* PawnCasting = Cast<APawn>(this);
             PawnCasting && (PawnCasting->GetWorld()->IsGameWorld() || PawnCasting->GetWorld()->IsPlayInEditor()))
         {
-            GetDamageIndicators()->Initialize(PawnCasting, {}, GetSkeletalMeshComponent());
+            GetDamageCounters()->Initialize(PawnCasting, {}, GetSkeletalMeshComponent());
         }
     }
 

@@ -49,7 +49,7 @@ class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, publi
 	UChildActorComponent* RightHandWeapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget", meta = (AllowPrivateAccess = "true"))
-	UDamageIndicatorPool* DamageIndicators;
+	UDamageCounterPool* DamageCounter;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
 	FName AssetName;
@@ -107,7 +107,7 @@ public:
 	virtual UChildActorComponent* GetRightHandComponent() const override;
 	virtual UPawnMovementComponent* GetPawnMovementComponent() const override;
 	virtual UC_WSSkill* GetSkillComponent() const override { return Skill; }
-	virtual UDamageIndicatorPool* GetDamageIndicators() const override { return DamageIndicators; }
+	virtual UDamageCounterPool* GetDamageCounters() const override { return DamageCounter; }
 	
 	virtual void HandleStaminaDepleted() override;
 

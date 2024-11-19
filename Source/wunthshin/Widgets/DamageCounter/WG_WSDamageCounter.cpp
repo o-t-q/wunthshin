@@ -1,12 +1,12 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "WG_WSDamageIndicator.h"
+#include "WG_WSDamageCounter.h"
 
 #include "Components/TextBlock.h"
 #include "Components/WidgetComponent.h"
 
-UDamageIndicatorPool::UDamageIndicatorPool()
+UDamageCounterPool::UDamageCounterPool()
 {
 	if (static ConstructorHelpers::FClassFinder<UUserWidget> DefaultClass(TEXT("/Script/UMGEditor.WidgetBlueprint'/Game/ThirdPerson/Blueprints/Widgets/BP_WG_WSDamageIndicator.BP_WG_WSDamageIndicator_C'"));
 		DefaultClass.Succeeded())
@@ -15,7 +15,7 @@ UDamageIndicatorPool::UDamageIndicatorPool()
 	}
 }
 
-void UDamageIndicatorPool::Initialize(AActor* InAttachTo, const TFunction<void(UWidgetComponent*)>& InFnPostInitialization, UMeshComponent* InMeshComponent)
+void UDamageCounterPool::Initialize(AActor* InAttachTo, const TFunction<void(UWidgetComponent*)>& InFnPostInitialization, UMeshComponent* InMeshComponent)
 {
 	for (uint32 i = 0; i < MaxAllocation; ++i)
 	{
@@ -41,11 +41,11 @@ void UDamageIndicatorPool::Initialize(AActor* InAttachTo, const TFunction<void(U
 			InFnPostInitialization(WidgetComponent);
 		}
 		
-		Widgets.Push(FDamageIndicatorContext(i, WidgetComponent));
+		Widgets.Push(FDamageCounterContext(i, WidgetComponent));
 	}
 }
 
-void UDamageIndicatorPool::Allocate(const float Damage)
+void UDamageCounterPool::Allocate(const float Damage)
 {
 	// 비트가 플립되지 않은 번호를 찾는다
 	int Available = _tzcnt_u32(AllocationMask) - 1;
@@ -64,8 +64,8 @@ void UDamageIndicatorPool::Allocate(const float Damage)
 	
 	AllocationMask |= 1 << Available;
 	
-	FDamageIndicatorContext& Context = Widgets[Available];
-	UWG_WSDamageIndicator* DamageIndicator = Cast<UWG_WSDamageIndicator>(Context.GetWidget()->GetWidget());
+	FDamageCounterContext& Context = Widgets[Available];
+	UWG_WSDamageCounter* DamageIndicator = Cast<UWG_WSDamageCounter>(Context.GetWidget()->GetWidget());
 
 	// 데미지를 설정하고 Visibility를 바꾼 다음 애니메이션을 재생한다
 	DamageIndicator->GetDamageText()->SetText(FText::FromString(FString::FromInt(static_cast<int32>(Damage))));
@@ -74,7 +74,7 @@ void UDamageIndicatorPool::Allocate(const float Damage)
 
 	// 일정 시간이 지나고 나서 해당 위젯을 해제
 	FTimerDelegate TimerDelegate;
-	TimerDelegate.BindUObject(this, &UDamageIndicatorPool::Deallocate, Context.GetIdentifier());
+	TimerDelegate.BindUObject(this, &UDamageCounterPool::Deallocate, Context.GetIdentifier());
 	Context.GetWidget()->GetWorld()->GetTimerManager().SetTimer
 	(
 		Context.GetTimerHandle(),
@@ -85,7 +85,7 @@ void UDamageIndicatorPool::Allocate(const float Damage)
 	);
 }
 
-void UDamageIndicatorPool::Deallocate(const short InIndex)
+void UDamageCounterPool::Deallocate(const short InIndex)
 {
 	// 위젯을 숨기고 다시 사용 가능함으로 표기
 	Widgets[InIndex].GetWidget()->SetVisibility(false);

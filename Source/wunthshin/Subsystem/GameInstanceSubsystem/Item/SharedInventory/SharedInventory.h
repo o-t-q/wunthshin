@@ -17,10 +17,10 @@ struct FSharedInventory
 	void RemoveItem(const USG_WSItemMetadata* InItemMetadata, const uint32 InCount);
 	void UseItem(uint32 InIndex, AActor* InUser, AActor* InTargetActor, uint32 InCount);
 
-private:
 	int32 FindItemIndex(const USG_WSItemMetadata* InMetadata) const;
 	FInventoryPair* FindItem(const USG_WSItemMetadata* InMetadata);
-	
+
+private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta=(AllowPrivateAccess = "true"))
 	TArray<FInventoryPair> ItemsOwned;
 };

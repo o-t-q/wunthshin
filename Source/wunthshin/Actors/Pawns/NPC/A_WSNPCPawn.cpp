@@ -23,7 +23,7 @@
 #include "wunthshin/Components/Skill/C_WSSkill.h"
 #include "wunthshin/Data/Items/DamageEvent/WSDamageEvent.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
-#include "wunthshin/Widgets/DamageIndicator/WG_WSDamageIndicator.h"
+#include "wunthshin/Widgets/DamageCounter/WG_WSDamageCounter.h"
 
 DEFINE_LOG_CATEGORY(LogNPCPawn);
 
@@ -36,7 +36,7 @@ AA_WSNPCPawn::AA_WSNPCPawn()
 	MovementComponent = CreateOptionalDefaultSubobject<UFloatingPawnMovement>(TEXT("MovementComponent"));
 	CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CapsuleComponent"));
 	MeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
-	Inventory = CreateDefaultSubobject<UC_WSInventory>(TEXT("Inventory"));
+	Inventory = CreateDefaultSubobject<UC_WSInventory>(InventoryComponentName);
 	Shield = CreateDefaultSubobject<UC_WSShield>(TEXT("Shield"));
 	StatsComponent = CreateDefaultSubobject<UStatsComponent>(TEXT("StatsComponent"));
 	RightHandWeapon = CreateDefaultSubobject<UChildActorComponent>(TEXT("RightHandWeapon"));
@@ -61,7 +61,7 @@ AA_WSNPCPawn::AA_WSNPCPawn()
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = true;
 	
-	DamageIndicators = CreateDefaultSubobject<UDamageIndicatorPool>(TEXT("DamageIndicators"));
+	DamageCounter = CreateDefaultSubobject<UDamageCounterPool>(TEXT("DamageCounters"));
 }
 
 void AA_WSNPCPawn::OnConstruction(const FTransform& Transform)
@@ -189,7 +189,7 @@ float AA_WSNPCPawn::TakeDamage(float DamageAmount, struct FDamageEvent const& Da
 			UE_LOG(LogNPCPawn, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), DamageAmount, *DamageCauser->GetName(), *GetName());
 			CustomEvent.SetFirstHit(this);
 			PlayHitMontage();
-            DamageIndicators->Allocate(DamageAmount);
+            DamageCounter->Allocate(DamageAmount);
 
 			// 무기를 맞았을 경우 무기의 원소 효과를 부여
 			if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))

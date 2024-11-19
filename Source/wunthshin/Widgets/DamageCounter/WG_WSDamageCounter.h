@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "WG_WSDamageIndicator.generated.h"
+#include "WG_WSDamageCounter.generated.h"
 
 class UWidgetComponent;
 
@@ -14,7 +14,7 @@ class UCanvasPanel;
  * 
  */
 UCLASS()
-class WUNTHSHIN_API UWG_WSDamageIndicator : public UUserWidget
+class WUNTHSHIN_API UWG_WSDamageCounter : public UUserWidget
 {
 	GENERATED_BODY()
 	
@@ -33,12 +33,12 @@ public:
 };
 
 USTRUCT(BlueprintType)
-struct FDamageIndicatorContext
+struct FDamageCounterContext
 {
 	GENERATED_BODY()
 
-	FDamageIndicatorContext() = default;
-	explicit FDamageIndicatorContext(const short InIdentifier, UWidgetComponent* InComponent) : Identifier(InIdentifier), Widget(InComponent) {}
+	FDamageCounterContext() = default;
+	explicit FDamageCounterContext(const short InIdentifier, UWidgetComponent* InComponent) : Identifier(InIdentifier), Widget(InComponent) {}
 
 	short GetIdentifier() const { return Identifier; }
 	UWidgetComponent* GetWidget() const { return Widget; }
@@ -56,17 +56,17 @@ private:
 };
 
 UCLASS(BlueprintType)
-class UDamageIndicatorPool : public UObject
+class UDamageCounterPool : public UObject
 {
 	GENERATED_BODY()
 
-	UDamageIndicatorPool();
+	UDamageCounterPool();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UUserWidget> DefaultWidgetClass;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	TArray<FDamageIndicatorContext> Widgets;
+	TArray<FDamageCounterContext> Widgets;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	int32 ConsecutiveOverflow = 0;
