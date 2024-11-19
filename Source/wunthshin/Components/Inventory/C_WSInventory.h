@@ -56,23 +56,25 @@ class WUNTHSHIN_API UC_WSInventory : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TArray<FInventoryPair> Items;
+
+public:
 	// Sets default values for this component's properties
 	UC_WSInventory();
-
-	const TArray<FInventoryPair>& GetItems() const;
-
+	
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 public:
-	void AddItem(AA_WSItem* InItem, int InCount = 1);	// 아이템 추가
-	void RemoveItem(AA_WSItem* InItem, int InCount = 1); // 아이템 빼기
-	void UseItem(uint32 Index, AActor* InTarget, int InCount = 1);	// 아이템 사용
+	virtual const TArray<FInventoryPair>& GetItems() const;
+
+	virtual int32 FindItemIndex(const USG_WSItemMetadata* InMetadata) const;
+	virtual FInventoryPair* FindItem(const USG_WSItemMetadata* InMetadata);
+	
+	virtual void AddItem(AA_WSItem* InItem, int InCount = 1);	// 아이템 추가
+	virtual void RemoveItem(AA_WSItem* InItem, int InCount = 1); // 아이템 빼기
+	virtual void UseItem(uint32 Index, AActor* InTarget, int InCount = 1);	// 아이템 사용
 	
 };
