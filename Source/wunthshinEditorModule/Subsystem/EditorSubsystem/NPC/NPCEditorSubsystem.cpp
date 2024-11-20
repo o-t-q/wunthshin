@@ -8,17 +8,14 @@
 void UNPCEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+	AssetDataTable = CastChecked<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCTable.DT_NPCTable'")));
+	StatDataTable = CastChecked<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCStatsTable.DT_NPCStatsTable'")));
+	
 	DataTableMapping.Emplace(FNPCTableRow::StaticStruct(), AssetDataTable);
 	DataTableMapping.Emplace(FNPCStats::StaticStruct(), StatDataTable);
 }
 
-UNPCEditorSubsystem::UNPCEditorSubsystem()
+UNPCEditorSubsystem::UNPCEditorSubsystem(): AssetDataTable(nullptr), StatDataTable(nullptr)
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> AssetTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCTable.DT_NPCTable'"));
-	check(AssetTable.Object);
-	AssetDataTable = AssetTable.Object;
-	
-	static ConstructorHelpers::FObjectFinder<UDataTable> StatTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_NPCStatsTable.DT_NPCStatsTable'"));
-	check(StatTable.Object);
-	StatDataTable = StatTable.Object;
 }

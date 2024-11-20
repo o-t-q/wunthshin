@@ -17,16 +17,16 @@ bool UWeaponEditorSubsystem::IsEditorOnly() const
 	return true;
 }
 
-UWeaponEditorSubsystem::UWeaponEditorSubsystem()
+UWeaponEditorSubsystem::UWeaponEditorSubsystem(): DataTable(nullptr)
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> Table(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_WeaponTable.DT_WeaponTable'"));
-	check(Table.Object);
-	DataTable = Table.Object;
 }
 
 void UWeaponEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+	
+	DataTable = CastChecked<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_WeaponTable.DT_WeaponTable'")));
+	
 	FItemSubsystemUtility::UpdateTable<FWeaponTableRow>(DataTable, Metadata);
 	DataTableMapping.Emplace(FWeaponTableRow::StaticStruct(), DataTable);
 }

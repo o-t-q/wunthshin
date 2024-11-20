@@ -9,18 +9,17 @@
 void UCharacterEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
+
+	AssetDataTable = CastChecked<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterTable.DT_CharacterTable'")));
+	StatDataTable = CastChecked<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterStatsTable.DT_CharacterStatsTable'")));
+	
+	check(StatDataTable);
+	
 	DataTableMapping.Emplace(FCharacterTableRow::StaticStruct(), AssetDataTable);
 	DataTableMapping.Emplace(FCharacterStats::StaticStruct(), StatDataTable);
 }
 
-UCharacterEditorSubsystem::UCharacterEditorSubsystem()
+UCharacterEditorSubsystem::UCharacterEditorSubsystem(): AssetDataTable(nullptr), StatDataTable(nullptr)
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> AssetTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterTable.DT_CharacterTable'"));
-	check(AssetTable.Object);
-	AssetDataTable = AssetTable.Object;
-	
-	static ConstructorHelpers::FObjectFinder<UDataTable> StatTable(TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_CharacterStatsTable.DT_CharacterStatsTable'"));
-	check(StatTable.Object);
-	StatDataTable = StatTable.Object;
 }
 #endif
