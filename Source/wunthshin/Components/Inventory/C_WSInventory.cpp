@@ -59,7 +59,7 @@ void UC_WSInventory::BeginPlay()
 void UC_WSInventory::AddItem(AA_WSItem* InItem, int InCount)
 {
 	// 타입 캐스팅 안전
-	if (InCount < 0) 
+	if (InCount <= 0) 
 	{
 		return;
 	}
@@ -90,7 +90,7 @@ void UC_WSInventory::RemoveItem(AA_WSItem* InItem, int InCount)
 	}
 
 	// 타입 캐스팅 안전
-	if (InCount < 0) 
+	if (InCount <= 0) 
 	{
 		return;
 	}
@@ -134,7 +134,7 @@ void UC_WSInventory::UseItem(uint32 Index, AActor* InTarget, int Count)
 	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::UseItem"));
 
 	// 음수 갯수 예외처리
-	if (Count < 0) 
+	if (Count <= 0) 
 	{
 		return;
 	}

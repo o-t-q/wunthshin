@@ -7,6 +7,11 @@ DEFINE_LOG_CATEGORY(LogSharedInventory);
 
 void FSharedInventory::AddItem(const USG_WSItemMetadata* InItemMetadata, const uint32 InCount)
 {
+	if (InCount <= 0)
+	{
+		return;
+	}
+	
 	// 동일한 아이템이 이미 존재하는 경우
 	if (FInventoryPair* Iterator = FindItem(InItemMetadata); Iterator)
 	{
@@ -23,6 +28,11 @@ void FSharedInventory::AddItem(const USG_WSItemMetadata* InItemMetadata, const u
 
 void FSharedInventory::RemoveItem(const USG_WSItemMetadata* InItemMetadata, const uint32 InCount)
 {
+	if (InCount <= 0)
+	{
+		return;
+	}
+	
 	if (ItemsOwned.IsEmpty())
 	{
 		return;
@@ -61,6 +71,11 @@ void FSharedInventory::RemoveItem(const USG_WSItemMetadata* InItemMetadata, cons
 
 void FSharedInventory::UseItem(const uint32 InIndex, AActor* InUser, AActor* InTargetActor, const uint32 InCount)
 {
+	if (InCount <= 0)
+	{
+		return;
+	}
+	
 	// OOB
 	if (static_cast<uint32>(ItemsOwned.Num()) < InCount)
 	{
