@@ -2,9 +2,9 @@
 
 #include "wunthshinGameMode.h"
 
-#include "wunthshinPlayerController.h"
 #include "wunthshinPlayerState.h"
 #include "Actors/Pawns/Character/AA_WSCharacter.h"
+#include "Controller/PlayerController/wunthshinPlayerController.h"
 #include "Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 #include "UObject/ConstructorHelpers.h"
 

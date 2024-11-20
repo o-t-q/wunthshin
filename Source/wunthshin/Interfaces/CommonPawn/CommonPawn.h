@@ -38,6 +38,8 @@ class WUNTHSHIN_API ICommonPawn
 	virtual void SetHitMontages(const TArray<UAnimMontage*>& InMontages) = 0;
 	
 public:
+	static const FName InventoryComponentName;
+	
 	virtual FName GetAssetName() const = 0;
 
 	COMPONENT_GETTER(UCapsuleComponent, CapsuleComponent);
@@ -48,6 +50,7 @@ public:
 	COMPONENT_GETTER(UChildActorComponent, RightHandComponent);
 	COMPONENT_GETTER(UPawnMovementComponent, PawnMovementComponent);
 	COMPONENT_GETTER(UC_WSSkill, SkillComponent);
+	COMPONENT_GETTER(UDamageCounterPool, DamageCounters);
 
 	// 빨리 달리는지 확인하는 함수
 	virtual bool IsFastRunning() const = 0;

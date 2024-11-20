@@ -8,11 +8,8 @@
 #include "wunthshin/Widgets/Inventory/WG_WSInventory.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
-#include "Components/CanvasPanelSlot.h"
-#include "Components/HorizontalBox.h"
-#include "Components/NamedSlot.h"
-#include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
+#include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 
 UImage* UWG_WSInGameBundle::FadeImageStatic = nullptr;
 
@@ -32,8 +29,13 @@ void UWG_WSInGameBundle::NativeConstruct()
 	// 메뉴버튼 이벤트 바인딩
 	Button_OpenInventory->OnClicked.AddDynamic(this,&ThisClass::OpenWindowInventory);
 
-	// 우측 캐릭터 변경 슬롯 초기화
-	InitCharacterSlots();
+	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
+	{
+		CharacterSubsystem->OnCharacterAdded.AddUniqueDynamic(this, &UWG_WSInGameBundle::InitCharacterSlots);
+		
+		// 우측 캐릭터 변경 슬롯 초기화
+		InitCharacterSlots();
+	}
 }
 
 void UWG_WSInGameBundle::NativeOnInitialized()
@@ -66,10 +68,14 @@ void UWG_WSInGameBundle::OpenWindow(FName InWindowName)
 
 void UWG_WSInGameBundle::InitCharacterSlots()
 {
-	//auto test = ULocalPlayer::GetSubsystem<UCharacterSubsystem>()->GetRowValue<FCharacterTableRow>(TEXT("YinLin"));
-	TArray<UObject*> Objects;
-	Objects.Add(NewObject<UObject>(this,FName("YinLin")));
-	CharacterRoot->SetListItems(Objects);
+	CharacterRoot->ClearListItems();
+	
+	// 1. 현재 레벨 상 캐릭터가 파괴되지 않고 유지되는 상태이므로 캐릭터 자체를 데이터로 사용함
+	// 2. HUD도 레벨 변경에 맞춰 동시에 파괴되기 때문에 캐릭터가 파괴되기 전까지는 동일한 포인터를 유지하고 있게됨
+	if (const UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
+	{
+		CharacterRoot->SetListItems(CharacterSubsystem->GetOwnedCharacters());
+	}
 }
 
 

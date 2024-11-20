@@ -14,6 +14,7 @@
 
 #include "AA_WSCharacter.generated.h"
 
+class UDamageCounterPool;
 class UClimCharacterMovementComponent;
 class UC_WSSkill;
 class UPawnMovementComponent;
@@ -115,6 +116,9 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFet
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	UChildActorComponent* RightHandWeapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widget", meta = (AllowPrivateAccess = "true"))
+	UDamageCounterPool* DamageCounters;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
 	FName AssetName;
@@ -267,6 +271,7 @@ public:
 	virtual UChildActorComponent* GetRightHandComponent() const override { return RightHandWeapon; }
 	virtual UPawnMovementComponent* GetPawnMovementComponent() const override { return ACharacter::GetMovementComponent(); }
 	virtual UC_WSSkill* GetSkillComponent() const override { return Skill; }
+	virtual UDamageCounterPool* GetDamageCounters() const override { return DamageCounters; }
 	
 	virtual void HandleStaminaDepleted() override;
 	UInputMappingContext* GetMappingContext() const { return DefaultMappingContext; }

@@ -30,9 +30,11 @@
 #if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
 #include "wunthshinEditorModule/Subsystem/EditorSubsystem/Character/CharacterEditorSubsystem.h"
 #endif
+#include "wunthshin/Components/CharacterInventory/C_WSCharacterInventory.h"
 #include "wunthshin/Components/Skill/C_WSSkill.h"
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
+#include "wunthshin/Widgets/DamageCounter/WG_WSDamageCounter.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -117,7 +119,7 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
     FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
     // Create a Inventory
-    Inventory = CreateDefaultSubobject<UC_WSInventory>(TEXT("Inventory"));
+    Inventory = CreateDefaultSubobject<UC_WSCharacterInventory>(InventoryComponentName);
     // Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
     // are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
@@ -135,6 +137,8 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
     CilmMovementComponent = Cast<UClimCharacterMovementComponent>(GetCharacterMovement());
 
     Skill = CreateDefaultSubobject<UC_WSSkill>(TEXT("SkillComponent"));
+    
+    DamageCounters = CreateDefaultSubobject<UDamageCounterPool>(TEXT("DamageIndicators"));
 
     AutoPossessPlayer = EAutoReceiveInput::Type::Disabled;
     AutoPossessAI = EAutoPossessAI::Disabled;
@@ -285,6 +289,7 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
             UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
             CustomEvent.SetFirstHit(this);
             PlayHitMontage();
+            DamageCounters->Allocate(Damage);
 
             // 무기를 맞았을 경우 무기의 원소 효과를 부여
             if (const AA_WSWeapon* Weapon = Cast<AA_WSWeapon>(DamageCauser))
