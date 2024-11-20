@@ -375,6 +375,11 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
     return true;
 }
 
+IInventoryComponent* AA_WSCharacter::GetInventoryComponent() const
+{
+    return Inventory;
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -768,7 +773,7 @@ void AA_WSCharacter::CheckItemAndDrop()
             NewItem->GetComponentByClass<UProjectileMovementComponent>()->InitialSpeed = 150.f;
             NewItem->GetComponentByClass<UProjectileMovementComponent>()->bSimulationEnabled = true;
             NewItem->FinishSpawning(ItemTransform, false);
-            Inventory->RemoveItem(NewItem, 1);
+            Inventory->RemoveItem(NewItem->GetItemMetadata(), 1);
             break;
         }
     }

@@ -43,7 +43,7 @@ public:
 
 	COMPONENT_GETTER(UCapsuleComponent, CapsuleComponent);
 	COMPONENT_GETTER(USkeletalMeshComponent, SkeletalMeshComponent);
-	COMPONENT_GETTER(UC_WSInventory, InventoryComponent);
+	COMPONENT_GETTER(IInventoryComponent, InventoryComponent);
 	COMPONENT_GETTER(UC_WSShield, ShieldComponent);
 	COMPONENT_GETTER(UStatsComponent, StatsComponent);
 	COMPONENT_GETTER(UChildActorComponent, RightHandComponent);

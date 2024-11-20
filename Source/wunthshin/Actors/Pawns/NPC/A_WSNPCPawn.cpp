@@ -215,7 +215,7 @@ USkeletalMeshComponent* AA_WSNPCPawn::GetSkeletalMeshComponent() const
 	return MeshComponent;
 }
 
-UC_WSInventory* AA_WSNPCPawn::GetInventoryComponent() const
+IInventoryComponent* AA_WSNPCPawn::GetInventoryComponent() const
 {
 	return Inventory;
 }

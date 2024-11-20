@@ -30,12 +30,16 @@ void UC_WSCharacterInventory::BeginPlay()
 
 const TArray<FInventoryPair>& UC_WSCharacterInventory::GetItems() const
 {
+	static const TArray<FInventoryPair> EmptyFallbackReturn = {};
+	
 	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
 	{
 		return ItemSubsystem->GetSharedInventory().GetItems();
 	}
 
-	return Super::GetItems();
+	// 게임 인스턴스에 접근 실패
+	check(false);
+	return EmptyFallbackReturn;
 }
 
 int32 UC_WSCharacterInventory::FindItemIndex(const USG_WSItemMetadata* InMetadata) const
@@ -45,7 +49,7 @@ int32 UC_WSCharacterInventory::FindItemIndex(const USG_WSItemMetadata* InMetadat
 		return ItemSubsystem->GetSharedInventory().FindItemIndex(InMetadata);
 	}
 
-	return -1;
+	return INDEX_NONE;
 }
 
 FInventoryPair* UC_WSCharacterInventory::FindItem(const USG_WSItemMetadata* InMetadata)
@@ -60,36 +64,20 @@ FInventoryPair* UC_WSCharacterInventory::FindItem(const USG_WSItemMetadata* InMe
 
 void UC_WSCharacterInventory::AddItem(AA_WSItem* InItem, int InCount)
 {
-	// 타입 캐스팅 안전
-	if (InCount < 0) 
-	{
-		return;
-	}
-
-	const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata();
-	// Item metadata가 생성되지 않았음
-	check(ItemMetadata);
-
 	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
 	{
-		ItemSubsystem->GetSharedInventory().AddItem(ItemMetadata, InCount);
+		if (const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata())
+		{
+			ItemSubsystem->GetSharedInventory().AddItem(ItemMetadata, InCount);
+		}
 	}
 }
 
-void UC_WSCharacterInventory::RemoveItem(AA_WSItem* InItem, int InCount)
+void UC_WSCharacterInventory::RemoveItem(const USG_WSItemMetadata* InItem, int InCount)
 {
-	// 타입 캐스팅 안전
-	if (InCount < 0) 
-	{
-		return;
-	}
-
-	const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata();
-	check(ItemMetadata);
-
 	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
 	{
-		ItemSubsystem->GetSharedInventory().RemoveItem(ItemMetadata, InCount);
+		ItemSubsystem->GetSharedInventory().AddItem(InItem, InCount);
 	}
 }
 
@@ -97,11 +85,6 @@ void UC_WSCharacterInventory::UseItem(uint32 Index, AActor* InTarget, int InCoun
 {
 	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::UseItem"));
 
-	// 음수 갯수 예외처리
-	if (InCount < 0) 
-	{
-		return;
-	}
 	
 	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
 	{

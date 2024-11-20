@@ -14,6 +14,7 @@
 
 #include "AA_WSCharacter.generated.h"
 
+class UC_WSCharacterInventory;
 class UDamageCounterPool;
 class UClimCharacterMovementComponent;
 class UC_WSSkill;
@@ -103,7 +104,7 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IElementTrack
 	UInputAction* CharacterSwapTwoAction;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Stats", meta = (AllowPrivateAccess = "true"))
-	UC_WSInventory* Inventory;
+	UC_WSCharacterInventory* Inventory;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
 	UC_WSShield* Shield;
@@ -262,16 +263,16 @@ public:
 	virtual void SetAssetName(const FName& InAssetName) override { AssetName = InAssetName; }
 
 	// ICommonPawn
-	virtual FName GetAssetName() const override { return AssetName; }
-	virtual UCapsuleComponent* GetCapsuleComponent() const override { return ACharacter::GetCapsuleComponent(); }
+	virtual FName                   GetAssetName() const override { return AssetName; }
+	virtual UCapsuleComponent*      GetCapsuleComponent() const override { return ACharacter::GetCapsuleComponent(); }
 	virtual USkeletalMeshComponent* GetSkeletalMeshComponent() const override { return GetMesh(); }
-	virtual UC_WSInventory* GetInventoryComponent() const override { return Inventory; }
-	virtual UC_WSShield* GetShieldComponent() const override { return Shield; }
-	virtual UStatsComponent* GetStatsComponent() const override { return CharacterStatsComponent; }
-	virtual UChildActorComponent* GetRightHandComponent() const override { return RightHandWeapon; }
+	virtual IInventoryComponent*    GetInventoryComponent() const override;
+	virtual UC_WSShield*            GetShieldComponent() const override { return Shield; }
+	virtual UStatsComponent*        GetStatsComponent() const override { return CharacterStatsComponent; }
+	virtual UChildActorComponent*   GetRightHandComponent() const override { return RightHandWeapon; }
 	virtual UPawnMovementComponent* GetPawnMovementComponent() const override { return ACharacter::GetMovementComponent(); }
-	virtual UC_WSSkill* GetSkillComponent() const override { return Skill; }
-	virtual UDamageCounterPool* GetDamageCounters() const override { return DamageCounters; }
+	virtual UC_WSSkill*             GetSkillComponent() const override { return Skill; }
+	virtual UDamageCounterPool*     GetDamageCounters() const override { return DamageCounters; }
 	
 	virtual void HandleStaminaDepleted() override;
 	UInputMappingContext* GetMappingContext() const { return DefaultMappingContext; }

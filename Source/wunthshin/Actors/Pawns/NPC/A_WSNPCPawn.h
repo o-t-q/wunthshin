@@ -101,7 +101,7 @@ public:
 
 	virtual UCapsuleComponent* GetCapsuleComponent() const override;
 	virtual USkeletalMeshComponent* GetSkeletalMeshComponent() const override;
-	virtual UC_WSInventory* GetInventoryComponent() const override;
+	virtual IInventoryComponent* GetInventoryComponent() const override;
 	virtual UC_WSShield* GetShieldComponent() const override;
 	virtual UStatsComponent* GetStatsComponent() const override;
 	virtual UChildActorComponent* GetRightHandComponent() const override;
