@@ -8,6 +8,7 @@
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 #include "WG_WSCharacterChangerEntry.generated.h"
 
+class UOverlay;
 class AA_WSCharacter;
 class UProgressBar;
 struct FCharacterTableRow;
@@ -33,7 +34,7 @@ protected:
 public:
 	// 캐릭터 변경시 호출
 	UFUNCTION()
-	void BindKey();
+	void DisplayBindKey() const;
 
 protected:
 	virtual FReply NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
@@ -46,10 +47,16 @@ protected:
 	UTextBlock* KeyText;
 
 	UPROPERTY(meta = (BindWidget))
+	UOverlay* KeyOverlay;
+
+	UPROPERTY(meta = (BindWidget))
 	UProgressBar* CurrentHP;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TWeakObjectPtr<const AA_WSCharacter> WeakCharacterPtr;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	int32 CharacterIndex;
 
 protected:
 	FOnClick OnClick;

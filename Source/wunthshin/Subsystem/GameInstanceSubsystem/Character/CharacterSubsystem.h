@@ -10,6 +10,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterAdded);
 
+
 class AA_WSCharacter;
 /**
  * 

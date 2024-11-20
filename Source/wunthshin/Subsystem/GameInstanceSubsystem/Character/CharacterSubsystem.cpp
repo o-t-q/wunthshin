@@ -138,7 +138,7 @@ void UCharacterSubsystem::SpawnAsCharacter(const int32 InIndex)
 	}
 
 	// 체력이 남아있다면 전환
-	if (OwnedCharacters[InIndex]->GetStatsComponent()->GetHP() < 0)
+	if (OwnedCharacters[InIndex]->GetStatsComponent()->GetHP() <= 0)
 	{
 		return;
 	}
@@ -157,12 +157,11 @@ void UCharacterSubsystem::SpawnAsCharacter(const int32 InIndex)
 		CurrentCharacter->SetActorEnableCollision(false);
 		CurrentCharacter->SetActorHiddenInGame(true);
 		CurrentCharacter->SetActorTransform(FTransform::Identity);
-
+		
+		CurrentSpawnedIndex = InIndex;
 		PlayerController->Possess(OwnedCharacters[InIndex]);
 		OwnedCharacters[InIndex]->SetActorEnableCollision(true);
 		OwnedCharacters[InIndex]->SetActorHiddenInGame(false);
 		OwnedCharacters[InIndex]->SetActorTransform(PreviousTransform);
-		
-		CurrentSpawnedIndex = InIndex;
 	}
 }
