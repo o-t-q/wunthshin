@@ -52,7 +52,7 @@ public:
 
 	AA_WSCharacter* GetCharacter(const int32 InIndex) const
 	{
-		if (OwnedCharacters.Num() > InIndex)
+		if (OwnedCharacters.IsValidIndex(InIndex))
 		{
 			return OwnedCharacters[InIndex];
 		}
@@ -64,7 +64,7 @@ public:
 
 	AA_WSCharacter* GetCurrentCharacter() const
 	{
-		if (OwnedCharacters.Num() > CurrentSpawnedIndex)
+		if (OwnedCharacters.IsValidIndex(CurrentSpawnedIndex))
 		{
 			return OwnedCharacters[CurrentSpawnedIndex];
 		}

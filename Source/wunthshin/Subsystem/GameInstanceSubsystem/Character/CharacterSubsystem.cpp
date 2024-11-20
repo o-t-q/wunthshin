@@ -107,10 +107,9 @@ void UCharacterSubsystem::AddCharacter(AA_WSCharacter* InCharacter)
 
 void UCharacterSubsystem::AddCharacter(AA_WSCharacter* Character, const int32 InIndex)
 {
-	if (OwnedCharacters.Num() > InIndex)
+	if (OwnedCharacters.IsValidIndex(InIndex))
 	{
 		OwnedCharacters[InIndex] = Character;
-
 		OnCharacterAdded.Broadcast();
 	}
 	else
