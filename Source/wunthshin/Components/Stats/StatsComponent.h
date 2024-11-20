@@ -66,6 +66,13 @@ public:
 		return CurrentStats.HP / CurrentStats.MaxHP;
 	}
 
+	// Delegate 바인딩용 우회함수, GetHPRatio를 호출함
+	UFUNCTION()
+	float GetHPRatioNonConst()
+	{
+		return GetHPRatio();
+	}
+
 	UFUNCTION(BlueprintCallable)
 	float GetStamina() const { return CurrentStats.Stamina; }
 
