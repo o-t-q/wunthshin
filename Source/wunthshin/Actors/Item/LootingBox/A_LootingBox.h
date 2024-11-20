@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
+#include "wunthshin/Actors/Item/A_WSItem.h"
 #include "wunthshin/Interfaces/Taker/Taker.h"
 #include "wunthshin/Data/Items/LootingBox/LootingBoxTableRow.h"
 #include "A_LootingBox.generated.h"
@@ -19,18 +19,19 @@
 //
 //
 
+struct FInventoryPair;
 class USG_WSItemMetadata;
 class UC_WSInventory;
 class UC_WSPickUp;
 
 UCLASS()
-class WUNTHSHIN_API AA_LootingBox : public AActor, public I_WSTaker, public IDataTableFetcher
+class WUNTHSHIN_API AA_LootingBox : public AA_WSItem
 {
 	GENERATED_BODY()
 
 public:
 	// Sets default values for this actor's properties
-	AA_LootingBox();
+	AA_LootingBox(const FObjectInitializer& ObjectInitializer);
 
 protected:
 	// Called when the game starts or when spawned
@@ -41,9 +42,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 protected:
-	// 물체가 주어짐을 당했을 때 줍는 대상의 callback
-	virtual bool Take(UC_WSPickUp* InTakenComponent) override;
-
 	// 조회한 데이터 테이블의 데이터를 상속받은 클래스에서 사용
 	virtual void ApplyAsset(const FTableRowBase* InRowPointer) override;
 
@@ -62,15 +60,12 @@ protected:
 	void Interaction();
 	
 protected:
-	UPROPERTY()
-	UC_WSPickUp* PickUpComponent;
-
 	// UPROPERTY()
 	// UC_WSInventory* InventoryComponent;
 	
 protected:
 	UPROPERTY()
-	TMap<USG_WSItemMetadata*, uint64> Items;
+	TArray<FInventoryPair> Items;
 
 	UPROPERTY()
 	FLootingBoxTableRow Data;

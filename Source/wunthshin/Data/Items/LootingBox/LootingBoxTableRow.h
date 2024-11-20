@@ -27,9 +27,9 @@ public:
 	// UPROPERTY(EditAnywhere)
 	// UDataTable* ItemDataTable;
 
-	// 필수아이템 여부
-	UPROPERTY(EditAnywhere)
-	bool bIsEssential = false;
+	// // 필수아이템 여부
+	// UPROPERTY(EditAnywhere)
+	// bool bIsEssential = false;
 
 	// 필수아이템은 AssetName으로 ItemTable에서 정보를 가져온다, 랜덤아이템이면 무시한다
 	UPROPERTY(EditAnywhere)
@@ -45,14 +45,10 @@ public:
 	
 	// 뜨게할 최소수량, 최대수량(루팅박스 초기화 시 최소최대 사이의 랜덤수량으로 초기화한다)
 	UPROPERTY(EditAnywhere)
-	uint64 MinQuantity;
+	uint64 MinQuantity = 1;
 
 	UPROPERTY(EditAnywhere)
 	uint64 MaxQuantity;
-
-	// 최종 결정된 수량
-	UPROPERTY()
-	uint64 Quantity;
 };
 
 
@@ -66,14 +62,17 @@ struct WUNTHSHIN_API FLootingBoxTableRow : public FTableRowBase
 public:
 	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName)
 	{
-		// Diversity만큼 RandomItems 크기를 강제
+		// MaxDiversity만큼 RandomItems 크기를 강제
 		
 	}
 	
 public:
-	// 랜덤아이템 종류 수
+	// 랜덤아이템 최대 종류 수(MinDiversity ~ Diversity 사이 랜덤)
 	UPROPERTY(EditAnywhere)
-	uint64 Diversity;
+	uint64 MinDiversity = 1;
+	
+	UPROPERTY(EditAnywhere)
+	uint64 MaxDiversity;
 
 	// 랜덤으로 뜨게할 아이템, 종류 수 만큼만 생성된다
 	// 아이템테이블에 랜덤아이템(등급, 타입, 지역(예정))를 정의하여 해당 배열에 할당한다

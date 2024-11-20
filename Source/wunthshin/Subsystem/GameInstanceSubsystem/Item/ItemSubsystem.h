@@ -37,4 +37,5 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual USG_WSItemMetadata* GetMetadata(const FName& InAssetName) override;
 	FSharedInventory& GetSharedInventory() { return SharedInventory; }
+	UDataTable* GetDataTable() const { return DataTable;}
 };

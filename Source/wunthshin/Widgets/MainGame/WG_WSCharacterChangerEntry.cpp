@@ -3,58 +3,98 @@
 
 #include "WG_WSCharacterChangerEntry.h"
 
-#include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "Components/Image.h"
+#include "Components/Overlay.h"
 #include "Components/PanelWidget.h"
+#include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
-#include "GameFramework/InputSettings.h"
 #include "Kismet/GameplayStatics.h"
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
+#include "wunthshin/Components/Stats/StatsComponent.h"
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 
 void UWG_WSCharacterChangerEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
 
-	// 대기 중인 캐릭터 정보를 받아옴
-	auto AssetName = ListItemObject->GetFName();
-	auto Subsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>();
-	Data = *Subsystem->GetRowValue<FCharacterTableRow>(AssetName);
-	if (Data.CharacterName.IsNone()) return;
-
-	RefreshEntry();
-}
-
-void UWG_WSCharacterChangerEntry::RefreshEntry()
-{
-	// 이벤트 발동 시 출격할 캐릭터 초상화
-	//CharacterIcon->SetBrushFromTexture(Data.CharacterIcon);
-	auto Mat = CharacterIcon->GetDynamicMaterial();
-	Mat->SetTextureParameterValue(FName("Icon"),Data.CharacterIcon);
-	CharacterIcon->SetBrushFromMaterial(Mat);
-
-	// 현재 맵핑된 키
-	auto Player = Cast<AA_WSCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(),0));
-	auto ActionMapping = Player->GetMappingContext()->GetMappings();
-	if (!ActionMapping.IsEmpty())
+	if (const AA_WSCharacter* Character = Cast<AA_WSCharacter>(ListItemObject))
 	{
-		for (auto& Mapping : ActionMapping)
+		// 약한 참조
+		WeakCharacterPtr = Character;
+
+		// 캐릭터의 설명 복사
+		const FCharacterTableRow* Row = Character->GetDataTableHandle().GetRow<FCharacterTableRow>(TEXT(""));
+		CharacterIcon->SetBrushFromTexture(Row->CharacterIcon);
+
+		// 캐릭터의 체력변화 추적
+		CurrentHP->PercentDelegate.BindDynamic(Character->GetStatsComponent(), &UStatsComponent::GetHPRatioNonConst);
+		CurrentHP->SynchronizeProperties();
+
+		if (const UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
 		{
-			FString ActionName = Mapping.Action.GetName();
-			if (ActionName.Contains("IA_Character"))
-				KeyText->SetText(FText::FromString(ActionName));
+			CharacterIndex = CharacterSubsystem->GetIndexOfCharacter(Character);
+		}
+
+		if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+		{
+			TScriptDelegate<> Delegate;
+			Delegate.BindUFunction(this, "DisplayBindKey");
+			if (!PlayerController->OnPossessedPawnChanged.Contains(Delegate))
+			{
+				PlayerController->OnPossessedPawnChanged.Add(Delegate);	
+			}
+			
+			DisplayBindKey();
 		}
 	}
+}
 
-	// 캐릭터 변경 함수 바인딩
-	//OnClick.AddUniqueDynamic()
-	OnClick.AddUniqueDynamic(this,&ThisClass::RefreshEntry);
-	// todo: 현재 체력 출력
+void UWG_WSCharacterChangerEntry::DisplayBindKey() const
+{
+	// 현재 캐릭터라면 키 바인드 안내 표시를 숨김
+	if (const UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
+	{
+		if (CharacterSubsystem->GetCurrentCharacter() == WeakCharacterPtr)
+		{
+			KeyOverlay->SetVisibility(ESlateVisibility::Hidden);
+			return;
+		}
+	}
+	
+	// 그렇지 않다면 현재 맵핑된 키를 보여줌
+	KeyOverlay->SetVisibility(ESlateVisibility::Visible);
+	
+	if (WeakCharacterPtr.IsValid())
+	{
+		const AA_WSCharacter* Character = WeakCharacterPtr.Get();
+		auto ActionMapping = Character->GetMappingContext()->GetMappings();
+		if (!ActionMapping.IsEmpty())
+		{
+			FString CurrentKeyMapping = "IA_Character" + FString::FromInt(CharacterIndex + 1);
+			const FEnhancedActionKeyMapping* It = ActionMapping.FindByPredicate([&CurrentKeyMapping](const FEnhancedActionKeyMapping& InMapping)
+			{
+				return InMapping.Action.GetName() == CurrentKeyMapping;
+			});
+
+			if (It)
+			{
+				KeyText->SetText(It->Key.GetDisplayName(false));
+			}
+		}	
+	}
 }
 
 FReply UWG_WSCharacterChangerEntry::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+	FReply ReturnValue = Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	OnClick.Broadcast();
-	return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	
+	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>();
+		CharacterSubsystem && WeakCharacterPtr.IsValid())
+	{
+		CharacterSubsystem->SpawnAsCharacter(CharacterSubsystem->GetIndexOfCharacter(WeakCharacterPtr.Get()));
+	}
+	
+	return ReturnValue;
 }

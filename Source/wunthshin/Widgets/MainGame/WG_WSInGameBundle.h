@@ -42,7 +42,7 @@ protected:
 	UFUNCTION()
 	void OpenWindowInventory() { OpenWindow("Window_Inventory"); };
 
-protected:
+	UFUNCTION()
 	void InitCharacterSlots();
 
 public:

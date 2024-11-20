@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{E32676A7-41D5-BD12-CFA1-20AA410C358D}",
+	"EngineAssociation": "{671E0447-4F97-C480-D668-069DFA461C2D}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -15,7 +15,7 @@
 		{
 			"Name": "wunthshinEditorModule",
 			"Type": "Editor",
-			"LoadingPhase": "PostEngineInit" 
+			"LoadingPhase": "PostEngineInit"
 		}
 	],
 	"Plugins": [

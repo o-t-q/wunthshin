@@ -30,6 +30,7 @@
 #if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
 #include "wunthshinEditorModule/Subsystem/EditorSubsystem/Character/CharacterEditorSubsystem.h"
 #endif
+#include "wunthshin/Actors/Item/LootingBox/A_LootingBox.h"
 #include "wunthshin/Components/CharacterInventory/C_WSCharacterInventory.h"
 #include "wunthshin/Components/Skill/C_WSSkill.h"
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
@@ -330,6 +331,12 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
     ensure(Item);
     UE_LOG(LogTemplateCharacter, Log, TEXT("Pick up item: %s"), *Item->GetName());
 
+    if (const AA_LootingBox* LootingBox = Cast<AA_LootingBox>(Item);
+        LootingBox)
+    {
+        //LootingBox->Open();
+    }
+    
     // 손이 비어있고, 무기를 잡으려 할때
     if (const AA_WSWeapon* WeaponCast = Cast<AA_WSWeapon>(Item);
         WeaponCast && !RightHandWeapon->GetChildActor())

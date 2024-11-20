@@ -82,6 +82,56 @@ void UC_WSInventory::AddItem(AA_WSItem* InItem, int InCount)
 	Items.Emplace(InItem->GetItemMetadata());
 }
 
+void UC_WSInventory::AddItem(USG_WSItemMetadata* InMetaData, int InCount)
+{
+	// 타입 캐스팅 안전
+	if (InCount < 0) 
+	{
+		return;
+	}
+	
+	// Item metadata가 생성되지 않았음
+	check(InMetaData);
+
+	// 동일한 아이템이 이미 존재하는 경우
+	if (FInventoryPair* Iterator = FindItem(InMetaData); Iterator)
+	{
+		UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
+		// todo: 오버플로우 방지
+		Iterator->Count += InCount;
+		return;
+	}
+
+	// 동일한 아이템이 없으므로 추가
+	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
+	Items.Emplace(InMetaData);
+}
+
+void UC_WSInventory::AddItem(FInventoryPair InInvenPair)
+{
+	// 타입 캐스팅 안전
+	if (InInvenPair.Count < 0) 
+	{
+		return;
+	}
+	
+	// Item metadata가 생성되지 않았음
+	check(InInvenPair.Metadata);
+
+	// 동일한 아이템이 이미 존재하는 경우
+	if (FInventoryPair* Iterator = FindItem(InInvenPair.Metadata); Iterator)
+	{
+		UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
+		// todo: 오버플로우 방지
+		Iterator->Count += InInvenPair.Count;
+		return;
+	}
+
+	// 동일한 아이템이 없으므로 추가
+	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
+	Items.Emplace(InInvenPair);
+}
+
 void UC_WSInventory::RemoveItem(AA_WSItem* InItem, int InCount)
 {
 	if (Items.IsEmpty())
