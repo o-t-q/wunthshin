@@ -132,6 +132,34 @@ void UC_WSInventory::AddItem(FInventoryPair InInvenPair)
 	Items.Emplace(InInvenPair);
 }
 
+void UC_WSInventory::AddItems(TArray<FInventoryPair> InItems)
+{
+ 	for(auto& InvenPair : InItems)
+	{
+		// 타입 캐스팅 안전
+		if (InvenPair.Count <= 0) 
+		{
+			return;
+		}
+	
+		// Item metadata가 생성되지 않았음
+		check(InvenPair.Metadata);
+
+		// 동일한 아이템이 이미 존재하는 경우
+		if (FInventoryPair* Iterator = FindItem(InvenPair.Metadata); Iterator)
+		{
+			UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
+			// todo: 오버플로우 방지
+			Iterator->Count += InvenPair.Count;
+			return;
+		}
+
+		// 동일한 아이템이 없으므로 추가
+		UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
+		Items.Emplace(InvenPair);
+	}
+}
+
 void UC_WSInventory::RemoveItem(AA_WSItem* InItem, int InCount)
 {
 	if (Items.IsEmpty())

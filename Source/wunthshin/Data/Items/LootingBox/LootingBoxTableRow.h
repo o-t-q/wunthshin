@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
+#include "wunthshin/Data/Items/ItemTableRow/ItemTableRow.h"
 #include "LootingBoxTableRow.generated.h"
 
 /***************************************************************************************************
@@ -53,7 +54,7 @@ public:
 
 
 USTRUCT()
-struct WUNTHSHIN_API FLootingBoxTableRow : public FTableRowBase
+struct WUNTHSHIN_API FLootingBoxTableRow : public FItemTableRow
 {
 	friend FLootItem;
 	

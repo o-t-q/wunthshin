@@ -32,10 +32,6 @@ class WUNTHSHIN_API AA_WSItem : public AActor, public IDataTableFetcher
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* ItemNotifyWidget;
 
-	// 아이템 정보를 불러오기 위한 핸들
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
-	FName AssetName;
-
 	// 충돌체 동적 생성 후 호출
 	void InitializeCollisionLazy() const;
 
@@ -76,6 +72,10 @@ public:
 	const USG_WSItemMetadata* GetItemMetadata() const;
 
 protected:
+	// 아이템 정보를 불러오기 위한 핸들
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
+	FName AssetName;
+	
 	// 아이템의 메타데이터 (GameInstance 및 Editor Subsystem에서 관리, Destroy 하면 안됨!)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Metadata")
 	const USG_WSItemMetadata* ItemMetadata;

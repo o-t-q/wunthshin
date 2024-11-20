@@ -76,6 +76,7 @@ public:
 	virtual void AddItem(AA_WSItem* InItem, int InCount = 1);				// 아이템 추가
 	virtual void AddItem(USG_WSItemMetadata* InMetaData, int InCount = 1);	// 아이템 추가(메타데이터)
 	virtual void AddItem(FInventoryPair InInvenPair);						// 아이템 추가(FInventoryPair)
+	virtual void AddItems(TArray<FInventoryPair> InItems);					// 복수아이템 추가
 	virtual void RemoveItem(AA_WSItem* InItem, int InCount = 1);			// 아이템 빼기
 	virtual void UseItem(uint32 Index, AActor* InTarget, int InCount = 1);	// 아이템 사용
 	

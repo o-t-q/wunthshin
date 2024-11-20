@@ -42,7 +42,7 @@ void UWG_WSInventory::NativeConstruct()
 
 	// 자주 사용할거 같아서 미리 받아놓음
 	AA_WSCharacter* Player = Cast<AA_WSCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	PlayerInventory = Player->GetComponentByClass<UC_WSInventory>();
+	PlayerInventory = Player->GetInventoryComponent();
 
 	// 값 초기화
 	CurrentCategory = EItemType::Weapon;
@@ -52,7 +52,7 @@ void UWG_WSInventory::NativeConstruct()
 	{
 		CheckBox->SetCheckedState(ECheckBoxState::Unchecked);
 	}
-	ChangeCategory(CurrentCategory);
+	
 	
 	// 각종 버튼 바인딩
 	Button_CloseInventory->OnClicked.AddDynamic(this, &ThisClass::OnClickButton_CloseInventory);
@@ -88,7 +88,6 @@ void UWG_WSInventory::RefreshListItem()
 
 	for (auto& Item : Items)
 	{
-		// Category가 0이면 모두출력, 아니면 해당 타입만 출력
 		auto Type = Item.Metadata->ItemType;
 		if(CurrentCategory != Type) continue;
 		
@@ -138,6 +137,8 @@ void UWG_WSInventory::RefreshListItem()
 	// 아이템 설명
 	auto itemDesc = SelectedEntry->GetData()->EntryData.Metadata->GetItemDescription();
 	ItemDescription->SetText(FText::FromName(itemDesc));
+
+	ChangeCategory(CurrentCategory);
 }
 
 void UWG_WSInventory::ChangeCategory(EItemType InItemType)

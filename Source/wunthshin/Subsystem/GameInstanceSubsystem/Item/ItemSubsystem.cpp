@@ -25,6 +25,7 @@ void UItemSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	check(LootingBoxTable);
 	
 	FItemSubsystemUtility::UpdateTable<FItemTableRow>(DataTable, Metadata);
+	FItemSubsystemUtility::UpdateTable<FLootingBoxTableRow>(LootingBoxTable, Metadata, false);
 	DataTableMapping.Emplace(FItemTableRow::StaticStruct(), DataTable);
 	DataTableMapping.Emplace(FLootingBoxTableRow::StaticStruct(), LootingBoxTable);
 }

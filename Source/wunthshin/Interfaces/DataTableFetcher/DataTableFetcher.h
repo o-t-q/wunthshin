@@ -41,7 +41,7 @@ public:
 		{
 			check(false);
 			return;
-		}
+		}         
 
 		const UWorld* World = ObjectCast->GetWorld();
 		ensureAlwaysMsgf(World, TEXT("Invalid World!"));
