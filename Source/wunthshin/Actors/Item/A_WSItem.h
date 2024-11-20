@@ -65,8 +65,8 @@ public:
 	// 아이템을 주울 수 있다는 알림을 띄우는 위젯을 관리하는 컴포넌트
 	FORCEINLINE UWidgetComponent* GetItemNotifyWidget() const { return ItemNotifyWidget; }
 
-	void SetAssetName(const FName& InAssetName) { AssetName = InAssetName; }
-	FName GetAssetName() const { return AssetName; }
+	virtual void SetAssetName(const FName& InAssetName) override { AssetName = InAssetName; }
+	virtual FName GetAssetName() const override { return AssetName; }
 
 	virtual UClass* GetSubsystemType() const override;
 #if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR 

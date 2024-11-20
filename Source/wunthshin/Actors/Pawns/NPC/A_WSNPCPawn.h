@@ -20,7 +20,7 @@ class UC_WSInventory;
 class AA_WSNPCAIController;
 
 UCLASS()
-class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, public IElementTracked, public ICommonPawn, public I_WSTaker
+class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IElementTracked, public ICommonPawn, public I_WSTaker
 {
 	GENERATED_BODY()
 

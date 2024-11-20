@@ -38,7 +38,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FGlide);
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
 UCLASS(config = Game, Blueprintable)
-class AA_WSCharacter : public ACharacter, public I_WSTaker, public IDataTableFetcher, public IElementTracked, public ICommonPawn, public ISkillCast
+class AA_WSCharacter : public ACharacter, public I_WSTaker, public IElementTracked, public ICommonPawn, public ISkillCast
 {
 	GENERATED_BODY()
 	
@@ -259,7 +259,7 @@ public:
 	virtual bool Take(UC_WSPickUp* InTakenComponent) override;
 	
 	// 사용할 에셋의 이름
-	void SetAssetName(const FName& InAssetName) { AssetName = InAssetName; }
+	virtual void SetAssetName(const FName& InAssetName) override { AssetName = InAssetName; }
 
 	// ICommonPawn
 	virtual FName GetAssetName() const override { return AssetName; }
