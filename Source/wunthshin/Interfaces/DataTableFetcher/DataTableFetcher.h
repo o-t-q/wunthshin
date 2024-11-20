@@ -28,35 +28,33 @@ class WUNTHSHIN_API IDataTableFetcher
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	void UpdateDataTable(const FName& InRowName, const bool bForce = false) 
+	FDataTableRowHandle GetDataTableHandle() const
 	{
-		if (!DataTableRowHandle.IsNull() && !bForce) 
+		const UObject* ObjectCast = CastChecked<UObject>(this);
+		
+		if (const FDataTableRowHandle& Handle = GetRowHandle(ObjectCast, GetAssetName());
+			!Handle.IsNull())
 		{
-			return;
+			return Handle;
 		}
 
-		const UObject* ObjectCast = Cast<UObject>(this);
-
-		if (!ObjectCast)
-		{
-			check(false);
-			return;
-		}
-
-		const UWorld* World = ObjectCast->GetWorld();
-		ensureAlwaysMsgf(World, TEXT("Invalid World!"));
-		DataTableRowHandle = GetRowHandle(ObjectCast, InRowName);
+		return {};
 	}
-
+	
 	// 데이터 테이블 row 타입에 따라 핸들을 가져온 후 ApplyAsset을 호출
 	void FetchAsset(const FName& InRowName)
 	{
-		if (DataTableRowHandle.IsNull()) 
+		const UObject* ObjectCast = CastChecked<UObject>(this);
+		
+		if (const FDataTableRowHandle Handle = GetRowHandle(ObjectCast, InRowName);
+			!Handle.IsNull())
 		{
-			UpdateDataTable(InRowName);
+			ApplyAsset(Handle.GetRow<FTableRowBase>(""));
 		}
-
-		ApplyAsset(DataTableRowHandle.GetRow<FTableRowBase>(""));
+		else
+		{
+			check(!Handle.IsNull());
+		}
 	}
 
 	// 상속 객체에 해당하는 서브 시스템 getter
@@ -70,12 +68,9 @@ public:
 	// 상속된 클래스가 주로 사용할 테이블 row 타입
 	virtual UScriptStruct* GetTableType() const = 0;
 
-	// 에셋의 데이터 테이블 핸들 getter
-	FORCEINLINE FDataTableRowHandle GetDataTableHandle() const
-	{
-		ensureAlwaysMsgf(!DataTableRowHandle.IsNull(), TEXT("Data table might not be fetched before"));
-		return DataTableRowHandle;
-	}
+	// 상속된 클래스로 파생된 객체들의 AssetName
+	virtual FName GetAssetName() const = 0;
+	virtual void SetAssetName(const FName& InRowName) = 0;
 
 protected:
 	// 조회한 데이터 테이블의 데이터를 상속받은 클래스에서 사용
@@ -83,9 +78,5 @@ protected:
 	
 private:
 	FDataTableRowHandle GetRowHandle(const UObject* InThisPointer, const FName& InRowName) const;
-
-	// 에셋 이름과 타입을 기준으로 불러온 데이터 테이블 row의 핸들
-	FDataTableRowHandle DataTableRowHandle;
-
 	
 };

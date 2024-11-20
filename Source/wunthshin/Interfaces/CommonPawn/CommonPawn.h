@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "wunthshin/Interfaces/DataTableFetcher/DataTableFetcher.h"
 
 #include "CommonPawn.generated.h"
 
@@ -22,7 +23,7 @@ struct FCharacterTableRow;
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UCommonPawn : public UInterface
+class UCommonPawn : public UDataTableFetcher
 {
 	GENERATED_BODY()
 };
@@ -30,7 +31,7 @@ class UCommonPawn : public UInterface
 /**
  * 
  */
-class WUNTHSHIN_API ICommonPawn
+class WUNTHSHIN_API ICommonPawn : public IDataTableFetcher
 {
 	GENERATED_BODY()
 
@@ -39,8 +40,6 @@ class WUNTHSHIN_API ICommonPawn
 	
 public:
 	static const FName InventoryComponentName;
-	
-	virtual FName GetAssetName() const = 0;
 
 	COMPONENT_GETTER(UCapsuleComponent, CapsuleComponent);
 	COMPONENT_GETTER(USkeletalMeshComponent, SkeletalMeshComponent);
