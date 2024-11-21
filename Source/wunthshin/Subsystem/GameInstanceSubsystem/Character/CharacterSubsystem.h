@@ -38,6 +38,10 @@ public:
 	UCharacterSubsystem();
 
 	FOnCharacterAdded OnCharacterAdded;
+
+	// 모든 플레이어의 체력을 100으로 설정
+	UFUNCTION()
+	void ResetPlayer();
 	
 	UFUNCTION()
 	void TakeCharacterLevelSnapshot();

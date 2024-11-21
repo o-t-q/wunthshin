@@ -13,6 +13,7 @@
 #include "Components/WidgetComponent.h"
 #include "EventTicket/EventTicket.h"
 #include "EventTicket/ItemTicket/ItemTicket.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Actors/Pawns/NPC/A_WSNPCPawn.h"
@@ -23,9 +24,41 @@ void UWorldStatusSubsystem::PushTicket_Internal(TSharedPtr<FEventTicket> InTicke
     EventQueue.Push(InTicket);
 }
 
-UWorldStatusSubsystem::UWorldStatusSubsystem()
-    : CurrentLevelSequence(nullptr), LevelSequenceActor(nullptr), SkillVictimPawn(nullptr)
+void UWorldStatusSubsystem::PlayDeathLevelSequence(const bool bAlive)
 {
+    if (!bAlive)
+    {
+        FLatentActionInfo LatentActionInfo;
+        LatentActionInfo.CallbackTarget = this;
+        LatentActionInfo.ExecutionFunction = "ReloadLevel";
+        LatentActionInfo.Linkage = 1;
+        
+        PlayLevelSequence(DeathLevelSequence, true, [this, LatentActionInfo]()
+        {
+            UGameplayStatics::UnloadStreamLevel(this, CurrentLevelName, LatentActionInfo, true);
+        });
+    }
+}
+
+void UWorldStatusSubsystem::ReloadLevel()
+{
+    FLatentActionInfo LatentActionInfo;
+    LatentActionInfo.CallbackTarget = UGameplayStatics::GetPlayerController(this, 0);
+    LatentActionInfo.ExecutionFunction = "RestartLevel";
+    LatentActionInfo.Linkage = 1;
+    
+    UGameplayStatics::LoadStreamLevel(this, CurrentLevelName, true, true, LatentActionInfo);
+}
+
+UWorldStatusSubsystem::UWorldStatusSubsystem()
+    : CurrentLevelSequence(nullptr), LevelSequenceActor(nullptr), SkillVictimPawn(nullptr), DeathLevelSequence(nullptr)
+{
+}
+
+void UWorldStatusSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+    Super::Initialize(Collection);
+    DeathLevelSequence = Cast<ULevelSequence>(StaticLoadObject(ULevelSequence::StaticClass(), nullptr, TEXT("/Script/LevelSequence.LevelSequence'/Game/ThirdPerson/Blueprints/LevelChangeSequence/BP_Death_LevelChange.BP_Death_LevelChange'")));
 }
 
 void UWorldStatusSubsystem::Tick(float InDeltaTime)
@@ -122,10 +155,11 @@ void UWorldStatusSubsystem::Tick(float InDeltaTime)
     }
 }
 
-void UWorldStatusSubsystem::PlayLevelSequence(ULevelSequence* InSequence, const TFunction<void()>& OnEndedFunction)
+void UWorldStatusSubsystem::PlayLevelSequence(ULevelSequence* InSequence, const bool bPauseAtEnd, const TFunction<void()>& OnFinishedFunction)
 {
     FMovieSceneSequencePlaybackSettings PlaybackSettings;
     PlaybackSettings.bAutoPlay = true;
+    PlaybackSettings.bPauseAtEnd = bPauseAtEnd;
     PlaybackSettings.LoopCount.Value = 0;
     PlaybackSettings.bHideHud = true;
     PlaybackSettings.bDisableLookAtInput = true;
@@ -139,7 +173,7 @@ void UWorldStatusSubsystem::PlayLevelSequence(ULevelSequence* InSequence, const 
         LevelSequenceActor
     );
     
-    OnLevelSequenceEnded = OnEndedFunction;
+    OnLevelSequenceEnded = OnFinishedFunction;
     CurrentLevelSequence->OnFinished.AddUniqueDynamic(this, &UWorldStatusSubsystem::ClearLevelSequence);
 }
 
@@ -183,6 +217,11 @@ void UWorldStatusSubsystem::PushTicketScheduled(TWeakPtr<FEventTicket> Ticket, F
             -1
         );
     }
+}
+
+void UWorldStatusSubsystem::SetCurrentStreamingLevel(const FName& InLevelName)
+{
+    CurrentLevelName = InLevelName;
 }
 
 void UWorldStatusSubsystem::PushItem(const USG_WSItemMetadata* InItem, AActor* InInstigator, AActor* InTarget)

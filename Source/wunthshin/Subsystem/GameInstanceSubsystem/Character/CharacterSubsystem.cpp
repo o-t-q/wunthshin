@@ -11,6 +11,14 @@
 #include "wunthshin/Data/Characters/CharacterStats/CharacterStats.h"
 #include "wunthshin/Data/Characters/CharacterTableRow/CharacterTableRow.h"
 
+void UCharacterSubsystem::ResetPlayer()
+{
+	for (const AA_WSCharacter* Character : OwnedCharacters)
+	{
+		Character->GetStatsComponent()->SetHP(100);
+	}
+}
+
 UCharacterSubsystem::UCharacterSubsystem()
 	: AssetDataTable(nullptr), StatDataTable(nullptr) {}
 
