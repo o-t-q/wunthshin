@@ -26,7 +26,9 @@ class WUNTHSHINEDITORMODULE_API UItemEditorSubsystem : public UEditorSubsystem, 
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
 	UDataTable* DataTable;
-	
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
+	UDataTable* LootingBoxTable;
 public:
 	UItemEditorSubsystem();
 

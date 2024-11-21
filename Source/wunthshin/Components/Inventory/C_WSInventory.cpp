@@ -57,6 +57,11 @@ void UC_WSInventory::AddItem(AA_WSItem* InItem, int InCount)
 	}
 }
 
+void UC_WSInventory::AddItem(const USG_WSItemMetadata* InMetadata, int InCount)
+{
+	Items.AddItem(InMetadata, InCount);
+}
+
 void UC_WSInventory::RemoveItem(const USG_WSItemMetadata* InItem, int InCount)
 {
 	Items.RemoveItem(InItem, InCount);

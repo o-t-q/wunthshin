@@ -31,10 +31,14 @@ class WUNTHSHIN_API UItemSubsystem : public UGameInstanceSubsystem, public IItem
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
 	UDataTable* DataTable;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
+	UDataTable* LootingBoxTable;
+
 public:
 	UItemSubsystem();
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual USG_WSItemMetadata* GetMetadata(const FName& InAssetName) override;
 	FSharedInventory& GetSharedInventory() { return SharedInventory; }
+	UDataTable* GetDataTable() const { return DataTable; }
 };

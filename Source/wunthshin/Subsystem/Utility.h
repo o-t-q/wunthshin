@@ -66,11 +66,15 @@ struct FItemSubsystemUtility
 	static void UpdateTable
 	(
 		UDataTable* InDataTable, 
-		TMap<FName, MetadataT*>& OutMetadataMap
+		TMap<FName, MetadataT*>& OutMetadataMap,
+		bool bEmpty = true
 	)
 	{
 		check(InDataTable);
-		OutMetadataMap.Empty();
+		if (bEmpty)
+		{
+			OutMetadataMap.Empty();	
+		}
 		
 		TArray<TableT*> Rows;
 		InDataTable->GetAllRows<TableT>(TEXT(""), Rows);

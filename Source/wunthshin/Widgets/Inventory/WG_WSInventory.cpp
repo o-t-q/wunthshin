@@ -14,6 +14,7 @@
 #include "wunthshin/Components/Inventory/C_WSInventory.h"
 #include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 #include "wunthshin/Widgets/MainGame/WG_WSInGameBundle.h"
+#include "wunthshin/Components/CharacterInventory/C_WSCharacterInventory.h"
 
 
 void UWG_WSInventory::NativeConstruct()
@@ -42,7 +43,7 @@ void UWG_WSInventory::NativeConstruct()
 
 	// 자주 사용할거 같아서 미리 받아놓음
 	AA_WSCharacter* Player = Cast<AA_WSCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	PlayerInventory = Player->GetComponentByClass<UC_WSInventory>();
+	PlayerInventory = Player->GetComponentByClass<UC_WSCharacterInventory>();
 
 	// 값 초기화
 	CurrentCategory = EItemType::Weapon;
@@ -52,7 +53,7 @@ void UWG_WSInventory::NativeConstruct()
 	{
 		CheckBox->SetCheckedState(ECheckBoxState::Unchecked);
 	}
-	ChangeCategory(CurrentCategory);
+	
 	
 	// 각종 버튼 바인딩
 	Button_CloseInventory->OnClicked.AddDynamic(this, &ThisClass::OnClickButton_CloseInventory);
@@ -88,7 +89,6 @@ void UWG_WSInventory::RefreshListItem()
 
 	for (auto& Item : Items)
 	{
-		// Category가 0이면 모두출력, 아니면 해당 타입만 출력
 		auto Type = Item.Metadata->ItemType;
 		if(CurrentCategory != Type) continue;
 		

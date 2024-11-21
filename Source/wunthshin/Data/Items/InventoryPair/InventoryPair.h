@@ -17,6 +17,9 @@ public:
 	FInventoryPair(const USG_WSItemMetadata* InMetadata) :
 		Metadata(InMetadata), Count(1) {}
 
+	FInventoryPair(const USG_WSItemMetadata* InMetadata, const uint64 InCount) :
+		Metadata(InMetadata), Count(InCount) {}
+	
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<const USG_WSItemMetadata> Metadata;
 

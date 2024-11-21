@@ -13,6 +13,7 @@
 #include "WG_WSInventory.generated.h"
 
 
+class IInventoryComponent;
 class UCheckBox;
 enum class EItemType : uint8;
 class UWG_WSInventoryEntry;
@@ -60,7 +61,7 @@ public:
 
 protected:
 	UPROPERTY()
-	UC_WSInventory* PlayerInventory;
+	TScriptInterface<IInventoryComponent> PlayerInventory;
 
 	UPROPERTY()
 	UWG_WSInventoryEntry* SelectedEntry;
