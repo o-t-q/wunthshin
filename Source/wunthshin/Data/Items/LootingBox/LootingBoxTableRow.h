@@ -63,8 +63,8 @@ struct WUNTHSHIN_API FLootingBoxTableRow : public FItemTableRow
 public:
 	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName)
 	{
+		Super::OnDataTableChanged(InDataTable, InRowName);
 		// MaxDiversity만큼 RandomItems 크기를 강제
-		
 	}
 	
 public:
