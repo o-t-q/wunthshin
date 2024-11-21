@@ -12,7 +12,8 @@ void AwunthshinPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+	if (UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>();
+		WorldStatusSubsystem && Cast<AA_WSCharacter>(GetPawn()))
 	{
 		OnPlayerAlivenessChanged.AddUniqueDynamic(WorldStatusSubsystem, &UWorldStatusSubsystem::PlayDeathLevelSequence); 
 	}
