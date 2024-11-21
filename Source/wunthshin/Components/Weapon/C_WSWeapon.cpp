@@ -6,9 +6,13 @@
 #include "InputAction.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+
+#include "Kismet/GameplayStatics.h"
+
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Actors/Item/Weapon/A_WSWeapon.h"
 #include "wunthshin/Interfaces/Taker/Taker.h"
+#include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
 
 
@@ -58,7 +62,8 @@ void UC_WSWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	
 	if (OwningPawn) 
 	{
-		if (APlayerController* PC = Cast<APlayerController>(OwningPawn->GetController()))
+		if (const UCharacterSubsystem* CharacterSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCharacterSubsystem>();
+			CharacterSubsystem && CharacterSubsystem->IsOwnedCharacter(Cast<AA_WSCharacter>(OwningPawn)))
 		{
 			if (AActor* Weapon = Cast<AActor>(GetOwner());
 				Weapon && Weapon->InputComponent)
@@ -67,7 +72,7 @@ void UC_WSWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 				ensure(EnhancedInputComponent);
 
 				EnhancedInputComponent->ClearBindingsForObject(this);
-				Weapon->DisableInput(PC);
+				Weapon->DisableInput(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 			}
 		}
 	}
@@ -145,11 +150,12 @@ void UC_WSWeapon::UpdateCache(TScriptInterface<I_WSTaker> InTaker)
 
 void UC_WSWeapon::SetupInputComponent()
 {
-	if (APlayerController* PC = Cast<APlayerController>(OwningPawn->GetController()))
+	if (const UCharacterSubsystem* CharacterSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCharacterSubsystem>();
+		CharacterSubsystem && CharacterSubsystem->IsOwnedCharacter(Cast<AA_WSCharacter>(OwningPawn)))
 	{
-		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
+		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 
-		if (!Subsystem->HasMappingContext(IMC_Weapon))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()); !Subsystem->HasMappingContext(IMC_Weapon))
 		{
 			Subsystem->AddMappingContext(IMC_Weapon, 0);
 		}
