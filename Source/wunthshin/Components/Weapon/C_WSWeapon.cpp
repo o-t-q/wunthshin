@@ -155,7 +155,8 @@ void UC_WSWeapon::SetupInputComponent()
 	{
 		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()); !Subsystem->HasMappingContext(IMC_Weapon))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
+			!Subsystem->HasMappingContext(IMC_Weapon))
 		{
 			Subsystem->AddMappingContext(IMC_Weapon, 0);
 		}

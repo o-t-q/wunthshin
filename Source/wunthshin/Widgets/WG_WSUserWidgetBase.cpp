@@ -40,9 +40,11 @@ void UWG_WSUserWidgetBase::SetVisibleWidget(bool bIsVisible)
 void UWG_WSUserWidgetBase::OnVisibleWidget()
 {
 	SetVisibleWidget(true);
+	GetPlayerContext().GetPlayerController()->SetInputMode(FInputModeUIOnly{});
 }
 
 void UWG_WSUserWidgetBase::OnHideWidget()
 {
 	SetVisibleWidget(false);
+	GetPlayerContext().GetPlayerController()->SetInputMode(FInputModeGameOnly{});
 }
