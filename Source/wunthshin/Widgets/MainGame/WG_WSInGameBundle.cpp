@@ -115,25 +115,18 @@ FCTweenInstance* UWG_WSInGameBundle::FadeInOut(bool bIsIn, float InDuration)
 
 void UWG_WSInGameBundle::OpenWindow(FName InWindowName)
 {
-	if (ChildWidgets[InWindowName]->GetVisibility() == ESlateVisibility::Hidden)
+	if (ChildWidgets[InWindowName]->GetVisibility() == ESlateVisibility::Hidden && !ChildWidgets[InWindowName]->IsInAnimation())
 	{
+		ChildWidgets[InWindowName]->SetInAnimation(true);
+		
 		FadeInOut(false)->SetOnComplete([this, InWindowName] ()
 		{
 			ChildWidgets[InWindowName]->OnVisibleWidget();
+			ChildWidgets[InWindowName]->SetInAnimation(false);
 		})->CreateUObject(this);
 
 		FadeInOut(true);
 	}
-	else if (ChildWidgets[InWindowName]->GetVisibility() == ESlateVisibility::Visible)
-	{
-		FadeInOut(false, 0.5f)->SetOnComplete([this, InWindowName]()
-		{
-			ChildWidgets[InWindowName]->OnHideWidget();
-		});
-
-		FadeInOut(true, 0.5f);
-	}
-	
 }
 
 void UWG_WSInGameBundle::InitCharacterSlots()
