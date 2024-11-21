@@ -32,15 +32,19 @@ class WUNTHSHIN_API AA_WSItem : public AActor, public IDataTableFetcher
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* ItemNotifyWidget;
 
+	// 아이템 정보를 불러오기 위한 핸들
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
+	FName AssetName;
+
 	// 충돌체 동적 생성 후 호출
 	void InitializeCollisionLazy() const;
 
 	// 매시의 Bound에 따라 업데이트
 	void FitCollisionToMesh() const;
-	
+
 public:
 	static const FName CollisionComponentName;
-	
+
 	// Sets default values for this actor's properties
 	AA_WSItem(const FObjectInitializer& ObjectInitializer);
 
@@ -65,21 +69,17 @@ public:
 	virtual FName GetAssetName() const override { return AssetName; }
 
 	virtual UClass* GetSubsystemType() const override;
-#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR 
+#if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
 	virtual UClass* GetEditorSubsystemType() const override;
 #endif
-	
+
 	const USG_WSItemMetadata* GetItemMetadata() const;
 
 protected:
-	// 아이템 정보를 불러오기 위한 핸들
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Asset", meta = (AllowPrivateAccess = "true"))
-	FName AssetName;
-	
 	// 아이템의 메타데이터 (GameInstance 및 Editor Subsystem에서 관리, Destroy 하면 안됨!)
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Metadata")
 	const USG_WSItemMetadata* ItemMetadata;
-	
+
 	// 매시
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Mesh")
 	UStaticMeshComponent* MeshComponent;

@@ -58,10 +58,6 @@ public:
 	TArray<FInventoryPair> OpenLootingBox() const { return InventoryComponent->GetItems(); };
 	
 protected:
-	// UPROPERTY()
-	// UC_WSInventory* InventoryComponent;
-	
-protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UC_WSInventory* InventoryComponent;
 

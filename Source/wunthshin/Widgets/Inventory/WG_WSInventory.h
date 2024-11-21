@@ -60,8 +60,8 @@ public:
 	void ChangeCategory(EItemType InItemType);
 
 protected:
-	
-	IInventoryComponent* PlayerInventory;
+	UPROPERTY()
+	TScriptInterface<IInventoryComponent> PlayerInventory;
 
 	UPROPERTY()
 	UWG_WSInventoryEntry* SelectedEntry;
