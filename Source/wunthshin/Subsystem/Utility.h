@@ -84,6 +84,7 @@ struct FItemSubsystemUtility
 			OutMetadataMap.Add(Row->ItemName);
 			OutMetadataMap[Row->ItemName] = NewObject<MetadataT>();
 			OutMetadataMap[Row->ItemName]->AssetName = Row->ItemName;
+			OutMetadataMap[Row->ItemName]->ItemRarity = Row->ItemRarity;
 			OutMetadataMap[Row->ItemName]->ItemType = Row->ItemType;
 			OutMetadataMap[Row->ItemName]->ItemIcon = Row->ItemIcon;
 			OutMetadataMap[Row->ItemName]->ItemDescription = Row->ItemDescription;

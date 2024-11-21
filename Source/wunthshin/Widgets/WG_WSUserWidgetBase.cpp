@@ -2,9 +2,8 @@
 
 
 #include "WG_WSUserWidgetBase.h"
-#include  "FCTween.h"
 #include "Blueprint/WidgetTree.h"
-#include "Components/Image.h"
+#include "Kismet/GameplayStatics.h"
 
 //UImage* UWG_WSUserWidgetBase::FadeImage = nullptr;
 
@@ -35,6 +34,11 @@ bool UWG_WSUserWidgetBase::InitializeWidget()
 void UWG_WSUserWidgetBase::SetVisibleWidget(bool bIsVisible)
 {
 	this->SetVisibility(bIsVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
+}
+
+void UWG_WSUserWidgetBase::SetGamePaused(bool bIsGamePaused)
+{
+	UGameplayStatics::SetGamePaused(this->GetWorld(),bIsGamePaused);
 }
 
 void UWG_WSUserWidgetBase::OnVisibleWidget()

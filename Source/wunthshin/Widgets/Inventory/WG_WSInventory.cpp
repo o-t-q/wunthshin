@@ -58,6 +58,7 @@ void UWG_WSInventory::NativeConstruct()
 	// 각종 버튼 바인딩
 	Button_CloseInventory->OnClicked.AddDynamic(this, &ThisClass::OnClickButton_CloseInventory);
 	OnVisibilityChanged.AddDynamic(this, &ThisClass::OnRefreshListItem);
+	
 	Toggle_CategoryWeapon->OnCheckStateChanged.AddUniqueDynamic(this, &ThisClass::OnToggleCategory_Weapon);
 	Toggle_CategoryConsumable->OnCheckStateChanged.AddUniqueDynamic(this, &ThisClass::OnToggleCategory_Consumable);
 
@@ -65,7 +66,7 @@ void UWG_WSInventory::NativeConstruct()
 	// auto event = TileView->OnItemSelectionChanged();
 	// event.AddUObject(this, &ThisClass::OnRefreshListItemChangedItem);
 	// todo: 아이템 획득하는 delegate에 RefreshListItem() 바인딩
-
+	
 	RefreshListItem();
 }
 

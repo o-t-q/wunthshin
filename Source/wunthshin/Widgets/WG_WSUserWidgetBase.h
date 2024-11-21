@@ -29,7 +29,8 @@ public:
 	
 protected:
 	void SetVisibleWidget(bool bIsVisible);
-
+	void SetGamePaused(bool bIsGamePaused);
+	
 protected:
 	UPROPERTY(VisibleAnywhere, meta = (BindWidget))
 	TMap<FName,class UWG_WSUserWidgetBase*> ChildWidgets;

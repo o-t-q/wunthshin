@@ -61,9 +61,10 @@ void UWG_WSInGameBundle::OpenWindow(FName InWindowName)
 	FadeInOut(false)->SetOnComplete([=, this] ()
 	{
 		ChildWidgets[InWindowName]->OnVisibleWidget();
+		FadeInOut(true);
 	})->CreateUObject(this);
 
-	FadeInOut(true);
+	
 }
 
 void UWG_WSInGameBundle::InitCharacterSlots()
