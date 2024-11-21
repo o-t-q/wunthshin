@@ -12,19 +12,12 @@ DEFINE_LOG_CATEGORY(LogInventory);
 
 int32 UC_WSInventory::FindItemIndex(const USG_WSItemMetadata* InMetadata) const
 {
-	return Items.IndexOfByPredicate(
-		[&InMetadata](const FInventoryPair& InPair)
-		{
-			return InPair.Metadata == InMetadata;
-		});
+	return Items.FindItemIndex(InMetadata);
 }
 
 FInventoryPair* UC_WSInventory::FindItem(const USG_WSItemMetadata* InMetadata)
 {
-	return Items.FindByPredicate([&InMetadata](const FInventoryPair& InEntry)
-		{
-			return InEntry.Metadata == InMetadata;
-		});
+	return Items.FindItem(InMetadata);
 }
 
 
@@ -42,7 +35,7 @@ UC_WSInventory::UC_WSInventory()
 
 const TArray<FInventoryPair>& UC_WSInventory::GetItems() const
 {
-	return Items;
+	return Items.GetItems();
 }
 
 
@@ -58,189 +51,18 @@ void UC_WSInventory::BeginPlay()
 
 void UC_WSInventory::AddItem(AA_WSItem* InItem, int InCount)
 {
-	// 타입 캐스팅 안전
-	if (InCount <= 0) 
+	if (const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata())
 	{
-		return;
-	}
-
-	const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata();
-	// Item metadata가 생성되지 않았음
-	check(ItemMetadata);
-
-	// 동일한 아이템이 이미 존재하는 경우
-	if (FInventoryPair* Iterator = FindItem(ItemMetadata); Iterator)
-	{
-		UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
-		// todo: 오버플로우 방지
-		Iterator->Count += InCount;
-		return;
-	}
-
-	// 동일한 아이템이 없으므로 추가
-	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
-	Items.Emplace(InItem->GetItemMetadata());
-}
-
-void UC_WSInventory::AddItem(USG_WSItemMetadata* InMetaData, int InCount)
-{
-	// 타입 캐스팅 안전
-	if (InCount <= 0) 
-	{
-		return;
-	}
-	
-	// Item metadata가 생성되지 않았음
-	check(InMetaData);
-
-	// 동일한 아이템이 이미 존재하는 경우
-	if (FInventoryPair* Iterator = FindItem(InMetaData); Iterator)
-	{
-		UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
-		// todo: 오버플로우 방지
-		Iterator->Count += InCount;
-		return;
-	}
-
-	// 동일한 아이템이 없으므로 추가
-	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
-	Items.Emplace(InMetaData);
-}
-
-void UC_WSInventory::AddItem(FInventoryPair InInvenPair)
-{
-	// 타입 캐스팅 안전
-	if (InInvenPair.Count <= 0) 
-	{
-		return;
-	}
-	
-	// Item metadata가 생성되지 않았음
-	check(InInvenPair.Metadata);
-
-	// 동일한 아이템이 이미 존재하는 경우
-	if (FInventoryPair* Iterator = FindItem(InInvenPair.Metadata); Iterator)
-	{
-		UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
-		// todo: 오버플로우 방지
-		Iterator->Count += InInvenPair.Count;
-		return;
-	}
-
-	// 동일한 아이템이 없으므로 추가
-	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
-	Items.Emplace(InInvenPair);
-}
-
-void UC_WSInventory::AddItems(TArray<FInventoryPair> InItems)
-{
- 	for(auto& InvenPair : InItems)
-	{
-		// 타입 캐스팅 안전
-		if (InvenPair.Count <= 0) 
-		{
-			return;
-		}
-	
-		// Item metadata가 생성되지 않았음
-		check(InvenPair.Metadata);
-
-		// 동일한 아이템이 이미 존재하는 경우
-		if (FInventoryPair* Iterator = FindItem(InvenPair.Metadata); Iterator)
-		{
-			UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
-			// todo: 오버플로우 방지
-			Iterator->Count += InvenPair.Count;
-			return;
-		}
-
-		// 동일한 아이템이 없으므로 추가
-		UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::AddItem"));
-		Items.Emplace(InvenPair);
+		Items.AddItem(ItemMetadata, InCount);	
 	}
 }
 
-void UC_WSInventory::RemoveItem(AA_WSItem* InItem, int InCount)
+void UC_WSInventory::RemoveItem(const USG_WSItemMetadata* InItem, int InCount)
 {
-	if (Items.IsEmpty())
-	{
-		return;
-	}
-
-	// 타입 캐스팅 안전
-	if (InCount <= 0) 
-	{
-		return;
-	}
-
-	const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata();
-	check(ItemMetadata);
-
-	if (FInventoryPair* Iterator = FindItem(ItemMetadata); Iterator)
-	{
-		// 못 찾은 경우
-		if (Iterator == nullptr) 
-		{
-			return;
-		}
-
-		// 버리고자 하는 값이 더 큼
-		if (Iterator->Count < (uint32)InCount) 
-		{
-			return;
-		}
-
-		UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::RemoveItem"));
-
-		// 아이템을 버림
-		// todo: 오버플로우, 언더플로우 방지
-		Iterator->Count -= (uint32)InCount;
-
-		// 아이템을 모두 버렸을 경우 Items에서 삭제
-		if (Iterator->Count == 0UL)
-		{
-			Items.RemoveAll([&Iterator](const FInventoryPair& InPair)
-				{
-					return Iterator->Metadata == InPair.Metadata;
-				});
-		}
-	}
+	Items.RemoveItem(InItem, InCount);
 }
 
 void UC_WSInventory::UseItem(uint32 Index, AActor* InTarget, int Count)
 {
-	UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::UseItem"));
-
-	// 음수 갯수 예외처리
-	if (Count <= 0) 
-	{
-		return;
-	}
-
-	// OOB
-	if (Items.Num() < Count)
-	{
-		return;
-	}
-
-	// 사용 횟수가 소유하고 있는 아이템 수보다 많은 경우
-	if (Items[Index].Count < static_cast<uint32>(Count))
-	{
-		return;
-	}
-	
-	if (UWorldStatusSubsystem* WorldStatus = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
-	{
-		for (int i = 0; i < Count; ++i) 
-		{
-			WorldStatus->PushItem(Items[Index].Metadata, GetOwner(), InTarget);
-		}
-
-		Items[Index].Count -= Count;
-
-		if (Items[Index].Count <= 0)
-		{
-			Items.RemoveAt(Index);
-		}
-	}
+	Items.UseItem(Index, GetOwner(),InTarget, Count);
 }

@@ -147,11 +147,6 @@ void AA_WSNPCPawn::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	// 데이터 테이블을 로드
-	// 블루프린트로 생성된 후 배치된 객체의 경우 
-	// OnConstruction이 호출되지 않기 때문에 핸들이 존재하지 않을 수 있음
-	UpdateDataTable(AssetName);
-	
 	if (const FNPCTableRow* Row = GetDataTableHandle().GetRow<FNPCTableRow>("")) 
 	{
 		if (AA_WSNPCAIController* AIController = Cast<AA_WSNPCAIController>(GetController());
@@ -220,7 +215,7 @@ USkeletalMeshComponent* AA_WSNPCPawn::GetSkeletalMeshComponent() const
 	return MeshComponent;
 }
 
-UC_WSInventory* AA_WSNPCPawn::GetInventoryComponent() const
+IInventoryComponent* AA_WSNPCPawn::GetInventoryComponent() const
 {
 	return Inventory;
 }

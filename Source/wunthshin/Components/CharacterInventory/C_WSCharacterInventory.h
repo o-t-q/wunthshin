@@ -3,12 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "wunthshin/Components/Inventory/C_WSInventory.h"
+#include "wunthshin/Interfaces/InventoryComponent/InventoryComponent.h"
 #include "C_WSCharacterInventory.generated.h"
 
 
+/**
+ * 게임 인스턴스에 연동된 플레이어 귀속 인벤토리 컴포넌트
+ */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class WUNTHSHIN_API UC_WSCharacterInventory : public UC_WSInventory
+class WUNTHSHIN_API UC_WSCharacterInventory : public UActorComponent, public IInventoryComponent
 {
 	GENERATED_BODY()
 
@@ -27,6 +30,6 @@ public:
 	virtual FInventoryPair* FindItem(const USG_WSItemMetadata* InMetadata) override;
 	
 	virtual void AddItem(AA_WSItem* InItem, int InCount = 1) override;
-	virtual void RemoveItem(AA_WSItem* InItem, int InCount = 1) override;
+	virtual void RemoveItem(const USG_WSItemMetadata* InItem, int InCount = 1) override;
 	virtual void UseItem(uint32 Index, AActor* InTarget, int InCount = 1) override;
 };

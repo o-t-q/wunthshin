@@ -20,7 +20,7 @@ class UC_WSInventory;
 class AA_WSNPCAIController;
 
 UCLASS()
-class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IDataTableFetcher, public IElementTracked, public ICommonPawn, public I_WSTaker
+class WUNTHSHIN_API AA_WSNPCPawn : public APawn, public IElementTracked, public ICommonPawn, public I_WSTaker
 {
 	GENERATED_BODY()
 
@@ -101,7 +101,7 @@ public:
 
 	virtual UCapsuleComponent* GetCapsuleComponent() const override;
 	virtual USkeletalMeshComponent* GetSkeletalMeshComponent() const override;
-	virtual UC_WSInventory* GetInventoryComponent() const override;
+	virtual IInventoryComponent* GetInventoryComponent() const override;
 	virtual UC_WSShield* GetShieldComponent() const override;
 	virtual UStatsComponent* GetStatsComponent() const override;
 	virtual UChildActorComponent* GetRightHandComponent() const override;

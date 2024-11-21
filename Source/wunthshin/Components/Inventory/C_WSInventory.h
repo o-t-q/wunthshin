@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "wunthshin/Data/Items/InventoryPair/InventoryPair.h"
+#include "wunthshin/Interfaces/InventoryComponent/InventoryComponent.h"
+#include "wunthshin/Subsystem/GameInstanceSubsystem/Item/SharedInventory/SharedInventory.h"
+
 #include "C_WSInventory.generated.h"
 
 class UListView;
@@ -52,12 +55,12 @@ public:
 };
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class WUNTHSHIN_API UC_WSInventory : public UActorComponent
+class WUNTHSHIN_API UC_WSInventory : public UActorComponent, public IInventoryComponent
 {
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	TArray<FInventoryPair> Items;
+	FSharedInventory Items;
 
 public:
 	// Sets default values for this component's properties
@@ -68,16 +71,13 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	virtual const TArray<FInventoryPair>& GetItems() const;
+	virtual const TArray<FInventoryPair>& GetItems() const override;
 
-	virtual int32 FindItemIndex(const USG_WSItemMetadata* InMetadata) const;
-	virtual FInventoryPair* FindItem(const USG_WSItemMetadata* InMetadata);
+	virtual int32           FindItemIndex(const USG_WSItemMetadata* InMetadata) const override;
+	virtual FInventoryPair* FindItem(const USG_WSItemMetadata* InMetadata) override;
 	
-	virtual void AddItem(AA_WSItem* InItem, int InCount = 1);				// 아이템 추가
-	virtual void AddItem(USG_WSItemMetadata* InMetaData, int InCount = 1);	// 아이템 추가(메타데이터)
-	virtual void AddItem(FInventoryPair InInvenPair);						// 아이템 추가(FInventoryPair)
-	virtual void AddItems(TArray<FInventoryPair> InItems);					// 복수아이템 추가
-	virtual void RemoveItem(AA_WSItem* InItem, int InCount = 1);			// 아이템 빼기
-	virtual void UseItem(uint32 Index, AActor* InTarget, int InCount = 1);	// 아이템 사용
+	virtual void AddItem(AA_WSItem* InItem, int InCount = 1) override;	// 아이템 추가
+	virtual void RemoveItem(const USG_WSItemMetadata* InItem, int InCount = 1) override; // 아이템 빼기
+	virtual void UseItem(uint32 Index, AActor* InTarget, int InCount = 1) override;	// 아이템 사용
 	
 };
