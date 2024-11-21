@@ -47,7 +47,6 @@ AA_WSNPCPawn::AA_WSNPCPawn()
 	CapsuleComponent->SetCollisionProfileName("Pawn");
 
 	MeshComponent->SetupAttachment(CapsuleComponent);
-	MeshComponent->SetRelativeLocation({ 0.f, 0.f, -96.f });
 	MeshComponent->SetRelativeRotation({ 0.f, 270.f, 0.f });
 
 	Shield->SetupAttachment(MeshComponent);

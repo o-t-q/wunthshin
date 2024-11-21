@@ -80,12 +80,7 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
 
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
-	
-	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-
-    // 매시를 캡슐 콜리전 원점으로 옮김
-    GetMesh()->SetRelativeLocation({ 0.f, 0.f, -96.f });
+    
     GetMesh()->SetRelativeRotation({ 0.f, 270.f, 0.f });
 
     // Don't rotate when the controller rotates. Let that just affect the camera.
