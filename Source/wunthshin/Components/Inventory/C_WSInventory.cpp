@@ -53,7 +53,7 @@ void UC_WSInventory::AddItem(AA_WSItem* InItem, int InCount)
 {
 	if (const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata())
 	{
-		Items.AddItem(ItemMetadata, InCount);	
+		AddItem(ItemMetadata, InCount);
 	}
 }
 
