@@ -331,6 +331,7 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
     ensure(Item);
     UE_LOG(LogTemplateCharacter, Log, TEXT("Pick up item: %s"), *Item->GetName());
 
+    // 루팅박스 줍기
     if (const AA_LootingBox* LootingBox = Cast<AA_LootingBox>(Item);
         LootingBox)
     {
