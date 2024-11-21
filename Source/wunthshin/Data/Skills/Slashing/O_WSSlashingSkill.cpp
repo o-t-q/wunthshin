@@ -18,17 +18,17 @@ void UO_WSSlashingSkill::DoSkillImpl(const FSkillParameter& InParameter, ICommon
 
 		if (UWorldStatusSubsystem* WorldStatusSubsystem = World->GetSubsystem<UWorldStatusSubsystem>())
 		{
+			WorldStatusSubsystem->PushAttack(this);
+
+			FWSDamageEvent DamageEvent{};
+			DamageEvent.SetDamageEvent(WorldStatusSubsystem->GetCurrentAttackID(this));
+			InTargetActor->TakeDamage(Damage, DamageEvent, Instigator, nullptr);
+
+			// 즉발이므로 바로 추적 해제
+			WorldStatusSubsystem->PopAttack(this);
+			
 			if (AActor* Weapon = InInstigator->GetRightHandComponent()->GetChildActor())
 			{
-				WorldStatusSubsystem->PushAttack(this);
-
-				FWSDamageEvent DamageEvent{};
-				DamageEvent.SetDamageEvent(WorldStatusSubsystem->GetCurrentAttackID(this));
-				InTargetActor->TakeDamage(Damage, DamageEvent, Instigator, Weapon);
-
-				// 즉발이므로 바로 추적 해제
-				WorldStatusSubsystem->PopAttack(this);
-
 				const TSharedPtr<FWeaponModifierTicket> ModifierTicket = MakeShared<FWeaponModifierTicket>();
 				ModifierTicket->WeaponComponent = Weapon->GetComponentByClass<UC_WSWeapon>();
 				ModifierTicket->WeaponModifier =

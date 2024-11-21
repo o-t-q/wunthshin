@@ -287,7 +287,7 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
         if (CharacterStatsComponent->GetHP() > 0)
         {
             CharacterStatsComponent->DecreaseHP(Damage);
-            UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
+            UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, DamageCauser ? *DamageCauser->GetName() : TEXT("null"), *GetName());
             CustomEvent.SetFirstHit(this);
             PlayHitMontage();
             DamageCounters->Allocate(Damage);
