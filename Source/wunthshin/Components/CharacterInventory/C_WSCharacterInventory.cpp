@@ -63,12 +63,9 @@ FInventoryPair* UC_WSCharacterInventory::FindItem(const USG_WSItemMetadata* InMe
 
 void UC_WSCharacterInventory::AddItem(AA_WSItem* InItem, int InCount)
 {
-	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
+	if (const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata())
 	{
-		if (const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata())
-		{
-			ItemSubsystem->GetSharedInventory().AddItem(ItemMetadata, InCount);
-		}
+		AddItem(ItemMetadata, InCount);
 	}
 }
 
@@ -79,6 +76,7 @@ void UC_WSCharacterInventory::AddItem(const USG_WSItemMetadata* InMetadata, int 
 		if (InMetadata)
 		{
 			ItemSubsystem->GetSharedInventory().AddItem(InMetadata, InCount);
+			OnCharacterInventoryUpdated.Broadcast();
 		}
 	}
 }
@@ -88,6 +86,7 @@ void UC_WSCharacterInventory::RemoveItem(const USG_WSItemMetadata* InItem, int I
 	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
 	{
 		ItemSubsystem->GetSharedInventory().AddItem(InItem, InCount);
+		OnCharacterInventoryUpdated.Broadcast();
 	}
 }
 
@@ -99,6 +98,7 @@ void UC_WSCharacterInventory::UseItem(uint32 Index, AActor* InTarget, int InCoun
 	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
 	{
 		ItemSubsystem->GetSharedInventory().UseItem(Index, GetOwner(), InTarget, InCount);
+		OnCharacterInventoryUpdated.Broadcast();
 	}
 }
 

@@ -42,8 +42,13 @@ void UWG_WSInventory::NativeConstruct()
 	// RarityBackground.Emplace(ERarity::Legendary, NewObject<UTexture2D>(RarityBGLegend.Object));
 
 	// 자주 사용할거 같아서 미리 받아놓음
-	AA_WSCharacter* Player = Cast<AA_WSCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	const AA_WSCharacter* Player = Cast<AA_WSCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	PlayerInventory = Player->GetComponentByClass<UC_WSCharacterInventory>();
+
+	if (UC_WSCharacterInventory* InventoryComponent = Player->GetComponentByClass<UC_WSCharacterInventory>())
+	{
+		InventoryComponent->OnCharacterInventoryUpdated.AddUniqueDynamic(this, &UWG_WSInventory::RefreshListItem);
+	}
 
 	// 값 초기화
 	CurrentCategory = EItemType::Weapon;
@@ -65,19 +70,8 @@ void UWG_WSInventory::NativeConstruct()
 	// auto event = TileView->OnItemSelectionChanged();
 	// event.AddUObject(this, &ThisClass::OnRefreshListItemChangedItem);
 	// todo: 아이템 획득하는 delegate에 RefreshListItem() 바인딩
-
+	
 	RefreshListItem();
-}
-
-void UWG_WSInventory::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
-{
-	Super::NativeTick(MyGeometry, InDeltaTime);
-
-	// Test
-	if (UGameplayStatics::GetPlayerController(GetWorld(), 0)->WasInputKeyJustPressed(FKey(TEXT("Q"))))
-	{
-		RefreshListItem();
-	}
 }
 
 void UWG_WSInventory::RefreshListItem()

@@ -6,6 +6,8 @@
 #include "wunthshin/Interfaces/InventoryComponent/InventoryComponent.h"
 #include "C_WSCharacterInventory.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterInventoryUpdated);
+
 /**
  * 게임 인스턴스에 연동된 플레이어 귀속 인벤토리 컴포넌트
  */
@@ -15,6 +17,8 @@ class WUNTHSHIN_API UC_WSCharacterInventory : public UActorComponent, public IIn
 	GENERATED_BODY()
 
 public:
+	FOnCharacterInventoryUpdated OnCharacterInventoryUpdated;
+	
 	// Sets default values for this component's properties
 	UC_WSCharacterInventory();
 
