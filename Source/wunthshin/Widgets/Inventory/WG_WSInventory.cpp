@@ -137,8 +137,6 @@ void UWG_WSInventory::RefreshListItem()
 	// 아이템 설명
 	auto itemDesc = SelectedEntry->GetData()->EntryData.Metadata->GetItemDescription();
 	ItemDescription->SetText(FText::FromName(itemDesc));
-
-	ChangeCategory(CurrentCategory);
 }
 
 void UWG_WSInventory::ChangeCategory(EItemType InItemType)

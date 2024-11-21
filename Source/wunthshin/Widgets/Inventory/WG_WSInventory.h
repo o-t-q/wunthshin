@@ -13,6 +13,7 @@
 #include "WG_WSInventory.generated.h"
 
 
+class IInventoryComponent;
 class UCheckBox;
 enum class EItemType : uint8;
 class UWG_WSInventoryEntry;
@@ -59,8 +60,8 @@ public:
 	void ChangeCategory(EItemType InItemType);
 
 protected:
-	UPROPERTY()
-	UC_WSInventory* PlayerInventory;
+	
+	IInventoryComponent* PlayerInventory;
 
 	UPROPERTY()
 	UWG_WSInventoryEntry* SelectedEntry;

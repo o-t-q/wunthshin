@@ -6,7 +6,6 @@
 #include "wunthshin/Interfaces/InventoryComponent/InventoryComponent.h"
 #include "C_WSCharacterInventory.generated.h"
 
-
 /**
  * 게임 인스턴스에 연동된 플레이어 귀속 인벤토리 컴포넌트
  */
@@ -30,6 +29,7 @@ public:
 	virtual FInventoryPair* FindItem(const USG_WSItemMetadata* InMetadata) override;
 	
 	virtual void AddItem(AA_WSItem* InItem, int InCount = 1) override;
+	virtual void AddItem(const USG_WSItemMetadata* InMetadata, int InCount = 1) override;
 	virtual void RemoveItem(const USG_WSItemMetadata* InItem, int InCount = 1) override;
 	virtual void UseItem(uint32 Index, AActor* InTarget, int InCount = 1) override;
 };

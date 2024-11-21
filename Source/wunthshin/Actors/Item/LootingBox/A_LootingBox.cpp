@@ -65,7 +65,7 @@ void AA_LootingBox::InitializeLootingBox()
 		{
 			auto MetaData = Subsystem->GetMetadata(Item.ItemRowHandle.RowName);
 			uint64 Quantity = FMath::RandRange((double)Item.MinQuantity, (double)Item.MaxQuantity);
-			InventoryComponent->AddItem(FInventoryPair(MetaData, Quantity));
+			InventoryComponent->AddItem(MetaData, Quantity);
 		}
 	
 		// 랜덤 아이템 초기화
@@ -81,29 +81,35 @@ void AA_LootingBox::InitializeLootingBox()
 			ERarity Rarity = Item.ItemRarity;
 			EItemType Type = Item.ItemType;
 			uint64 Quantity = FMath::RandRange((double)Item.MinQuantity, (double)Item.MaxQuantity);
-		
+
+
 			// 아이템 테이블을 순회하며 조건 맞는 것만 필터링
-			ItemDataTable->ForeachRow<FItemTableRow>(TEXT(""), [&,this](const FName Key, const FItemTableRow TableRow)
+			TArray<FItemTableRow*> AllRows;
+			ItemDataTable->GetAllRows<FItemTableRow>(TEXT(""), AllRows);
+			for (FItemTableRow* Row : AllRows)
 			{
-				// bool bIsCorrect = Rarity == TableRow.ItemRarity && Type == TableRow.ItemType;
-				//
-				// if (bIsCorrect)
-				// {
-				// 	FilteredItem.Add(FInventoryPair(Subsystem->GetMetadata(TableRow.ItemName), Quantity));
-				// }
-				if(Type == TableRow.ItemType && Rarity == TableRow.ItemRarity)
-					FilteredItem.Add(FInventoryPair(Subsystem->GetMetadata(TableRow.ItemName),Quantity));
-			});
+					if(Type == Row->ItemType && Rarity == Row->ItemRarity)
+						FilteredItem.Add(FInventoryPair(Subsystem->GetMetadata(Row->ItemName),Quantity));
+			}
+			// ItemDataTable->ForeachRow<FItemTableRow>(TEXT(""), [&,this](const FName Key, const FItemTableRow TableRow)
+			// {
+			// 	if(Type == TableRow.ItemType && Rarity == TableRow.ItemRarity)
+			// 		FilteredItem.Add(FInventoryPair(Subsystem->GetMetadata(TableRow.ItemName),Quantity));
+			// });
 
 			// 필터링된 아이템 중 하나를 선정
+			if(FilteredItem.IsEmpty()) continue;
 			uint64 RandomIndex = FMath::RandRange(0, FilteredItem.Num() - 1);
 			ResultArray.Add(FilteredItem[RandomIndex]);
+			FilteredItem.Reset();
+			FilteredItem.Shrink();
 			++Count;
 		}
 
+		// 선정된 랜덤아이템들을 추가
 		for (const FInventoryPair& Item : ResultArray)
 		{
-			InventoryComponent->AddItem(Item);
+			InventoryComponent->AddItem(Item.Metadata, Item.Count);
 		}
 	}
 }
