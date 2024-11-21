@@ -20,6 +20,7 @@ public:
 	UFUNCTION()
 	void UpdateByAlive(const bool bInbAlive);
 
+	virtual void RestartLevel() override;
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;

@@ -72,22 +72,35 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 
 	TFunction<void()> OnLevelSequenceEnded;
 	TArray<TSharedPtr<FEventTicket>> EventQueue;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Level, meta = (AllowPrivateAccess = "true"))
+	FName CurrentLevelName;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	ULevelSequence* DeathLevelSequence;
 
 	// WeakPtr로 넘김에 따라 객체 소멸이 발생할 경우,
 	// FTimerDelegate 등 임시변수에 공유 포인터를 저장, 소멸하지 않을 경우 사용
 	void PushTicket_Internal(TSharedPtr<FEventTicket> InTicket);
-
+	
 public:
 	FOnWeaponAttackEnded OnWeaponAttackEnded;
 
 	UWorldStatusSubsystem();
-	
+
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Tick(float InDeltaTime) override;
+
+	UFUNCTION()
+	void PlayDeathLevelSequence(const bool bAlive);
+
+	UFUNCTION(BlueprintCallable)
+	void ReloadLevel();
 
 	void AddNPCPawn(AA_WSNPCPawn* InNewNPCPawn) { NPCPawns.Add(InNewNPCPawn); }
 	void RemoveNPCPawn(const AA_WSNPCPawn* InPawnToRemove) { NPCPawns.Remove(InPawnToRemove); }
 
-	void PlayLevelSequence(ULevelSequence* InSequence, const TFunction<void()>& OnEndedFunction = {});
+	void PlayLevelSequence(ULevelSequence* InSequence, bool bPauseAtEnd = false, const TFunction<void()>& OnFinishedFunction = {});
 	bool IsLevelSequencePlaying() const { return CurrentLevelSequence != nullptr; }
 	void SetSkillVictimPawn(APawn* InSkillVictimPawn) { SkillVictimPawn = InSkillVictimPawn; }
 
@@ -221,5 +234,6 @@ public:
 
 		return ItemsNearbyCharacter[0] == InActor;
 	}
-	
+
+	void SetCurrentStreamingLevel(const FName& InLevelName);
 };

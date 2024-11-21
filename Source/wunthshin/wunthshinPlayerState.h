@@ -24,6 +24,8 @@ class WUNTHSHIN_API AwunthshinPlayerState : public APlayerState
 	
 public:
 	FOnPlayerAliveChanged OnPlayerAlivenessChanged;
+
+	virtual void BeginPlay() override;
 	
 	void SetAlive(const bool InbAlive);
 	bool IsAlive() const { return bAlive; }
