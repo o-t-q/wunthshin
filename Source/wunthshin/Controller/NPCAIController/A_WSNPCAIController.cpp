@@ -68,14 +68,9 @@ void AA_WSNPCAIController::DisableOutBlockingVolumeCollision()
 	for (AActor* Actor : FoundVolumes)
 	{
 		// Label을 비교하여 "OutBlockingVolume"인지 확인
-		if (Actor->GetActorLabel() == "OutBlockingVolume")
+		if (UPrimitiveComponent* VolumeComponent = Actor->FindComponentByTag<UPrimitiveComponent>(TEXT("OutBlockingVolume")))
 		{
-			UPrimitiveComponent* VolumeComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
-			if (VolumeComponent)
-			{
-				// 충돌 비활성화
-				VolumeComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-			}
+			VolumeComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 	}
 }
