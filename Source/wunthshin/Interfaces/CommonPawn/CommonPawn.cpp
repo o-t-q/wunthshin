@@ -46,7 +46,7 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
 
     if (InData->bCustomCapsuleSize)
     {
-        GetCapsuleComponent()->InitCapsuleSize(InData->Radius, InData->HalfHeight);
+        GetCapsuleComponent()->SetCapsuleSize(InData->Radius, InData->HalfHeight);
         GetSkeletalMeshComponent()->SetRelativeLocation({ 0.f, 0.f, -InData->HalfHeight });
     }
     else
