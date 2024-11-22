@@ -40,10 +40,12 @@ void UWG_WSUserWidgetBase::OnVisibleWidget()
 {
 	SetVisibleWidget(true);
 	GetPlayerContext().GetPlayerController()->SetInputMode(FInputModeUIOnly{});
+	GetPlayerContext().GetPlayerController()->SetShowMouseCursor(true);
 }
 
 void UWG_WSUserWidgetBase::OnHideWidget()
 {
 	SetVisibleWidget(false);
 	GetPlayerContext().GetPlayerController()->SetInputMode(FInputModeGameOnly{});
+	GetPlayerContext().GetPlayerController()->SetShowMouseCursor(false);
 }
