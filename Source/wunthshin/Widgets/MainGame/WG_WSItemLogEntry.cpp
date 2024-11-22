@@ -3,9 +3,13 @@
 
 #include "WG_WSItemLogEntry.h"
 
+#include "wunthshin/Actors/Item/LootingBox/A_LootingBox.h"
+
 void UWG_WSItemLogEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
+	
+	auto Data = Cast<AA_LootingBox>(ListItemObject);
 	
 }
 
