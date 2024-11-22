@@ -39,6 +39,10 @@ void UWG_WSUserWidgetBase::SetVisibleWidget(bool bIsVisible)
 void UWG_WSUserWidgetBase::OnVisibleWidget()
 {
 	SetVisibleWidget(true);
+	FInputModeUIOnly UIOnly;
+	UIOnly.SetWidgetToFocus(TakeWidget());
+	UIOnly.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+
 	GetPlayerContext().GetPlayerController()->SetInputMode(FInputModeUIOnly{});
 	GetPlayerContext().GetPlayerController()->SetShowMouseCursor(true);
 }
