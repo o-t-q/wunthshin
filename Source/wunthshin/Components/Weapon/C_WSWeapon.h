@@ -75,7 +75,7 @@ protected:
 	TArray<UAnimMontage*> AttackMontages;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool bRespawn;
+	bool bRespawn = false;
 
 	//연속 공격 카운트
 	int32 NextAttackIndex = 0;
