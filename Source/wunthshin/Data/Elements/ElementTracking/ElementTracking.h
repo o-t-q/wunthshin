@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "wunthshin/Data/Elements/ElementRowHandle/ElementRowHandle.h"
 
 #include "ElementTracking.generated.h"
@@ -6,7 +6,7 @@
 DECLARE_LOG_CATEGORY_CLASS(LogElementTracking, Log, All);
 
 USTRUCT()
-struct FElementReactionPair
+struct WUNTHSHIN_API FElementReactionPair
 {
 	GENERATED_BODY()
 
@@ -17,7 +17,7 @@ struct FElementReactionPair
 };
 
 USTRUCT()
-struct FElementTrackingContext 
+struct WUNTHSHIN_API FElementTrackingContext
 {
 	GENERATED_BODY()
 
@@ -28,7 +28,7 @@ struct FElementTrackingContext
 };
 
 USTRUCT()
-struct FElementTrackingMap
+struct WUNTHSHIN_API FElementTrackingMap
 {
 	GENERATED_BODY()
 

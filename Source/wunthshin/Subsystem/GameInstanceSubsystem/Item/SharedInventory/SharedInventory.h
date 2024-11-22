@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "wunthshin/Data/Items/InventoryPair/InventoryPair.h"
 
 #include "SharedInventory.generated.h"
@@ -8,11 +8,11 @@ DECLARE_LOG_CATEGORY_EXTERN(LogSharedInventory, Log, All);
 class USG_WSItemMetadata;
 
 USTRUCT(BlueprintType)
-struct FSharedInventory
+struct WUNTHSHIN_API FSharedInventory
 {
 	GENERATED_BODY()
 
-	const TArray<FInventoryPair>& GetItems() const { return ItemsOwned; }
+	const TArray<FInventoryPair>& GetItems() const;
 	void AddItem(const USG_WSItemMetadata* InItemMetadata, const uint32 InCount);
 	void RemoveItem(const USG_WSItemMetadata* InItemMetadata, const uint32 InCount);
 	void UseItem(uint32 InIndex, AActor* InUser, AActor* InTargetActor, uint32 InCount);

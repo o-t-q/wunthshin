@@ -6,7 +6,7 @@
 
 // NPC의 스탯을 정의하는 구조체
 USTRUCT(BlueprintType)
-struct FNPCStats : public FCharacterStats
+struct WUNTHSHIN_API FNPCStats : public FCharacterStats
 {
     GENERATED_BODY()
 

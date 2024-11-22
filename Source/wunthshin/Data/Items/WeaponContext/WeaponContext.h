@@ -1,10 +1,10 @@
-﻿#pragma once
+#pragma once
 #include "wunthshin/Data/Modifiers/WeaponModifier/WeaponModifier.h"
 
 #include "WeaponContext.generated.h"
 
 USTRUCT(BlueprintType)
-struct FWeaponContext
+struct WUNTHSHIN_API FWeaponContext
 {
 	GENERATED_BODY()
 	

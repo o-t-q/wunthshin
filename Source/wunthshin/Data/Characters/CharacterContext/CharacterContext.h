@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "wunthshin/Data/Characters/CharacterStats/CharacterStats.h"
 
 #include "CharacterContext.generated.h"
@@ -6,7 +6,7 @@
 class AA_WSCharacter;
 
 USTRUCT(BlueprintType)
-struct FCharacterContext
+struct WUNTHSHIN_API FCharacterContext
 {
 	GENERATED_BODY()
 

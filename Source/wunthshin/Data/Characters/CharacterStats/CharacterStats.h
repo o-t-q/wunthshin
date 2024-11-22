@@ -5,7 +5,7 @@
 struct FWSArchive;
 
 USTRUCT(BlueprintType)
-struct FCharacterMovementModifier
+struct WUNTHSHIN_API FCharacterMovementModifier
 {
 	GENERATED_BODY()
 
@@ -29,7 +29,7 @@ struct FCharacterMovementModifier
 };
 
 USTRUCT(BlueprintType)
-struct FCharacterMovementStats
+struct WUNTHSHIN_API FCharacterMovementStats
 {
 	GENERATED_BODY()
 	virtual ~FCharacterMovementStats() = default;
@@ -69,7 +69,7 @@ private:
 
 // 캐릭터의 스탯을 정의하는 구조체
 USTRUCT(BlueprintType)
-struct FCharacterStats : public FTableRowBase
+struct WUNTHSHIN_API FCharacterStats : public FTableRowBase
 {
     GENERATED_BODY()
 	

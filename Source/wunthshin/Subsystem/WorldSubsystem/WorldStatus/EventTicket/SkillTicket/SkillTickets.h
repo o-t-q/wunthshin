@@ -1,11 +1,11 @@
-﻿#pragma once
+#pragma once
 #include "wunthshin/Data/Skills/SkillRowHandle/SkillRowHandle.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/EventTicket/EventTicket.h"
 
 class UO_WSBaseSkill;
 class ICommonPawn;
 
-struct FSkillStartTicket : public FEventTicket
+struct WUNTHSHIN_API FSkillStartTicket : public FEventTicket
 {
 public:
 	FSkillRowHandle SkillHandle;
@@ -16,7 +16,7 @@ public:
 	virtual void Execute(UWorld* InWorld) override;
 };
 
-struct FSkillRevokeTicket : public FEventTicket
+struct WUNTHSHIN_API FSkillRevokeTicket : public FEventTicket
 {
 public:
 	FSkillRowHandle SkillHandle;

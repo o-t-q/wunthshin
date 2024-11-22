@@ -6,7 +6,6 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
 #include "SharedInventory/SharedInventory.h"
-#include "wunthshin/Data/Items/ItemMetadata/SG_WSItemMetadata.h"
 
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "wunthshin/Interfaces/ItemMetadataGetter/ItemMetadataGetter.h"
@@ -39,6 +38,6 @@ public:
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual USG_WSItemMetadata* GetMetadata(const FName& InAssetName) override;
-	FSharedInventory& GetSharedInventory() { return SharedInventory; }
+	FSharedInventory& GetSharedInventory();
 	UDataTable* GetDataTable() const { return DataTable; }
 };

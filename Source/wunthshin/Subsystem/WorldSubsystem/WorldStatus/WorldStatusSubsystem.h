@@ -22,7 +22,7 @@ class USG_WSItemMetadata;
 class AA_WSItem;
 
 USTRUCT(BlueprintType)
-struct FDamageTakenArray
+struct WUNTHSHIN_API FDamageTakenArray
 {
 	GENERATED_BODY()
 

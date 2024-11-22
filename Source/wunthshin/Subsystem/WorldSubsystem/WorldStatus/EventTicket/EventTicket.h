@@ -1,6 +1,6 @@
-﻿#pragma once
+#pragma once
 
-struct FEventTicket
+struct WUNTHSHIN_API FEventTicket
 {
 public:
 	virtual ~FEventTicket() = default;

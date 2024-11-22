@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "wunthshin/Data/Items/InventoryPair/InventoryPair.h"
 #include "InventoryComponent.generated.h"
 
 class AA_WSItem;
-struct FInventoryPair;
 class USG_WSItemMetadata;
 
 // This class does not need to be modified.

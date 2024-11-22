@@ -3,7 +3,7 @@
 
 class ICommonPawn;
 
-struct FWSDamageEvent : public FDamageEvent
+struct WUNTHSHIN_API FWSDamageEvent : public FDamageEvent
 {
 	FGuid AttackID;
 

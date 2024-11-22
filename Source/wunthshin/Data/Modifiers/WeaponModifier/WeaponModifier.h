@@ -1,9 +1,9 @@
-﻿#pragma once
+#pragma once
 
 #include "WeaponModifier.generated.h"
 
 USTRUCT(BlueprintType)
-struct FWeaponModifier
+struct WUNTHSHIN_API FWeaponModifier
 {
 	GENERATED_BODY()
 	

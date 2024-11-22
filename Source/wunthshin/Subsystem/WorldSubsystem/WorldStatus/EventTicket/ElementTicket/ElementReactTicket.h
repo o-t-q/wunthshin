@@ -1,10 +1,10 @@
-﻿#pragma once
+#pragma once
 #include "wunthshin/Data/Elements/ElementRowHandle/ElementRowHandle.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/EventTicket/EventTicket.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogElementTicket, Log, All);
 
-struct FElementReactTicket : public FEventTicket
+struct WUNTHSHIN_API FElementReactTicket : public FEventTicket
 {
 public:
 	FElementRowHandle ElementHandle;
@@ -14,7 +14,7 @@ public:
 	virtual void Execute(UWorld* InWorld) override;
 };
 
-struct FElementReactRevokeTicket : public FEventTicket
+struct WUNTHSHIN_API FElementReactRevokeTicket : public FEventTicket
 {
 public:
 	AActor* TargetActor;

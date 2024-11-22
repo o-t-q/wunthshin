@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "wunthshin/Data/Modifiers/WeaponModifier/WeaponModifier.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/EventTicket/EventTicket.h"
 
@@ -6,7 +6,7 @@ class UC_WSWeapon;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogWeaponModifier, Log, All);
 
-struct FWeaponModifierTicket : public FEventTicket
+struct WUNTHSHIN_API FWeaponModifierTicket : public FEventTicket
 {
 public:
 	UC_WSWeapon* WeaponComponent;
@@ -17,7 +17,7 @@ public:
 	virtual void Execute(UWorld* InWorld) override;
 };
 
-struct FWeaponModifierRevokeTicket : public FEventTicket
+struct WUNTHSHIN_API FWeaponModifierRevokeTicket : public FEventTicket
 {
 public:
 	UC_WSWeapon* WeaponComponent;

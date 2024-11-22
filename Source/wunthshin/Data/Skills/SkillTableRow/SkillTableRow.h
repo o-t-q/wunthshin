@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "LevelSequence.h"
 
 #include "SkillTableRow.generated.h"
@@ -44,7 +44,7 @@ struct WUNTHSHIN_API FSkillParameter
 };
 
 USTRUCT()
-struct FSkillTableRow : public FTableRowBase
+struct WUNTHSHIN_API FSkillTableRow : public FTableRowBase
 {
 	GENERATED_BODY()
 

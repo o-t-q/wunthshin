@@ -1,9 +1,14 @@
-﻿#include "SharedInventory.h"
+#include "SharedInventory.h"
 
 #include "wunthshin/Data/Items/InventoryPair/InventoryPair.h"
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogSharedInventory);
+
+const TArray<FInventoryPair>& FSharedInventory::GetItems() const 
+{ 
+	return ItemsOwned; 
+}
 
 void FSharedInventory::AddItem(const USG_WSItemMetadata* InItemMetadata, const uint32 InCount)
 {

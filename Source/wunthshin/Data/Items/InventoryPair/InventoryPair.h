@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "InventoryPair.generated.h"
 
@@ -6,7 +6,7 @@ class USG_WSItemMetadata;
 class UInventoryEntryData;
 
 USTRUCT(BlueprintType)
-struct FInventoryPair
+struct WUNTHSHIN_API FInventoryPair
 {
 	GENERATED_BODY()
 

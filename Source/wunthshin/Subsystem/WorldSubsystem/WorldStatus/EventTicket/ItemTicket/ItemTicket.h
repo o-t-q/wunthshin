@@ -1,9 +1,9 @@
-﻿#pragma once
+#pragma once
 #include "wunthshin/Subsystem/WorldSubsystem/WorldStatus/EventTicket/EventTicket.h"
 
 class USG_WSItemMetadata;
 
-struct FItemTicket : public FEventTicket
+struct WUNTHSHIN_API FItemTicket : public FEventTicket
 {
 	friend class UWorldStatusSubsystem;
 

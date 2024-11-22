@@ -1,11 +1,11 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "ElementRowHandle.generated.h"
 
 // 커스텀 해시가 FDataTableRowHandle에 전역 적용되는 것을 막기 위한 구조체
 USTRUCT(BlueprintType)
-struct FElementRowHandle
+struct WUNTHSHIN_API FElementRowHandle
 {
 	GENERATED_BODY()	
 	

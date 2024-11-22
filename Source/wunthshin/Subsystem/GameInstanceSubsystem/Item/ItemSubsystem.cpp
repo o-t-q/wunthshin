@@ -34,3 +34,8 @@ USG_WSItemMetadata* UItemSubsystem::GetMetadata(const FName& InAssetName)
 {
 	return FItemSubsystemUtility::GetMetadataTemplate(Metadata, InAssetName);
 }
+
+FSharedInventory& UItemSubsystem::GetSharedInventory() 
+{ 
+	return SharedInventory; 
+}
