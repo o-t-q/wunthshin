@@ -43,7 +43,6 @@ AA_WSNPCPawn::AA_WSNPCPawn()
 	Skill = CreateDefaultSubobject<UC_WSSkill>(TEXT("SkillComponent"));
 	
 	SetRootComponent(CapsuleComponent);
-	CapsuleComponent->InitCapsuleSize(42.f, 96.f);
 	CapsuleComponent->SetCollisionProfileName("Pawn");
 
 	MeshComponent->SetupAttachment(CapsuleComponent);
