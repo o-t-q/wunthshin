@@ -108,7 +108,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="InventoryCategory", meta=(BindWidget))
 	UCheckBox* Toggle_CategoryConsumable;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Inventory", meta=(BindWidget))
+	UButton* Button_UseItem;
+	
 public:
 	UFUNCTION()
 	void OnClickButton_CloseInventory();
+
+	UFUNCTION()
+	void OnClickButton_UseItem();
 };

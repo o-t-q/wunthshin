@@ -10,13 +10,31 @@
 #include "wunthshin/Widgets/Inventory/WG_WSInventory.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
+#include "Components/ProgressBar.h"
 
 #include "Kismet/GameplayStatics.h"
 
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
+#include "wunthshin/Components/Stats/StatsComponent.h"
 
 UImage* UWG_WSInGameBundle::FadeImageStatic = nullptr;
+
+void UWG_WSInGameBundle::BindStamina(APawn* OldPawn, APawn* NewPawn)
+{
+	if (Cast<AA_WSCharacter>(OldPawn))
+	{
+		StaminaBar->PercentDelegate.Unbind();
+	}
+
+	if (const AA_WSCharacter* NewCharacter = Cast<AA_WSCharacter>(NewPawn))
+	{
+		CurrentCharacterStat = NewCharacter->GetStatsComponent();
+		StaminaBar->PercentDelegate.BindDynamic(CurrentCharacterStat, &UStatsComponent::GetStaminaRatioNonConst);
+	}
+
+	StaminaBar->SynchronizeProperties();
+}
 
 void UWG_WSInGameBundle::NativeConstruct()
 {
@@ -60,6 +78,15 @@ void UWG_WSInGameBundle::NativeOnInitialized()
 			EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &UWG_WSInGameBundle::OpenWindowInventory);
 		}
 	}
+
+	if (const AA_WSCharacter* Character = Cast<AA_WSCharacter>(GetPlayerContext().GetPawn()))
+	{
+		UStatsComponent* StatsComponent = Character->GetStatsComponent();
+		StaminaBar->PercentDelegate.BindDynamic(StatsComponent, &UStatsComponent::GetStaminaRatioNonConst);
+		StaminaBar->SynchronizeProperties();
+	}
+	
+	GetPlayerContext().GetPlayerController()->OnPossessedPawnChanged.AddUniqueDynamic(this, &ThisClass::BindStamina);
 }
 
 void UWG_WSInGameBundle::NativeDestruct()

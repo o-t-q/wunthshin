@@ -33,12 +33,7 @@ bool UWG_WSUserWidgetBase::InitializeWidget()
 
 void UWG_WSUserWidgetBase::SetVisibleWidget(bool bIsVisible)
 {
-	this->SetVisibility(bIsVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
-}
-
-void UWG_WSUserWidgetBase::SetGamePaused(bool bIsGamePaused)
-{
-	UGameplayStatics::SetGamePaused(this->GetWorld(),bIsGamePaused);
+	SetVisibility(bIsVisible ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 }
 
 void UWG_WSUserWidgetBase::OnVisibleWidget()

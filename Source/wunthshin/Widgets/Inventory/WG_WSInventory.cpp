@@ -65,7 +65,7 @@ void UWG_WSInventory::NativeConstruct()
 	OnVisibilityChanged.AddDynamic(this, &ThisClass::OnRefreshListItem);
 	Toggle_CategoryWeapon->OnCheckStateChanged.AddUniqueDynamic(this, &ThisClass::OnToggleCategory_Weapon);
 	Toggle_CategoryConsumable->OnCheckStateChanged.AddUniqueDynamic(this, &ThisClass::OnToggleCategory_Consumable);
-
+	Button_UseItem->OnClicked.AddDynamic(this, &ThisClass::OnClickButton_UseItem);
 	
 	// auto event = TileView->OnItemSelectionChanged();
 	// event.AddUObject(this, &ThisClass::OnRefreshListItemChangedItem);
@@ -151,4 +151,11 @@ void UWG_WSInventory::OnClickButton_CloseInventory()
 {
 	UWG_WSInGameBundle::FadeInOut(false, 0.5f)
 		->SetOnComplete([&, this](){OnHideWidget(); UWG_WSInGameBundle::FadeInOut(true, 0.5f);});
+}
+
+void UWG_WSInventory::OnClickButton_UseItem()
+{
+	if(!SelectedEntry) return;
+	auto index = PlayerInventory->FindItemIndex(SelectedEntry->GetData()->EntryData.Metadata);
+	PlayerInventory->UseItem(index, GetPlayerContext().GetPawn());
 }

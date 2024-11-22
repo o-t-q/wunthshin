@@ -66,11 +66,28 @@ public:
 		return CurrentStats.HP / CurrentStats.MaxHP;
 	}
 
+	UFUNCTION(BlueprintCallable)
+	float GetStaminaRatio() const
+	{
+		if (CurrentStats.Stamina == 0)
+		{
+			return 0.f;
+		}
+
+		return CurrentStats.Stamina / 100.f;
+	}
+
 	// Delegate 바인딩용 우회함수, GetHPRatio를 호출함
 	UFUNCTION()
 	float GetHPRatioNonConst()
 	{
 		return GetHPRatio();
+	}
+
+	UFUNCTION()
+	float GetStaminaRatioNonConst()
+	{
+		return GetStaminaRatio();
 	}
 
 	UFUNCTION(BlueprintCallable)

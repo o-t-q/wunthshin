@@ -81,17 +81,6 @@ void UC_WSCharacterInventory::AddItem(const USG_WSItemMetadata* InMetadata, int 
 	}
 }
 
-void UC_WSCharacterInventory::AddItem(const USG_WSItemMetadata* InMetadata, int InCount)
-{
-	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
-	{
-		if (InMetadata)
-		{
-			ItemSubsystem->GetSharedInventory().AddItem(InMetadata, InCount);
-		}
-	}
-}
-
 void UC_WSCharacterInventory::RemoveItem(const USG_WSItemMetadata* InItem, int InCount)
 {
 	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
