@@ -6,6 +6,18 @@
 #include "Actors/Pawns/Character/AA_WSCharacter.h"
 #include "Components/Stats/StatsComponent.h"
 #include "Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
+#include "Subsystem/WorldSubsystem/WorldStatus/WorldStatusSubsystem.h"
+
+void AwunthshinPlayerState::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>();
+		WorldStatusSubsystem && Cast<AA_WSCharacter>(GetPawn()))
+	{
+		OnPlayerAlivenessChanged.AddUniqueDynamic(WorldStatusSubsystem, &UWorldStatusSubsystem::PlayDeathLevelSequence); 
+	}
+}
 
 void AwunthshinPlayerState::SetAlive(const bool InbAlive)
 {

@@ -15,6 +15,7 @@
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "wunthshin/Interfaces/Taker/Taker.h"
 #include "wunthshin/Widgets/DamageCounter/WG_WSDamageCounter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Add default functionality here for any ICommonPawn functions that are not pure virtual.
 
@@ -45,7 +46,7 @@ void ICommonPawn::UpdatePawnFromDataTable(const FCharacterTableRow* InData)
 
     if (InData->bCustomCapsuleSize)
     {
-        GetCapsuleComponent()->SetCapsuleSize(InData->Radius, InData->HalfHeight);
+        GetCapsuleComponent()->InitCapsuleSize(InData->Radius, InData->HalfHeight);
         GetSkeletalMeshComponent()->SetRelativeLocation({ 0.f, 0.f, -InData->HalfHeight });
     }
     else

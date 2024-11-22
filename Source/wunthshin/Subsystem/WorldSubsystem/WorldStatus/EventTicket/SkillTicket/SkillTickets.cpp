@@ -26,9 +26,9 @@ void FSkillStartTicket::Execute(UWorld* InWorld)
 				
 				UE_LOG(LogSkillSubsystem, Log, TEXT("Skill level sequence found, playing: %s"), *Skill->Parameter.CastingSequence->GetName());
 
-				WorldStatusSubsystem->SetSkillVictimPawn(Cast<APawn>(Instigator));
+				WorldStatusSubsystem->SetSkillVictimPawn(Cast<APawn>(TargetActor));
 				WorldStatusSubsystem->FreezeSpawnedNPCsBT();
-				WorldStatusSubsystem->PlayLevelSequence(Skill->Parameter.CastingSequence);
+				WorldStatusSubsystem->PlayLevelSequence(Skill->Parameter.CastingSequence, false);
 			}
 
 			const TSharedPtr<FSkillRevokeTicket> SkillEndTicket = MakeShared<FSkillRevokeTicket>();

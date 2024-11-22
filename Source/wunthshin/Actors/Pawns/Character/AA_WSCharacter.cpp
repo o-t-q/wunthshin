@@ -72,7 +72,7 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
         ADD_INPUT_ACTION(PickUpAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_PickUp.IA_PickUp'");
         ADD_INPUT_ACTION(DropAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Drop.IA_Drop'");
         ADD_INPUT_ACTION(ZoomWheelAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_ZoomWheel.IA_ZoomWheel'");
-        ADD_INPUT_ACTION(ClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Climb.IA_Climb'");
+        //ADD_INPUT_ACTION(ClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Climb.IA_Climb'");
         ADD_INPUT_ACTION(CancelClimAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_CancelClimb.IA_CancelClimb'");
         ADD_INPUT_ACTION(CharacterSwapOneAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Character1.IA_Character1'");
         ADD_INPUT_ACTION(CharacterSwapTwoAction, "/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Character2.IA_Character2'")
@@ -80,12 +80,7 @@ AA_WSCharacter::AA_WSCharacter(const FObjectInitializer & ObjectInitializer)
 
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
-	
-	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-
-    // 매시를 캡슐 콜리전 원점으로 옮김
-    GetMesh()->SetRelativeLocation({ 0.f, 0.f, -96.f });
+    
     GetMesh()->SetRelativeRotation({ 0.f, 270.f, 0.f });
 
     // Don't rotate when the controller rotates. Let that just affect the camera.
@@ -230,9 +225,14 @@ void AA_WSCharacter::ApplyAsset(const FTableRowBase* InRowPointer)
     const FCharacterTableRow* Data = reinterpret_cast<const FCharacterTableRow*>(InRowPointer);
     
     UpdatePawnFromDataTable(Data);
+    // 초기 매시의 로컬 위치 저장
+    MeshNormalTransform = GetMesh()->GetRelativeTransform();
     
     if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
     {
+        // CDO에서 참조하여 사용할 크기가 없기 때문에 런타임에 재지정
+        MovementComponent->SetCrouchedHalfHeight(GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight() * 0.5f);
+
         if (const UStatsComponent* StatsComponent = GetStatsComponent())
         {
             const FCharacterMovementStats& MovementStats = StatsComponent->GetMovementStats();
@@ -287,7 +287,7 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
         if (CharacterStatsComponent->GetHP() > 0)
         {
             CharacterStatsComponent->DecreaseHP(Damage);
-            UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, *DamageCauser->GetName(), *GetName());
+            UE_LOG(LogTemplateCharacter, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), Damage, DamageCauser ? *DamageCauser->GetName() : TEXT("null"), *GetName());
             CustomEvent.SetFirstHit(this);
             PlayHitMontage();
             DamageCounters->Allocate(Damage);
@@ -310,12 +310,24 @@ void AA_WSCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
+    if(USpringArmComponent * SpringArm = GetCameraBoom())
+    {
+        SpringArm->TargetArmLength = FMath::FInterpTo(
+            SpringArm->TargetArmLength,  // 현재 길이
+            TargetArmLength,             // 목표 길이
+            DeltaSeconds,                   // 델타 시간
+            10.f                         // 보간 속도 (높을수록 빠르게 이동)
+        );
+    }
+
+
     if (bIsGliding)
     {
         if (!GetCharacterMovement()->IsFalling())
         {
             bIsGliding = false;
             StopJumping();
+
         }
         else
         {
@@ -442,7 +454,7 @@ void AA_WSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
         EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Started, this, &AA_WSCharacter::CheckItemAndDrop);
 
         // 등반
-        EnhancedInputComponent->BindAction(ClimAction, ETriggerEvent::Triggered, this, &AA_WSCharacter::Climb);
+       // EnhancedInputComponent->BindAction(ClimAction, ETriggerEvent::Triggered, this, &AA_WSCharacter::Climb);
 
         EnhancedInputComponent->BindAction(CancelClimAction, ETriggerEvent::Started, this, &AA_WSCharacter::CancelClimb);
 
@@ -454,6 +466,26 @@ void AA_WSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
     {
         UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
     }
+}
+
+void AA_WSCharacter::OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+    RecalculateBaseEyeHeight();
+    FVector& MeshRelativeLocation = GetMesh()->GetRelativeLocation_DirectMutable();
+    MeshRelativeLocation.Z = MeshNormalTransform.GetLocation().Z + HalfHeightAdjust;
+    BaseTranslationOffset.Z = MeshRelativeLocation.Z;
+
+    K2_OnStartCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
+}
+
+void AA_WSCharacter::OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust)
+{
+    RecalculateBaseEyeHeight();
+    FVector& MeshRelativeLocation = GetMesh()->GetRelativeLocation_DirectMutable();
+    MeshRelativeLocation.Z = MeshNormalTransform.GetLocation().Z;
+    BaseTranslationOffset.Z = MeshRelativeLocation.Z;
+
+    K2_OnEndCrouch(HalfHeightAdjust, ScaledHalfHeightAdjust);
 }
 
 void AA_WSCharacter::Move(const FInputActionValue& Value)
@@ -582,7 +614,7 @@ void AA_WSCharacter::FastRun()
 {
     bIsFastRunningPressing = true;
 
-    if (!CanFastRun()) 
+    if (!CanFastRun() || bIsGliding)
     {
         return;
     }
@@ -663,9 +695,9 @@ void AA_WSCharacter::OnJump()
     {
         Jump();
     }
-    
     else if (CharacterComponent->IsFalling())
     {
+        CilmMovementComponent->TryClimbing();
         if (CanGlide())
         {
             bIsGliding = !bIsGliding;
@@ -690,7 +722,7 @@ void AA_WSCharacter::ZoomWheel(const FInputActionValue& Value)
     //if (!SpringArm) { ensure(false); return; }
     const float ActionValue = Value.Get<float>();
     if (FMath::IsNearlyZero(ActionValue)) { return; }
-    SpringArm->TargetArmLength = FMath::Clamp(SpringArm->TargetArmLength + (ActionValue*50), 50.f, 500.f);
+    TargetArmLength = FMath::Clamp(SpringArm->TargetArmLength + (ActionValue*100), 50.f, 500.f);
 }
 
 
@@ -707,15 +739,15 @@ bool AA_WSCharacter::CanGlide()
     const FVector End = Start - FVector(0, 0, 300);
     bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
 
-    //DrawDebugLine
-    {
-        FColor LineColor = FColor::Red;
-        if (!bHit)
-        {
-            LineColor = FColor::Green;
-        }
-        DrawDebugLine(GetWorld(), Start, End, LineColor, false, 3.f, 0U, 2.0f);
-    }
+    ////DrawDebugLine
+    //{
+    //    FColor LineColor = FColor::Red;
+    //    if (!bHit)
+    //    {
+    //        LineColor = FColor::Green;
+    //    }
+    //    DrawDebugLine(GetWorld(), Start, End, LineColor, false, 3.f, 0U, 2.0f);
+    //}
     return !bHit;
 }
 
@@ -796,11 +828,10 @@ void AA_WSCharacter::CheckItemAndDrop()
     }
 }
 
-void AA_WSCharacter::Climb()
-{
-    
-    CilmMovementComponent->TryClimbing();
-}
+//void AA_WSCharacter::Climb()
+//{
+//    
+//}
 
 void AA_WSCharacter::CancelClimb()
 {

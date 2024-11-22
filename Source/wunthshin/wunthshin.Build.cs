@@ -11,8 +11,8 @@ public class wunthshin : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[]
 		{
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "AIModule", "NavigationSystem", "LevelSequence",
-			"FCTween"
-		});
+			"FCTween" ,"MovieScene"
+        });
 
 		if (Target.bBuildEditor)
 		{

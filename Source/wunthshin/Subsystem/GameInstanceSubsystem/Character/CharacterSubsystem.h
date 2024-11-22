@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 
+#include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Interfaces/DataTableQuery/DataTableQuery.h"
 #include "CharacterSubsystem.generated.h"
 
@@ -38,6 +39,10 @@ public:
 	UCharacterSubsystem();
 
 	FOnCharacterAdded OnCharacterAdded;
+
+	// 모든 플레이어의 체력을 100으로 설정
+	UFUNCTION()
+	void ResetPlayer();
 	
 	UFUNCTION()
 	void TakeCharacterLevelSnapshot();
@@ -61,6 +66,16 @@ public:
 	}
 
 	int32 GetIndexOfCharacter(const AA_WSCharacter* InCharacter) const;
+
+	bool IsOwnedCharacter(const AA_WSCharacter* InCharacter) const
+	{
+		if (InCharacter == nullptr)
+		{
+			return false;
+		}
+		
+		return OwnedCharacters.Contains(InCharacter);
+	}
 
 	AA_WSCharacter* GetCurrentCharacter() const
 	{

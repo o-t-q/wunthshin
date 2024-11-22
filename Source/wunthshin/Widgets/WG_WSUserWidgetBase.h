@@ -17,6 +17,9 @@ class WUNTHSHIN_API UWG_WSUserWidgetBase : public UUserWidget
 {
 	GENERATED_BODY()
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	bool bInAnimation = false;
+
 protected:
 	virtual void NativeConstruct() override;
 	bool InitializeWidget();
@@ -26,12 +29,13 @@ public:
 	void OnVisibleWidget();
 	UFUNCTION()
 	void OnHideWidget();
+
+	void SetInAnimation(const bool InValue) { bInAnimation = InValue; }
+	bool IsInAnimation() const { return bInAnimation; }
 	
 protected:
 	void SetVisibleWidget(bool bIsVisible);
-	void SetGamePaused(bool bIsGamePaused);
-	
-protected:
+
 	UPROPERTY(VisibleAnywhere, meta = (BindWidget))
 	TMap<FName,class UWG_WSUserWidgetBase*> ChildWidgets;
 };

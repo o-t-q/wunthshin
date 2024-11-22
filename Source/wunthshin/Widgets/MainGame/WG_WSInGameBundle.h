@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InputMappingContext.h"
+
 #include "Blueprint/UserWidget.h"
 #include "wunthshin/Widgets/WG_WSUserWidgetBase.h"
 #include "WG_WSInGameBundle.generated.h"
@@ -27,13 +29,23 @@ class WUNTHSHIN_API UWG_WSInGameBundle : public UWG_WSUserWidgetBase
 		Status,
 		Menu,
 	};
+	
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UInputMappingContext* InputMappingContext;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
+	UInputAction* InventoryAction;
 
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeOnInitialized() override;
+	virtual void NativeDestruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 public:
+	UWG_WSInGameBundle(const FObjectInitializer& ObjectInitializer);
+	
 	static FCTweenInstance* FadeInOut(bool bIsIn = false, float InDuration = 1.f);
 
 protected:

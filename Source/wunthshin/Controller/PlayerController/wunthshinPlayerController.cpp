@@ -3,6 +3,7 @@
 
 #include "wunthshinPlayerController.h"
 
+#include "wunthshin/wunthshinGameMode.h"
 #include "wunthshin/wunthshinPlayerState.h"
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
@@ -23,6 +24,18 @@ void AwunthshinPlayerController::UpdateByAlive(const bool bInbAlive)
 	{
 		GetPawn()->EnableInput(this);
 	}
+}
+
+void AwunthshinPlayerController::RestartLevel()
+{
+	Super::RestartLevel();
+
+	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
+	{
+		CharacterSubsystem->ResetPlayer();
+	}
+	
+	GetPlayerState<AwunthshinPlayerState>()->SetAlive(true);
 }
 
 void AwunthshinPlayerController::BeginPlay()

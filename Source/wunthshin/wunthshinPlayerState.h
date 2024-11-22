@@ -23,7 +23,10 @@ class WUNTHSHIN_API AwunthshinPlayerState : public APlayerState
 	bool bAlive = true;
 	
 public:
+	UPROPERTY(BlueprintAssignable)
 	FOnPlayerAliveChanged OnPlayerAlivenessChanged;
+
+	virtual void BeginPlay() override;
 	
 	void SetAlive(const bool InbAlive);
 	bool IsAlive() const { return bAlive; }

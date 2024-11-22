@@ -80,8 +80,8 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IElementTrack
 	UInputAction* ZoomWheelAction;
 
 	/** Clim Action*/
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	UInputAction* ClimAction;
+	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* ClimAction;*/
 
 	/** Cancel Clim Action*/
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -156,6 +156,11 @@ class AA_WSCharacter : public ACharacter, public I_WSTaker, public IElementTrack
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation", meta = (AllowPrivateAccess = "true"))
 	int32 HitAnimationIndex;
 
+	float TargetArmLength = 300.f; // 기본 카메라 거리
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mesh", meta = (AllowPrivateAccess = "true"))
+	FTransform MeshNormalTransform;
+
 public:
 	//딜리게이트
 	FFastRun OnFastRun;
@@ -199,6 +204,9 @@ public:
 
 protected:
 
+	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);
 
@@ -229,7 +237,7 @@ protected:
 	void CheckItemAndDrop();
 
 
-	void Climb();
+	//void Climb();
 	void CancelClimb();
 	
 

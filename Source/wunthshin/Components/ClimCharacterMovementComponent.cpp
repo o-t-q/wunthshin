@@ -448,20 +448,20 @@ bool UClimCharacterMovementComponent::ClimbDownToFloor() const
 
 	return bIsMovingTowardsFloor || (bIsClimbingFloor && bOnWalkableFloor);
 }
-
+//바닥 확인
 bool UClimCharacterMovementComponent::CheckFloor(FHitResult& FloorHit) const
 {
 	const FVector Start = UpdatedComponent->GetComponentLocation();
 	const FVector End = Start + FVector::DownVector * FloorCheckDistance;
 
-	DrawDebugLine(
-		GetWorld(),
-		Start,         // 시작 위치
-		End,           // 끝 위치
-		FColor::Green, // 선의 색상
-		false,         // 지속 시간 사용 여부
-		5.0f           // 지속 시간 (초 단위)
-	);
+	//DrawDebugLine(
+	//	GetWorld(),
+	//	Start,         // 시작 위치
+	//	End,           // 끝 위치
+	//	FColor::Green, // 선의 색상
+	//	false,         // 지속 시간 사용 여부
+	//	5.0f           // 지속 시간 (초 단위)
+	//);
 
 	return GetWorld()->LineTraceSingleByChannel(FloorHit, Start, End, ECC_WorldStatic, ClimbQueryParams);
 }

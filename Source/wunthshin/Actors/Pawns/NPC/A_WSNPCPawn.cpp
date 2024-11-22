@@ -47,7 +47,6 @@ AA_WSNPCPawn::AA_WSNPCPawn()
 	CapsuleComponent->SetCollisionProfileName("Pawn");
 
 	MeshComponent->SetupAttachment(CapsuleComponent);
-	MeshComponent->SetRelativeLocation({ 0.f, 0.f, -96.f });
 	MeshComponent->SetRelativeRotation({ 0.f, 270.f, 0.f });
 
 	Shield->SetupAttachment(MeshComponent);
@@ -181,7 +180,7 @@ float AA_WSNPCPawn::TakeDamage(float DamageAmount, struct FDamageEvent const& Da
 		if (StatsComponent->GetHP() > 0)
 		{
 			StatsComponent->DecreaseHP(DamageAmount);
-			UE_LOG(LogNPCPawn, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), DamageAmount, *DamageCauser->GetName(), *GetName());
+			UE_LOG(LogNPCPawn, Warning, TEXT("TakeDamage! : %s did %f with %s to %s"), *EventInstigator->GetName(), DamageAmount, DamageCauser ? *DamageCauser->GetName() : TEXT("null"), *GetName());
 			CustomEvent.SetFirstHit(this);
 			PlayHitMontage();
             DamageCounter->Allocate(DamageAmount);

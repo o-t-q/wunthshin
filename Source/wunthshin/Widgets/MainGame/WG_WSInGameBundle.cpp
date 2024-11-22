@@ -3,11 +3,16 @@
 
 #include "WG_WSInGameBundle.h"
 
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 #include "FCTween.h"
 #include "FCTweenUObject.h"
 #include "wunthshin/Widgets/Inventory/WG_WSInventory.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Button.h"
+
+#include "Kismet/GameplayStatics.h"
+
 #include "wunthshin/Subsystem/GameInstanceSubsystem/Character/CharacterSubsystem.h"
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 
@@ -41,11 +46,63 @@ void UWG_WSInGameBundle::NativeConstruct()
 void UWG_WSInGameBundle::NativeOnInitialized()
 {
 	Super::NativeOnInitialized();
+
+	if (const APlayerController* PlayerController = GetPlayerContext().GetPlayerController())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+			!Subsystem->HasMappingContext(InputMappingContext))
+		{
+			Subsystem->AddMappingContext(InputMappingContext, 1);
+		}
+
+		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(GetPlayerContext().GetPlayerController()->InputComponent))
+		{
+			EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &UWG_WSInGameBundle::OpenWindowInventory);
+		}
+	}
+}
+
+void UWG_WSInGameBundle::NativeDestruct()
+{
+	Super::NativeDestruct();
+	
+	if (const APlayerController* PlayerController = GetPlayerContext().GetPlayerController())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+			Subsystem->HasMappingContext(InputMappingContext))
+		{
+			Subsystem->RemoveMappingContext(InputMappingContext);
+		}
+
+		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(GetPlayerContext().GetPlayerController()->InputComponent))
+		{
+			EnhancedInputComponent->ClearBindingsForObject(this);
+		}
+	}
 }
 
 void UWG_WSInGameBundle::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+}
+
+UWG_WSInGameBundle::UWG_WSInGameBundle(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer),
+	  FadeImage(nullptr),
+	  Button_OpenInventory(nullptr),
+	  CharacterRoot(nullptr)
+{
+	if (static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC_HUD(TEXT("/Script/EnhancedInput.InputMappingContext'/Game/ThirdPerson/Input/IMC_HUD.IMC_HUD'"));
+		IMC_HUD.Succeeded())
+	{
+		InputMappingContext = IMC_HUD.Object;
+	}
+
+	if (static ConstructorHelpers::FObjectFinder<UInputAction> IA_Inventory(TEXT("/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Inventory.IA_Inventory'"));
+		IA_Inventory.Succeeded())
+	{
+		InventoryAction = IA_Inventory.Object;
+	}
 }
 
 FCTweenInstance* UWG_WSInGameBundle::FadeInOut(bool bIsIn, float InDuration)
@@ -58,13 +115,18 @@ FCTweenInstance* UWG_WSInGameBundle::FadeInOut(bool bIsIn, float InDuration)
 
 void UWG_WSInGameBundle::OpenWindow(FName InWindowName)
 {
-	FadeInOut(false)->SetOnComplete([=, this] ()
+	if (ChildWidgets[InWindowName]->GetVisibility() == ESlateVisibility::Hidden && !ChildWidgets[InWindowName]->IsInAnimation())
 	{
-		ChildWidgets[InWindowName]->OnVisibleWidget();
-		FadeInOut(true);
-	})->CreateUObject(this);
+		ChildWidgets[InWindowName]->SetInAnimation(true);
+		
+		FadeInOut(false)->SetOnComplete([this, InWindowName] ()
+		{
+			ChildWidgets[InWindowName]->OnVisibleWidget();
+			ChildWidgets[InWindowName]->SetInAnimation(false);
+		})->CreateUObject(this);
 
-	
+		FadeInOut(true);
+	}
 }
 
 void UWG_WSInGameBundle::InitCharacterSlots()

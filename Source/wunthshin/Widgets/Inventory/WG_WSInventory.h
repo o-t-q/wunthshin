@@ -34,7 +34,6 @@ class WUNTHSHIN_API UWG_WSInventory : public UWG_WSUserWidgetBase
 
 protected:
 	virtual void NativeConstruct() override;
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 public:
 	UFUNCTION()
