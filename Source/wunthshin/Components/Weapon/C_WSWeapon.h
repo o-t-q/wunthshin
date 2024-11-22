@@ -36,11 +36,13 @@ public:
 	// Sets default values for this component's properties
 	UC_WSWeapon();
 
+	void SetRespawn(const bool InbRespawn) { bRespawn = InbRespawn; }
+	bool IsRespawn() const { return bRespawn;  }
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 public:
 	UFUNCTION()
@@ -71,6 +73,9 @@ protected:
 	// MTG
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<UAnimMontage*> AttackMontages;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bRespawn;
 
 	//연속 공격 카운트
 	int32 NextAttackIndex = 0;

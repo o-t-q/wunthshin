@@ -78,12 +78,6 @@ void UC_WSWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 }
 
-void UC_WSWeapon::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	
-
-}
-
 bool UC_WSWeapon::AttackDefault()
 {
 	if (AttackMontages[NextAttackIndex]) 

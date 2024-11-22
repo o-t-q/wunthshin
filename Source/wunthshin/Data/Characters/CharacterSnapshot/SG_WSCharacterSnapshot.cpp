@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SG_WSCharacterSnapshot.h"
@@ -7,6 +7,7 @@
 #include "wunthshin/Actors/Pawns/Character/AA_WSCharacter.h"
 #include "wunthshin/Components/PickUp/C_WSPickUp.h"
 #include "wunthshin/Components/Stats/StatsComponent.h"
+#include "wunthshin/Components/Weapon/C_WSWeapon.h"
 
 AA_WSCharacter* USG_WSCharacterSnapshot::SpawnCharacter(UWorld* InWorld, const FTransform& Transform, AController* Owner) const
 {
@@ -36,6 +37,7 @@ AA_WSCharacter* USG_WSCharacterSnapshot::SpawnCharacter(UWorld* InWorld, const F
 
 		Weapon->SetAssetName(CharacterContext.WeaponName);
 		Weapon->FinishSpawning(Transform);
+		Weapon->GetComponentByClass<UC_WSWeapon>()->SetRespawn(true);
 		Weapon->GetComponentByClass<UC_WSPickUp>()->OnPickUp.Broadcast(Character);
 	}
 	

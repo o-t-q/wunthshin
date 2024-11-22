@@ -381,8 +381,18 @@ bool AA_WSCharacter::Take(UC_WSPickUp* InTakenComponent)
         RightHandWeapon->GetChildActor()->GetComponentByClass<UMeshComponent>()->SetCollisionProfileName("ItemEquipped");
     }
     
-    // 인벤토리로 무기 또는 아이템 저장
-    Inventory->AddItem(Item);
+
+    if (AA_WSWeapon* WeaponCast = Cast<AA_WSWeapon>(Item);
+        WeaponCast && WeaponCast->GetComponentByClass<UC_WSWeapon>()->IsRespawn())
+    {
+        return true;
+    }
+    else 
+    {
+        // 인벤토리로 무기 또는 아이템 저장
+        Inventory->AddItem(Item);
+    }
+    
 
     // todo/test: 아이템 효과 테스트, 이후에 삭제 필요함
     // {
