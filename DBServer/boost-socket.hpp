@@ -1,6 +1,9 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
+#include <Windows.h>
+#include <SDKDDKVer.h>
+
 #include <boost/asio.hpp>
 #include <boost/pool/pool_alloc.hpp>
 #include <array>
