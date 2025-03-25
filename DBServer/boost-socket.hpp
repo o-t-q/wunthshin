@@ -1,7 +1,6 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
-#include <Windows.h>
 #include <SDKDDKVer.h>
 
 #include <boost/asio.hpp>
@@ -109,25 +108,26 @@ namespace Network
 
             using ReadToken = std::function<void( const endpoint_type&, const boost::system::error_code& )>;
 
-            Acceptor() : m_acceptor_( m_dummy_context_ )
+            Acceptor() : m_acceptor_( m_dummy_context_ ), m_initialized_( false )
             { }
 
             explicit Acceptor( boost::asio::io_context&              context,
                                boost::asio::ip::tcp::socket&         socket,
                                const boost::asio::ip::tcp::endpoint& endpoint )
-                : m_acceptor_( context, endpoint ), m_socket_ptr_( &socket )
+                : m_acceptor_( context, endpoint ), m_socket_ptr_( &socket ), m_initialized_( true )
             { }
 
             void accept( ReadToken&& predicate )
             {
                 // Not initialized
-                assert( m_acceptor_.get_executor() != m_dummy_context_ );
+                assert( m_initialized_ );
                 m_acceptor_.async_accept(
                         *m_socket_ptr_,
                         std::bind( predicate, m_socket_ptr_->remote_endpoint(), std::placeholders::_1 ) );
             }
 
             inline static boost::asio::io_context m_dummy_context_ = {};
+            bool                                  m_initialized_;
             boost::asio::ip::tcp::acceptor        m_acceptor_;
             boost::asio::ip::tcp::socket*         m_socket_ptr_;
         };
@@ -144,7 +144,7 @@ namespace Network
         using endpoint_type = typename Protocol::endpoint;
 
     private:
-        Protocol::acceptor                                                      m_acceptor_;
+        std::unique_ptr<Protocol::acceptor>                                     m_acceptor_;
         boost::asio::io_context                                                 m_context_;
         boost::asio::executor_work_guard<decltype( m_context_ )::executor_type> m_work_gurad_{
             boost::asio::make_work_guard( m_context_ )
@@ -165,8 +165,13 @@ namespace Network
             Destroy();
         }
 
-        NetworkContext() : m_acceptor_( m_context_, { boost::asio::ip::tcp::v4(), Port } )
+        NetworkContext()
         {
+            m_acceptor_ = std::make_unique<Protocol::acceptor>(
+                m_context_,
+                Protocol::endpoint{ boost::asio::ip::tcp::v4(), Port }
+            );
+
             m_local_endpoint_ = { boost::asio::ip::tcp::v4(), Port };
 
             const auto& thread_count = std::min<uint32_t>( std::thread::hardware_concurrency(), 4 );
@@ -184,7 +189,7 @@ namespace Network
                              } );
         }
 
-        void accept( ReceiveHandlerSignature&& predicate )
+        void accept( const ReceiveHandlerSignature& predicate )
         {
             if ( m_running_ )
             {
@@ -195,7 +200,7 @@ namespace Network
 
             for ( size_t i = 0; i < receiving_threads; ++i )
             {
-                startAccept( i, predicate );
+                startAccept( i, std::move( predicate ) );
             }
 
             m_running_.store( true );
@@ -235,8 +240,8 @@ namespace Network
                     {
                     }
 
-                    m_sockets_[ index ].cancel();
-                    m_sockets_[ index ].close();
+                    m_sockets_.at( index ).cancel();
+                    m_sockets_.at( index ).close();
                 }
             }
 
@@ -264,9 +269,9 @@ namespace Network
         }
 
     private:
-        void startAccept( size_t i, ReceiveHandlerSignature&& predicate )
+        void startAccept( size_t i, const ReceiveHandlerSignature& predicate )
         {
-            m_sockets_[ i ] = Protocol::socket{ m_context_ };
+            m_sockets_.emplace( i, Protocol::socket{ m_context_ } );
             if ( m_recv_buffers_[ i ].data() == nullptr )
             {
                 m_recv_buffers_.emplace( i,
@@ -275,13 +280,19 @@ namespace Network
                                                  details::MaxPacketSize<Protocol>::value } );
             }
 
-            m_acceptor_.async_accept( m_sockets_[ i ],
+            CONSOLE_OUT( __FUNCTION__, "Start Accepting thread {}", i );
+            m_acceptor_->async_accept( m_sockets_.at( i ),
                                       [ this, predicate, index = i ]( const boost::system::error_code& ec )
                                       {
                                           if ( !ec )
                                           {
-                                              m_remote_endpoint_map_[ m_sockets_[ index ].remote_endpoint() ] = index;
-                                              m_sockets_[ index ].async_receive(
+                                              Protocol::endpoint endpoint = m_sockets_.at( index ).remote_endpoint();
+                                              CONSOLE_OUT( __FUNCTION__,
+                                                           "Accepting the connection of {}:{}",
+                                                           endpoint.address().to_v4().to_string(),
+                                                           endpoint.port() );
+                                              m_remote_endpoint_map_.emplace( endpoint, index );
+                                              m_sockets_.at( index ).async_receive(
                                                       m_recv_buffers_[ index ],
                                                       std::bind( &NetworkContext::receiveHandler,
                                                                  this,
@@ -294,7 +305,7 @@ namespace Network
         }
 
         void receiveHandler( const size_t                     index,
-                             ReceiveHandlerSignature&&        predicate,
+                             const ReceiveHandlerSignature&   predicate,
                              const boost::system::error_code& ec,
                              size_t                           read )
         {
@@ -313,7 +324,7 @@ namespace Network
 #ifdef _DEBUG
                     assert( m_sockets_.contains( index ) );
 #endif
-                    m_sockets_[ index ].async_receive( m_recv_buffers_[ index ],
+                    m_sockets_.at( index ).async_receive( m_recv_buffers_[ index ],
                                                        std::bind( &NetworkContext::receiveHandler,
                                                                   this,
                                                                   index,
@@ -327,7 +338,7 @@ namespace Network
                     {
                         m_sockets_.at( index ).cancel();
                         m_sockets_.at( index ).close();
-                        startAccept( index );
+                        startAccept( index, predicate );
                     }
                 }
             }
