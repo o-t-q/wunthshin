@@ -11,10 +11,13 @@
 #include <deque>
 #include <vector>
 #include <ranges>
+#include <memory>
 #include <functional>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "utility.hpp"
+#include "message.h"
 
 namespace Network
 {
@@ -90,7 +93,7 @@ namespace Network
         template <>
         struct MaxPacketSize<boost::asio::ip::tcp>
         {
-            static constexpr size_t value = std::numeric_limits<uint8_t>::max();
+            static constexpr size_t value = std::numeric_limits<uint16_t>::max();
         };
 
         template <typename Protocol>
@@ -136,7 +139,7 @@ namespace Network
     using ReceiveHandlerSignature =
             std::function<void( size_t, const boost::asio::mutable_buffer&, const boost::system::error_code&, size_t )>;
 
-    template <uint16_t Port = 7777>
+    template <uint16_t Port = 1337>
     struct NetworkContext
     {
     public:
@@ -152,10 +155,11 @@ namespace Network
         std::vector<std::thread> m_io_threads_;
         endpoint_type            m_local_endpoint_;
 
-        std::unordered_map<endpoint_type, size_t>               m_remote_endpoint_map_;
-        std::unordered_map<size_t, typename Protocol::socket>   m_sockets_;
-        std::unordered_map<size_t, std::atomic<bool>>           m_recv_running_;
-        std::unordered_map<size_t, boost::asio::mutable_buffer> m_recv_buffers_;
+        std::unordered_map<endpoint_type, size_t>                m_remote_endpoint_map_;
+        std::unordered_map<size_t, typename Protocol::socket>    m_sockets_;
+        std::unordered_map<size_t, std::atomic<bool>>            m_recv_running_;
+        std::unordered_map<size_t, boost::asio::mutable_buffer>  m_recv_buffers_;
+        std::unordered_map<size_t, std::unordered_set<std::unique_ptr<MessageBase>>> m_pending_messages_;
 
         std::atomic<bool> m_running_;
 
@@ -206,9 +210,8 @@ namespace Network
             m_running_.store( true );
         }
 
-        bool send( const size_t index,
-                   boost::asio::mutable_buffer& buffer,
-                   const std::function<void( const boost::system::error_code& ec, size_t )>& predicate )
+        template <typename MessageType> requires std::is_base_of_v <MessageBase, MessageType>
+        bool send( const size_t index, std::unique_ptr<MessageType>&& message )
         {
             if ( !m_running_ )
             {
@@ -218,12 +221,22 @@ namespace Network
 #ifdef _DEBUG
             assert( m_recv_running_.contains( index ) );
 #endif
-            if (!m_recv_running_.at(index))
+            if ( !m_recv_running_.at( index ) )
             {
                 return false;
             }
 
-            m_sockets_[ index ].async_send( buffer, predicate );
+            const auto& [iter, _] = m_pending_messages_[ index ].emplace( std::move( message ) );
+            boost::asio::const_buffer buffer( ( *iter ).get(), sizeof( MessageType ) );
+            const void*               unique_ptr_addr = reinterpret_cast<const void*>( &( *iter ) );
+
+            m_sockets_.at( index ).async_send(
+                    buffer,
+                                            [ this, index, unique_ptr_addr ]( const boost::system::error_code& ec, const size_t sent ) 
+                                            { 
+                                                m_pending_messages_.at( index ).erase( *reinterpret_cast<const std::unique_ptr<MessageBase>*>( unique_ptr_addr ) );
+                                            } );
+
             return true;
         }
 
@@ -274,10 +287,9 @@ namespace Network
             m_sockets_.emplace( i, Protocol::socket{ m_context_ } );
             if ( m_recv_buffers_[ i ].data() == nullptr )
             {
-                m_recv_buffers_.emplace( i,
-                                         boost::asio::mutable_buffer{
+                m_recv_buffers_.at( i ) = boost::asio::mutable_buffer{
                                                  details::allocate<Protocol>( details::MaxPacketSize<Protocol>::value ),
-                                                 details::MaxPacketSize<Protocol>::value } );
+                                                 details::MaxPacketSize<Protocol>::value };
             }
 
             CONSOLE_OUT( __FUNCTION__, "Start Accepting thread {}", i );
@@ -292,6 +304,10 @@ namespace Network
                                                            endpoint.address().to_v4().to_string(),
                                                            endpoint.port() );
                                               m_remote_endpoint_map_.emplace( endpoint, index );
+                                              if (m_recv_running_[index] == false)
+                                              {
+                                                  m_recv_running_.at( index ) = true;
+                                              }
                                               m_sockets_.at( index ).async_receive(
                                                       m_recv_buffers_[ index ],
                                                       std::bind( &NetworkContext::receiveHandler,
@@ -324,7 +340,7 @@ namespace Network
 #ifdef _DEBUG
                     assert( m_sockets_.contains( index ) );
 #endif
-                    m_sockets_.at( index ).async_receive( m_recv_buffers_[ index ],
+                    m_sockets_.at( index ).async_read_some( m_recv_buffers_[ index ],
                                                        std::bind( &NetworkContext::receiveHandler,
                                                                   this,
                                                                   index,

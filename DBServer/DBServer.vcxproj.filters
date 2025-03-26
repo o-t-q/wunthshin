@@ -13,12 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="헤더 파일\Handlers">
+      <UniqueIdentifier>{24c04947-a003-454b-bfc6-1ea142d52e04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DBServer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="message-handler.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Handlers\Public\pingpong.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="test_client.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -33,6 +42,18 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="message-handler.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Handlers\Public\pingpong.h">
+      <Filter>헤더 파일\Handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="message.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="DBServer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="test_client.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

@@ -159,12 +159,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="DBServer.cpp" />
+    <ClCompile Include="Handlers\Public\pingpong.cpp" />
     <ClCompile Include="message-handler.cpp" />
+    <ClCompile Include="test_client.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boost-socket.hpp" />
     <ClInclude Include="dbcon.hpp" />
+    <ClInclude Include="DBServer.h" />
+    <ClInclude Include="Handlers\Public\pingpong.h" />
     <ClInclude Include="message-handler.h" />
+    <ClInclude Include="message.h" />
+    <ClInclude Include="test_client.h" />
     <ClInclude Include="utility.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
