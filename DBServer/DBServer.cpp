@@ -2,14 +2,16 @@
 #include <csignal>
 #include <condition_variable>
 
+#include "boost-socket.hpp"
 #include "message-handler.h"
+#include "dbcon.hpp"
+
 #include "test_client.h"
 #include "DBServer.h"
 #include "utility.hpp"
 
-#include "boost-socket.hpp"
-
 std::unique_ptr<Network::NetworkContext<1337>> GlobalScope::G_TcpProtocol = {};
+std::unique_ptr<Database::DBConnection>        GlobalScope::G_Database    = {};
 
 void CleanUp( int signal )
 {
@@ -45,6 +47,7 @@ void GlobalScope::Initialize()
 {
     GetNetwork();
     GetHandler();
+    GetDatabase();
 }
 
 Network::NetworkContext<1337>& GlobalScope::GetNetwork()
@@ -65,4 +68,14 @@ MessageHandler& GlobalScope::GetHandler()
     }
 
     return *G_MessageHandler;
+}
+
+Database::DBConnection& GlobalScope::GetDatabase()
+{
+    if (!G_Database)
+    {
+        G_Database = std::make_unique<Database::DBConnection>( "postgres", 5432, "postgres", "1234" );
+    }
+
+    return *G_Database;
 }
