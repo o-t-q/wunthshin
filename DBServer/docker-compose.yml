@@ -1,0 +1,19 @@
+services:
+    db:
+        ports:
+            - 5432:5432
+        image: postgres:latest
+        volumes:
+            - db:/var/lib/postgresql/data
+            - ./tables/:/docker-entrypoint-initdb.d/
+        environment:
+            - POSTGRES_PASSWORD=1234
+            - TZ=Asia/Seoul
+        networks:
+            - db_net
+
+volumes:
+    db: {}
+
+networks:
+    db_net: {}

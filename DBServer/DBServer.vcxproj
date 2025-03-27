@@ -111,7 +111,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);BOOST_ASIO_DISABLE_CONCEPTS;PQXX_PQ_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,7 +128,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);PQXX_PQ_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -145,7 +145,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;BOOST_ASIO_DISABLE_CO_AWAIT;PQXX_PQ_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
@@ -164,7 +164,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;BOOST_ASIO_DISABLE_CO_AWAIT;PQXX_PQ_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -176,16 +176,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Data\Private\user.cpp" />
     <ClCompile Include="dbconn.cpp" />
     <ClCompile Include="DBServer.cpp" />
-    <ClCompile Include="Handlers\Public\pingpong.cpp" />
+    <ClCompile Include="db_test.cpp" />
+    <ClCompile Include="Handlers\Private\login.cpp" />
+    <ClCompile Include="Handlers\Private\pingpong.cpp" />
     <ClCompile Include="message-handler.cpp" />
     <ClCompile Include="test_client.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boost-socket.hpp" />
+    <ClInclude Include="Data\Public\user.hpp" />
     <ClInclude Include="dbcon.hpp" />
     <ClInclude Include="DBServer.h" />
+    <ClInclude Include="Handlers\Public\login.h" />
     <ClInclude Include="Handlers\Public\pingpong.h" />
     <ClInclude Include="message-handler.h" />
     <ClInclude Include="message.h" />

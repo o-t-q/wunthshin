@@ -1,12 +1,18 @@
 #pragma once
+#include <array>
 #include <optional>
 #include <type_traits>
+#include <string>
 #include <magic_enum/magic_enum.hpp>
 
 enum class EMessageType : int32_t
 {
     Unspecified,
 	PingPong,
+    Login,
+    LoginOK,
+    Logout,
+    LogoutOK,
     MAX
 };
 
@@ -15,10 +21,23 @@ constexpr size_t GetMaxMessageIndex()
     return static_cast<size_t>( EMessageType::MAX );
 }
 
+template <EMessageType MessageType>
+struct MessageTypeResolver
+{
+    using type = void;
+};
+
+#define DEFINE_MSG(NAME, ENUM, BODY) \
+    struct NAME : MessageT<ENUM> \
+    { BODY }; \
+    template <> \
+    struct MessageTypeResolver<ENUM> \
+    { using type = NAME; }
+
 #pragma pack( push, 1 )
 struct MessageBase 
 {
-    MessageBase( EMessageType InMessageType ) : messageType( InMessageType )
+    explicit MessageBase( EMessageType InMessageType ) : messageType( InMessageType )
     { }
 
     MessageBase(MessageBase&& other) noexcept
@@ -52,17 +71,30 @@ struct MessageT : MessageBase
     MessageT( MessageT&& other ) noexcept : MessageBase( other ) {}
 };
 
-struct UnspecifiedMessage : MessageT<EMessageType::Unspecified>
-{ };
-struct PingPongMessage : MessageT<EMessageType::PingPong> 
-{ };
+using HashArray = std::array<std::byte, 32>;
+using UUID = std::array<std::byte, 16>;
+
+DEFINE_MSG( UnspecifiedMessage, EMessageType::Unspecified );
+DEFINE_MSG( PingPongMessage, EMessageType::PingPong );
+DEFINE_MSG( LoginMessage, EMessageType::Login, std::string name; HashArray hashedPassword{}; );
+DEFINE_MSG( LoginOKMessage, EMessageType::LoginOK,
+    LoginOKMessage( UUID&& inSessionId ) : sessionId( inSessionId ){}
+    UUID sessionId{};
+);
+DEFINE_MSG( LogoutMessage, EMessageType::Logout, 
+    LogoutMessage( UUID&& inSessionId ) : sessionId( inSessionId ) {}
+    UUID sessionId{};
+);
+DEFINE_MSG( LogoutOKMessage, EMessageType::LogoutOK,
+           LogoutOKMessage(bool flag) : success(flag) {}
+           bool success; );
 #pragma pack( pop )
 
 template <size_t... Values>
 constexpr auto resolve_message_sizes_impl( std::integer_sequence<size_t, Values...> int_seq )
 {
     std::array<size_t, GetMaxMessageIndex()> out  = {};
-    std::vector<size_t> temp = { sizeof( MessageT<static_cast<EMessageType>( Values )> )... };
+    const std::vector<size_t>                temp = { sizeof( typename MessageTypeResolver<static_cast<EMessageType>( Values )>::type )... };
     for ( int i = 0; i < GetMaxMessageIndex(); ++i )
     {
         out.at( i ) = temp.at( i );

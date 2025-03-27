@@ -1,10 +1,10 @@
-#include "pingpong.h"
+#include "../Public/pingpong.h"
 #include "../../message.h"
 #include "../../utility.hpp"
 #include "../../DBServer.h"
 #include "../../boost-socket.hpp"
 
-Registration<PingPongHandler> PingPongRegistration = {};
+HandlerRegistration<PingPongHandler> PingPongRegistration = {};
 
 bool PingPongHandler::ShouldHandle( EMessageType messageType )
 {

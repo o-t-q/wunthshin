@@ -1,4 +1,7 @@
 #include "message-handler.h"
+
+#include <memory>
+
 #include "message.h"
 
 std::unique_ptr<MessageHandler> GlobalScope::G_MessageHandler = {};

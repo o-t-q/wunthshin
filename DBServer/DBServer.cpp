@@ -10,6 +10,8 @@
 #include "DBServer.h"
 #include "utility.hpp"
 
+extern void TestDB();
+
 std::unique_ptr<Network::NetworkContext<1337>> GlobalScope::G_TcpProtocol = {};
 std::unique_ptr<Database::DBConnection>        GlobalScope::G_Database    = {};
 
@@ -37,6 +39,7 @@ int main()
     std::signal( SIGINT | SIGTERM | SIGSEGV | SIGABRT | SIGFPE, CleanUp );
 
 #ifdef _DEBUG
+    TestDB();
     StartTestClient();
 #endif
 
