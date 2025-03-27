@@ -22,6 +22,34 @@ void RunClientThread()
         CONSOLE_OUT( __FUNCTION__, "Failed to connecting to the server : {}", ec.what() );
     }
 
+    UUID sessionID;
+
+    {
+        LoginMessage loginMessage;
+        loginMessage.name = "name";
+        boost::asio::const_buffer loginMessageBuffer( &loginMessage, sizeof( loginMessage ) );
+        CONSOLE_OUT( __FUNCTION__, "Login request sent" );
+        assert( socket.send( loginMessageBuffer ) != 0 );
+        UUID container;
+        LoginOKMessage              loginReply{ std::move( container ) };
+        boost::asio::mutable_buffer loginReceived( &loginReply, sizeof( loginReply ) );
+        socket.receive( loginReceived );
+        CONSOLE_OUT( __FUNCTION__, "Login OK, Session ID : {}", to_hex_string( loginReply.sessionId ));
+        sessionID = loginReply.sessionId;
+    }
+
+    {
+        LogoutMessage logoutMessage( std::move( sessionID ) );
+        boost::asio::const_buffer logoutBuffer ( &logoutMessage, sizeof( logoutMessage ) );
+        assert( socket.send( logoutBuffer ) != 0 );
+        CONSOLE_OUT( __FUNCTION__, "Logout request sent" );
+        LogoutOKMessage logoutReply(false);
+        boost::asio::mutable_buffer loginReceived( &logoutReply, sizeof( logoutReply ) );
+        socket.receive( loginReceived );
+        assert( logoutReply.success );
+        CONSOLE_OUT( __FUNCTION__, "Logout OK" );
+    }
+
     while ( ClientThreadRuninng )
     {
         PingPongMessage Message;

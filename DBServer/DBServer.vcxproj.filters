@@ -16,6 +16,15 @@
     <Filter Include="헤더 파일\Handlers">
       <UniqueIdentifier>{24c04947-a003-454b-bfc6-1ea142d52e04}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Data">
+      <UniqueIdentifier>{71beb564-657b-4803-be0b-ce3e9839f135}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Data">
+      <UniqueIdentifier>{e44f2255-da94-47aa-9583-b274a40bbbce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Handlers">
+      <UniqueIdentifier>{ce5cd7bb-3e98-485c-9f59-8792f919d3b4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DBServer.cpp">
@@ -24,14 +33,23 @@
     <ClCompile Include="message-handler.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Handlers\Public\pingpong.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="test_client.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="dbconn.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Data\Private\user.cpp">
+      <Filter>소스 파일\Data</Filter>
+    </ClCompile>
+    <ClCompile Include="db_test.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Handlers\Private\login.cpp">
+      <Filter>소스 파일\Handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Handlers\Private\pingpong.cpp">
+      <Filter>소스 파일\Handlers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -58,6 +76,12 @@
     </ClInclude>
     <ClInclude Include="test_client.h">
       <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Data\Public\user.hpp">
+      <Filter>헤더 파일\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="Handlers\Public\login.h">
+      <Filter>헤더 파일\Handlers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

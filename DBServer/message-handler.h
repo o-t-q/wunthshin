@@ -3,6 +3,8 @@
 #define NOMINMAX
 #include <SDKDDKVer.h>
 #include <boost/asio.hpp>
+#include <memory>
+#include <vector>
 
 #include "DBServer.h"
 #include "message.h"
@@ -31,9 +33,9 @@ private:
 };
 
 template <typename T>
-struct Registration
+struct HandlerRegistration
 {
-    Registration()
+    HandlerRegistration()
     {
         GlobalScope::GetHandler().RegisterHandler( new T() );
     }
