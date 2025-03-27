@@ -10,10 +10,19 @@ enum class EMessageType : int32_t
     Unspecified,
 	PingPong,
     Login,
-    LoginOK,
+    LoginStatus,
     Logout,
     LogoutOK,
+    Register,
+    RegisterStatus,
     MAX
+};
+
+enum class ERegistrationFailCode : int32_t
+{
+    None,
+    Name,
+    Email
 };
 
 constexpr size_t GetMaxMessageIndex()
@@ -77,8 +86,12 @@ using UUID = std::array<std::byte, 16>;
 DEFINE_MSG( UnspecifiedMessage, EMessageType::Unspecified );
 DEFINE_MSG( PingPongMessage, EMessageType::PingPong );
 DEFINE_MSG( LoginMessage, EMessageType::Login, std::string name; HashArray hashedPassword{}; );
-DEFINE_MSG( LoginOKMessage, EMessageType::LoginOK,
-    LoginOKMessage( UUID&& inSessionId ) : sessionId( inSessionId ){}
+DEFINE_MSG( LoginStatusMessage, EMessageType::LoginStatus,
+    LoginStatusMessage( UUID&& inSessionId )
+    {
+        sessionId = inSessionId;
+    }
+    bool success = false;    
     UUID sessionId{};
 );
 DEFINE_MSG( LogoutMessage, EMessageType::Logout, 
@@ -88,6 +101,16 @@ DEFINE_MSG( LogoutMessage, EMessageType::Logout,
 DEFINE_MSG( LogoutOKMessage, EMessageType::LogoutOK,
            LogoutOKMessage(bool flag) : success(flag) {}
            bool success; );
+DEFINE_MSG( RegisterMessage, EMessageType::Register,
+           std::string name; std::string email; HashArray hashedPassword{}; );
+DEFINE_MSG( RegisterStatusMessage, EMessageType::RegisterStatus,
+           bool success = false; ERegistrationFailCode code = ERegistrationFailCode::None;
+           RegisterStatusMessage() = default;
+           RegisterStatusMessage(bool inSuccess, ERegistrationFailCode inFailCode)
+           {
+               success = inSuccess;
+               code = inFailCode;
+           } );
 #pragma pack( pop )
 
 template <size_t... Values>

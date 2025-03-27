@@ -25,15 +25,42 @@ void RunClientThread()
     UUID sessionID;
 
     {
+        RegisterMessage registerMessage;
+        registerMessage.name = "name";
+        registerMessage.email = "test@test.com";
+        std::ranges::fill( registerMessage.hashedPassword, (std::byte)0 );
+        boost::asio::const_buffer registerBuffer( &registerMessage, sizeof(registerMessage) );
+        assert( socket.send( registerBuffer ) != 0 );
+        CONSOLE_OUT( __FUNCTION__, "Register request sent" )
+        RegisterStatusMessage registerResponse;
+        boost::asio::mutable_buffer registerResponseBuffer( &registerResponse, sizeof( registerResponse ) );
+        socket.receive( registerResponseBuffer );
+
+        if (registerResponse.success)
+        {
+            CONSOLE_OUT( __FUNCTION__, "Register success" )
+        }
+        else
+        {
+            CONSOLE_OUT( __FUNCTION__, "Register failed, reason : {}", magic_enum::enum_name<ERegistrationFailCode>(registerResponse.code) )
+        }
+    }
+
+    {
         LoginMessage loginMessage;
         loginMessage.name = "name";
         boost::asio::const_buffer loginMessageBuffer( &loginMessage, sizeof( loginMessage ) );
         CONSOLE_OUT( __FUNCTION__, "Login request sent" );
         assert( socket.send( loginMessageBuffer ) != 0 );
         UUID container;
-        LoginOKMessage              loginReply{ std::move( container ) };
+        LoginStatusMessage              loginReply{ std::move( container ) };
         boost::asio::mutable_buffer loginReceived( &loginReply, sizeof( loginReply ) );
         socket.receive( loginReceived );
+        assert( loginReply.success );
+        assert( !std::ranges::all_of( loginReply.sessionId.begin(), loginReply.sessionId.end(), [](const std::byte& b)
+        {
+            return b == (std::byte)0;
+        } ) );
         CONSOLE_OUT( __FUNCTION__, "Login OK, Session ID : {}", to_hex_string( loginReply.sessionId ));
         sessionID = loginReply.sessionId;
     }

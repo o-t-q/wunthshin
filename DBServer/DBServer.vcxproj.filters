@@ -39,16 +39,13 @@
     <ClCompile Include="dbconn.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Data\Private\user.cpp">
-      <Filter>소스 파일\Data</Filter>
-    </ClCompile>
-    <ClCompile Include="db_test.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Handlers\Private\login.cpp">
       <Filter>소스 파일\Handlers</Filter>
     </ClCompile>
     <ClCompile Include="Handlers\Private\pingpong.cpp">
+      <Filter>소스 파일\Handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Handlers\Private\register.cpp">
       <Filter>소스 파일\Handlers</Filter>
     </ClCompile>
   </ItemGroup>
@@ -81,6 +78,15 @@
       <Filter>헤더 파일\Data</Filter>
     </ClInclude>
     <ClInclude Include="Handlers\Public\login.h">
+      <Filter>헤더 파일\Handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Data\Public\inventory.hpp">
+      <Filter>헤더 파일\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="Data\Public\item.hpp">
+      <Filter>헤더 파일\Data</Filter>
+    </ClInclude>
+    <ClInclude Include="Handlers\Public\register.h">
       <Filter>헤더 파일\Handlers</Filter>
     </ClInclude>
   </ItemGroup>

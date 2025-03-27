@@ -176,22 +176,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Data\Private\user.cpp" />
     <ClCompile Include="dbconn.cpp" />
     <ClCompile Include="DBServer.cpp" />
-    <ClCompile Include="db_test.cpp" />
     <ClCompile Include="Handlers\Private\login.cpp" />
     <ClCompile Include="Handlers\Private\pingpong.cpp" />
+    <ClCompile Include="Handlers\Private\register.cpp" />
     <ClCompile Include="message-handler.cpp" />
     <ClCompile Include="test_client.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="boost-socket.hpp" />
+    <ClInclude Include="Data\Public\inventory.hpp" />
+    <ClInclude Include="Data\Public\item.hpp" />
     <ClInclude Include="Data\Public\user.hpp" />
     <ClInclude Include="dbcon.hpp" />
     <ClInclude Include="DBServer.h" />
     <ClInclude Include="Handlers\Public\login.h" />
     <ClInclude Include="Handlers\Public\pingpong.h" />
+    <ClInclude Include="Handlers\Public\register.h" />
     <ClInclude Include="message-handler.h" />
     <ClInclude Include="message.h" />
     <ClInclude Include="test_client.h" />
