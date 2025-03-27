@@ -8,10 +8,9 @@
 
 namespace Database
 {
-    static bool DoesTableExists( pqxx::work&& tx, const std::string_view db_name, const std::string_view table_name )
+    static bool DoesTableExists( pqxx::work&& tx, const std::string_view table_name )
     {
-        return !tx.exec( "SELECT EXISTS ( SELECT FROM information_schema.tables WHERE table_schema = '$1' AND "
-                        "table_name = '$2');", { db_name, table_name } ).empty();
+        return !tx.exec( "SELECT from pg_tables where tablename='$1';", pqxx::params{ table_name } ).empty();
     }
 
     struct Table;
@@ -43,7 +42,7 @@ namespace Database
         {
             for ( const auto& name : m_tables_ | std::views::keys )
             {
-                if ( !DoesTableExists( GetTransaction(), m_db_name_, name ) )
+                if ( !DoesTableExists( GetTransaction(), name ) )
                 {
                     CONSOLE_OUT( __FUNCTION__, "Table sanity check failed : {}", name )
                     std::abort();
