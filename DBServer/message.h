@@ -18,6 +18,20 @@ constexpr size_t GetMaxMessageIndex()
 #pragma pack( push, 1 )
 struct MessageBase 
 {
+    MessageBase( EMessageType InMessageType ) : messageType( InMessageType )
+    { }
+
+    MessageBase(MessageBase&& other) noexcept
+    {
+        messageType = other.messageType;
+        other.messageType = EMessageType::Unspecified;
+    }
+
+    MessageBase(const MessageBase& other)
+    {
+        messageType = other.messageType;
+    }
+
     EMessageType GetType() const
     {
         return messageType;
@@ -34,6 +48,8 @@ struct MessageT : MessageBase
     constexpr MessageT() : MessageBase( MessageType )
     {
     }
+
+    MessageT( MessageT&& other ) noexcept : MessageBase( other ) {}
 };
 
 struct UnspecifiedMessage : MessageT<EMessageType::Unspecified>
