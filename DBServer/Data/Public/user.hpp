@@ -30,12 +30,20 @@ struct UserProfile
         return !result.empty();
     }
 
-    static size_t TryLogin( const std::string_view name, const std::array<std::byte, 32>& hashedPassword, pqxx::work&& tx  )
+    static size_t TryLoginStr( const std::string_view name, const std::array<std::byte, 32>& hashedPassword, pqxx::work&& tx )
     {
-        const pqxx::params params { name, pqxx::bytes_view{ hashedPassword.begin(), hashedPassword.end() } };
+        const pqxx::params params{
+            name, pqxx::bytes_view{ hashedPassword.begin(), hashedPassword.end() }
+        };
 
-        const auto             result = tx.query_value<size_t>( "SELECT id FROM users WHERE name=$1 and password=$2;", params );
+        const auto result = tx.query_value<size_t>( "SELECT id FROM users WHERE name=$1 and password=$2;", params );
         return result;
+    }
+
+    static size_t TryLoginVarChar(const Varchar& name, const HashArray& hashedPassword, pqxx::work&& tx)
+    {
+        std::string stringify( name.begin(), name.end() );
+        return TryLoginStr( stringify, hashedPassword, std::move( tx ) );
     }
 
     static size_t GetIdentifier( const std::string_view name, pqxx::work&& tx )

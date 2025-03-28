@@ -23,7 +23,7 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
             std::unique_ptr<LoginStatusMessage> reply;
             auto& loginMessage = reinterpret_cast<LoginMessage&>( message );
             if ( const auto id = user_table->Execute<size_t>(
-                    std::bind_front( &UserProfile::TryLogin, loginMessage.name, loginMessage.hashedPassword ) );
+                         &UserProfile::TryLoginVarChar, loginMessage.name, loginMessage.hashedPassword );
                 id != 0 )
             {
                 static boost::uuids::random_generator uuid_gen;

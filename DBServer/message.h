@@ -1,9 +1,7 @@
 #pragma once
 #include <array>
-#include <optional>
 #include <type_traits>
 #include <string>
-#include <magic_enum/magic_enum.hpp>
 
 enum class EMessageType : int32_t
 {
@@ -80,12 +78,15 @@ struct MessageT : MessageBase
     MessageT( MessageT&& other ) noexcept : MessageBase( other ) {}
 };
 
+using Varchar = std::array<char, 255>;
 using HashArray = std::array<std::byte, 32>;
 using UUID = std::array<std::byte, 16>;
 
 DEFINE_MSG( UnspecifiedMessage, EMessageType::Unspecified );
 DEFINE_MSG( PingPongMessage, EMessageType::PingPong );
-DEFINE_MSG( LoginMessage, EMessageType::Login, std::string name; HashArray hashedPassword{}; );
+DEFINE_MSG( LoginMessage, EMessageType::Login, 
+    Varchar name; 
+    HashArray hashedPassword{}; );
 DEFINE_MSG( LoginStatusMessage, EMessageType::LoginStatus,
     LoginStatusMessage( UUID&& inSessionId )
     {

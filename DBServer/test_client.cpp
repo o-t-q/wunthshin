@@ -3,6 +3,7 @@
 #include <SDKDDKVer.h>
 #include <boost/asio.hpp>
 #include <future>
+#include <magic_enum/magic_enum.hpp>
 #include "message.h"
 #include "test_client.h"
 #include "utility.hpp"
@@ -48,7 +49,8 @@ void RunClientThread()
 
     {
         LoginMessage loginMessage;
-        loginMessage.name = "name";
+        const char*  username = "name";
+        strcpy_s( loginMessage.name.data(), sizeof(username), username );
         boost::asio::const_buffer loginMessageBuffer( &loginMessage, sizeof( loginMessage ) );
         CONSOLE_OUT( __FUNCTION__, "Login request sent" );
         assert( socket.send( loginMessageBuffer ) != 0 );
