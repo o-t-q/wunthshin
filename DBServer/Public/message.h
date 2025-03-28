@@ -90,7 +90,7 @@ struct MessageT : MessageBase
     MessageT( MessageT&& other ) noexcept : MessageBase( other ) {}
 };
 
-using Varchar = std::array<char, 255>;
+using Varchar = std::array<char, 256>;
 using HashArray = std::array<std::byte, 32>;
 using UUID = std::array<std::byte, 16>;
 
