@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <pqxx/pqxx>
-#include "../../dbcon.hpp"
+#include "../../Public/dbcon.hpp"
 
 struct UserProfile
 {

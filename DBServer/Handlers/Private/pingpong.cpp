@@ -1,8 +1,8 @@
 #include "../Public/pingpong.h"
-#include "../../message.h"
-#include "../../utility.hpp"
-#include "../../DBServer.h"
-#include "../../boost-socket.hpp"
+#include "../../Public/message.h"
+#include "../../Public/utility.hpp"
+#include "../../Public/DBServer.h"
+#include "../../Public/boost-socket.hpp"
 
 HandlerRegistration<PingPongHandler> PingPongRegistration = {};
 

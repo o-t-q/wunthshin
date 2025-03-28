@@ -1,5 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
+using System;
+using System.IO;
 using UnrealBuildTool;
 
 public class wunthshin : ModuleRules
@@ -10,7 +12,7 @@ public class wunthshin : ModuleRules
 		
 		PublicIncludePaths.AddRange(new string[] 
 		{
-			this.Name
+			"$(ProjectDir)/DBServer/Public"
 		});
 		
 		PublicDependencyModuleNames.AddRange(new string[]

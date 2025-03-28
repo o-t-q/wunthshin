@@ -1,9 +1,9 @@
 #include "../Public/register.h"
 #include <regex>
-#include "../../boost-socket.hpp"
+#include "../../Public/boost-socket.hpp"
 #include "../../Data/Public/user.hpp"
 #include "../../Data/Public/inventory.hpp"
-#include "../../dbcon.hpp"
+#include "../../Public/dbcon.hpp"
 
 HandlerRegistration<RegisterHandler> RegisterHandlerRegistration = {};
 

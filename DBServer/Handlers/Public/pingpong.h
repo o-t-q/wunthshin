@@ -1,8 +1,8 @@
 #pragma once
 #include <set>
 
-#include "../../message.h"
-#include "../../message-handler.h"
+#include "../../Public/message.h"
+#include "../../Public/message-handler.h"
 
 struct PingPongHandler : HandlerImplementation
 {

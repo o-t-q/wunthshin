@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../message.h"
-#include "../../message-handler.h"
+#include "../../Public/message.h"
+#include "../../Public/message-handler.h"
 
 struct RegisterHandler : HandlerImplementation
 {

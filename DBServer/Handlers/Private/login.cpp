@@ -1,9 +1,9 @@
 #include "../Public/login.h"
 #include "../../Data/Public/user.hpp"
-#include "../../dbcon.hpp"
+#include "../../Public/dbcon.hpp"
 #include <boost/uuid.hpp>
 
-#include "../../boost-socket.hpp"
+#include "../../Public/boost-socket.hpp"
 
 HandlerRegistration<LoginHandler> LoginHandlerRegistration = {};
 
