@@ -85,7 +85,7 @@ using UUID = std::array<std::byte, 16>;
 DEFINE_MSG( UnspecifiedMessage, EMessageType::Unspecified );
 DEFINE_MSG( PingPongMessage, EMessageType::PingPong );
 DEFINE_MSG( LoginMessage, EMessageType::Login, 
-    Varchar name; 
+    Varchar name{}; 
     HashArray hashedPassword{}; );
 DEFINE_MSG( LoginStatusMessage, EMessageType::LoginStatus,
     LoginStatusMessage( UUID&& inSessionId )
