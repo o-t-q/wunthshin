@@ -1,19 +1,26 @@
 #pragma once
 #include <array>
-#include <optional>
 #include <type_traits>
 #include <string>
-#include <magic_enum/magic_enum.hpp>
 
 enum class EMessageType : int32_t
 {
     Unspecified,
 	PingPong,
     Login,
-    LoginOK,
+    LoginStatus,
     Logout,
     LogoutOK,
+    Register,
+    RegisterStatus,
     MAX
+};
+
+enum class ERegistrationFailCode : int32_t
+{
+    None,
+    Name,
+    Email
 };
 
 constexpr size_t GetMaxMessageIndex()
@@ -71,14 +78,21 @@ struct MessageT : MessageBase
     MessageT( MessageT&& other ) noexcept : MessageBase( other ) {}
 };
 
+using Varchar = std::array<char, 255>;
 using HashArray = std::array<std::byte, 32>;
 using UUID = std::array<std::byte, 16>;
 
 DEFINE_MSG( UnspecifiedMessage, EMessageType::Unspecified );
 DEFINE_MSG( PingPongMessage, EMessageType::PingPong );
-DEFINE_MSG( LoginMessage, EMessageType::Login, std::string name; HashArray hashedPassword{}; );
-DEFINE_MSG( LoginOKMessage, EMessageType::LoginOK,
-    LoginOKMessage( UUID&& inSessionId ) : sessionId( inSessionId ){}
+DEFINE_MSG( LoginMessage, EMessageType::Login, 
+    Varchar name; 
+    HashArray hashedPassword{}; );
+DEFINE_MSG( LoginStatusMessage, EMessageType::LoginStatus,
+    LoginStatusMessage( UUID&& inSessionId )
+    {
+        sessionId = inSessionId;
+    }
+    bool success = false;    
     UUID sessionId{};
 );
 DEFINE_MSG( LogoutMessage, EMessageType::Logout, 
@@ -88,6 +102,16 @@ DEFINE_MSG( LogoutMessage, EMessageType::Logout,
 DEFINE_MSG( LogoutOKMessage, EMessageType::LogoutOK,
            LogoutOKMessage(bool flag) : success(flag) {}
            bool success; );
+DEFINE_MSG( RegisterMessage, EMessageType::Register,
+           std::string name; std::string email; HashArray hashedPassword{}; );
+DEFINE_MSG( RegisterStatusMessage, EMessageType::RegisterStatus,
+           bool success = false; ERegistrationFailCode code = ERegistrationFailCode::None;
+           RegisterStatusMessage() = default;
+           RegisterStatusMessage(bool inSuccess, ERegistrationFailCode inFailCode)
+           {
+               success = inSuccess;
+               code = inFailCode;
+           } );
 #pragma pack( pop )
 
 template <size_t... Values>
