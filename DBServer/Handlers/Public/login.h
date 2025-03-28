@@ -1,6 +1,6 @@
 #pragma once
 #include <unordered_map>
-#include "../../message-handler.h"
+#include "../../Public/message-handler.h"
 #include <boost/container_hash/hash.hpp>
 
 template <>

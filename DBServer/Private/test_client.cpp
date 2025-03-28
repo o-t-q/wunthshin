@@ -4,9 +4,9 @@
 #include <boost/asio.hpp>
 #include <future>
 #include <magic_enum/magic_enum.hpp>
-#include "message.h"
-#include "test_client.h"
-#include "utility.hpp"
+#include "../Public/message.h"
+#include "../Public/test_client.h"
+#include "../Public/utility.hpp"
 
 std::atomic<bool> ClientThreadRuninng;
 std::future<void> FutureClientThread;

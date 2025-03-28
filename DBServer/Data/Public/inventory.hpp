@@ -3,8 +3,8 @@
 #include <pqxx/pqxx>
 
 #include "item.hpp"
-#include "../../dbcon.hpp"
-#include "../../DBServer.h"
+#include "../../Public/dbcon.hpp"
+#include "../../Public/DBServer.h"
 
 struct Inventory
 {

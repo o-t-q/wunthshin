@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <vector>
 #include <type_traits>
 #include <string>
 
@@ -16,6 +17,9 @@ enum class EMessageType : int32_t
     MAX
 };
 
+template <EMessageType MessageType>
+concept CMessageConstraint = ( size_t )MessageType >= 0 && ( size_t )MessageType < ( size_t )EMessageType::MAX;
+
 enum class ERegistrationFailCode : int32_t
 {
     None,
@@ -29,17 +33,25 @@ constexpr size_t GetMaxMessageIndex()
 }
 
 template <EMessageType MessageType>
-struct MessageTypeResolver
+    requires CMessageConstraint<MessageType>
+struct MessageTypeResolver 
 {
     using type = void;
 };
 
-#define DEFINE_MSG(NAME, ENUM, BODY) \
+#define DEFINE_MSG(NAME, ENUM) \
+    struct NAME : MessageT<ENUM> {}; \
+    template <> \
+    struct MessageTypeResolver<ENUM> \
+    { using type = NAME; };
+
+
+#define DEFINE_MSG_WITH_BODY(NAME, ENUM, BODY) \
     struct NAME : MessageT<ENUM> \
     { BODY }; \
     template <> \
     struct MessageTypeResolver<ENUM> \
-    { using type = NAME; }
+    { using type = NAME; };
 
 #pragma pack( push, 1 )
 struct MessageBase 
@@ -67,8 +79,8 @@ private:
     EMessageType messageType;
 };
 
-template <EMessageType MessageType, typename Test = std::integral_constant<int32_t, static_cast<int32_t>(MessageType)>>
-    requires( Test::value >= 0 && Test::value < GetMaxMessageIndex() )
+template <EMessageType MessageType>
+    requires CMessageConstraint<MessageType>
 struct MessageT : MessageBase
 {
     constexpr MessageT() : MessageBase( MessageType )
@@ -82,12 +94,14 @@ using Varchar = std::array<char, 255>;
 using HashArray = std::array<std::byte, 32>;
 using UUID = std::array<std::byte, 16>;
 
-DEFINE_MSG( UnspecifiedMessage, EMessageType::Unspecified );
-DEFINE_MSG( PingPongMessage, EMessageType::PingPong );
-DEFINE_MSG( LoginMessage, EMessageType::Login, 
+DEFINE_MSG( UnspecifiedMessage, EMessageType::Unspecified )
+DEFINE_MSG( PingPongMessage, EMessageType::PingPong )
+DEFINE_MSG_WITH_BODY( LoginMessage, EMessageType::Login, 
     Varchar name{}; 
-    HashArray hashedPassword{}; );
-DEFINE_MSG( LoginStatusMessage, EMessageType::LoginStatus,
+    HashArray hashedPassword{}; )
+DEFINE_MSG_WITH_BODY(
+        LoginStatusMessage,
+        EMessageType::LoginStatus,
     LoginStatusMessage( UUID&& inSessionId )
     {
         sessionId = inSessionId;
@@ -95,23 +109,26 @@ DEFINE_MSG( LoginStatusMessage, EMessageType::LoginStatus,
     bool success = false;    
     UUID sessionId{};
 );
-DEFINE_MSG( LogoutMessage, EMessageType::Logout, 
+DEFINE_MSG_WITH_BODY(
+        LogoutMessage, EMessageType::Logout, 
     LogoutMessage( UUID&& inSessionId ) : sessionId( inSessionId ) {}
     UUID sessionId{};
-);
-DEFINE_MSG( LogoutOKMessage, EMessageType::LogoutOK,
+)
+DEFINE_MSG_WITH_BODY(
+        LogoutOKMessage, EMessageType::LogoutOK,
            LogoutOKMessage(bool flag) : success(flag) {}
-           bool success; );
-DEFINE_MSG( RegisterMessage, EMessageType::Register,
-           std::string name; std::string email; HashArray hashedPassword{}; );
-DEFINE_MSG( RegisterStatusMessage, EMessageType::RegisterStatus,
+           bool success; )
+DEFINE_MSG_WITH_BODY( RegisterMessage, EMessageType::Register,
+           std::string name; std::string email; HashArray hashedPassword{}; )
+DEFINE_MSG_WITH_BODY(
+        RegisterStatusMessage, EMessageType::RegisterStatus,
            bool success = false; ERegistrationFailCode code = ERegistrationFailCode::None;
            RegisterStatusMessage() = default;
            RegisterStatusMessage(bool inSuccess, ERegistrationFailCode inFailCode)
            {
                success = inSuccess;
                code = inFailCode;
-           } );
+           } )
 #pragma pack( pop )
 
 template <size_t... Values>

@@ -27,18 +27,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DBServer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="message-handler.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="test_client.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="dbconn.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="Handlers\Private\login.cpp">
       <Filter>소스 파일\Handlers</Filter>
     </ClCompile>
@@ -48,31 +36,22 @@
     <ClCompile Include="Handlers\Private\register.cpp">
       <Filter>소스 파일\Handlers</Filter>
     </ClCompile>
+    <ClCompile Include="Private\DBServer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\message-handler.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\test_client.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Private\dbconn.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="utility.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="boost-socket.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="dbcon.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="message-handler.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="Handlers\Public\pingpong.h">
       <Filter>헤더 파일\Handlers</Filter>
-    </ClInclude>
-    <ClInclude Include="message.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="DBServer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="test_client.h">
-      <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Data\Public\user.hpp">
       <Filter>헤더 파일\Data</Filter>
@@ -88,6 +67,27 @@
     </ClInclude>
     <ClInclude Include="Handlers\Public\register.h">
       <Filter>헤더 파일\Handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\boost-socket.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\dbcon.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\DBServer.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\message.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\message-handler.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\test_client.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\utility.hpp">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

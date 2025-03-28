@@ -2,13 +2,13 @@
 #include <csignal>
 #include <condition_variable>
 
-#include "boost-socket.hpp"
-#include "message-handler.h"
-#include "dbcon.hpp"
+#include "../Public/boost-socket.hpp"
+#include "../Public/message-handler.h"
+#include "../Public/dbcon.hpp"
 
-#include "test_client.h"
-#include "DBServer.h"
-#include "utility.hpp"
+#include "../Public/test_client.h"
+#include "../Public/DBServer.h"
+#include "../Public/utility.hpp"
 
 std::unique_ptr<Network::NetworkContext<1337>> GlobalScope::G_TcpProtocol = {};
 std::unique_ptr<Database::DBConnection>        GlobalScope::G_Database    = {};
