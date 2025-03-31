@@ -15,6 +15,7 @@ bool RegisterHandler::ShouldHandle( EMessageType messageType )
 void RegisterHandler::Handle( const size_t index, MessageBase& message )
 {
     static std::regex emailValidation( R"(^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$)" );
+    static std::regex idValidation( R"(^[a-zA-Z0-9]+$)") ;
     const auto&       registerMessage = reinterpret_cast<RegisterMessage&>( message );
 
     const Database::Table* userTable = GlobalScope::GetDatabase().GetTable( "User" );
@@ -35,7 +36,14 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
     }
 
     if ( std::cmatch matchResult;
-        !std::regex_match( newProfile.email.c_str(), matchResult, emailValidation ) && matchResult.size() != 1 )
+         !std::regex_match( newProfile.name.c_str(), matchResult, idValidation ) && matchResult.size() == 0 )
+    {
+        success = false;
+        failCode = ERegistrationFailCode::Name;
+    }
+
+    if ( std::cmatch matchResult;
+         !std::regex_match( newProfile.email.c_str(), matchResult, emailValidation ) && matchResult.size() != 1 )
     {
         success = false;
         failCode = ERegistrationFailCode::Email;

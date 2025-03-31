@@ -20,6 +20,12 @@ public class wunthshin : ModuleRules
 			"Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "AIModule", "NavigationSystem", "LevelSequence",
 			"FCTween" ,"MovieScene", "OnlineSubsystemUtils"
         });
+		
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"Sockets",
+            "NetCommon"
+		});
 
 		if (Target.bBuildEditor)
 		{
