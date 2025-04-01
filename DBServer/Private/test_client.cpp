@@ -29,7 +29,7 @@ void RunClientThread()
         RegisterMessage registerMessage;
         std::ranges::copy("name", registerMessage.name.begin());
         std::ranges::copy( "test@test.com", registerMessage.email.begin() );
-        std::ranges::fill( registerMessage.hashedPassword, (std::byte)0 );
+        std::ranges::fill( registerMessage.hashedPassword, (std::byte)1 );
         boost::asio::const_buffer registerBuffer( &registerMessage, sizeof(registerMessage) );
         assert( socket.send( registerBuffer ) != 0 );
         CONSOLE_OUT( __FUNCTION__, "Register request sent" )
@@ -49,8 +49,9 @@ void RunClientThread()
 
     {
         LoginMessage loginMessage;
-        const char*  username = "name";
-        strcpy_s( loginMessage.name.data(), sizeof(username), username );
+        constexpr char username[] = "name";
+        strcpy_s( loginMessage.name.data(), std::size(username), username );
+        std::ranges::fill(loginMessage.hashedPassword, (std::byte)1);
         boost::asio::const_buffer loginMessageBuffer( &loginMessage, sizeof( loginMessage ) );
         CONSOLE_OUT( __FUNCTION__, "Login request sent" );
         assert( socket.send( loginMessageBuffer ) != 0 );

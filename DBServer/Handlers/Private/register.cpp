@@ -39,10 +39,10 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
         success  = false;
         failCode = ERegistrationFailCode::Email;
     }
-    
-    UserProfile newProfile;
+
     if ( success )
     {
+        UserProfile newProfile{};
         std::copy( registerMessage.name.begin(), nameNullTrailing, newProfile.name.begin() );
         std::copy( registerMessage.email.begin(), emailNullTrailing, newProfile.email.begin() );
         newProfile.hashedPassword = registerMessage.hashedPassword;
@@ -58,7 +58,7 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
         }
 
         if ( std::cmatch matchResult;
-             !std::regex_match( nameStringify.data(), matchResult, idValidation ) || matchResult.size() == 0 )
+             !std::regex_match( nameStringify.data(), matchResult, idValidation ) || matchResult.empty() )
         {
             CONSOLE_OUT( __FUNCTION__, "Registration failed due to the name rule" )
             success  = false;
@@ -66,7 +66,7 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
         }
 
         if ( std::cmatch matchResult;
-             !std::regex_match( emailStringify.data(), matchResult, emailValidation ) || matchResult.size() == 0 )
+             !std::regex_match( emailStringify.data(), matchResult, emailValidation ) || matchResult.empty() )
         {
             CONSOLE_OUT( __FUNCTION__, "Registration failed due to the email rule" )
             success  = false;
@@ -83,6 +83,6 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
         }
     }
 
-    auto registerReply = std::make_unique<RegisterStatusMessage>( success, failCode );
+    auto registerReply = make_vec_unqiue<RegisterStatusMessage>( success, failCode );
     GlobalScope::GetNetwork().send<RegisterStatusMessage>( index, std::move( registerReply ) );
 }

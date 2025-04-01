@@ -159,7 +159,7 @@ namespace Network
         std::unordered_map<size_t, typename Protocol::socket>    m_sockets_;
         std::unordered_map<size_t, std::atomic<bool>>            m_recv_running_;
         std::unordered_map<size_t, boost::asio::mutable_buffer>  m_recv_buffers_;
-        std::unordered_map<size_t, std::unordered_set<std::unique_ptr<MessageBase>>> m_pending_messages_;
+        std::unordered_map<size_t, std::unordered_set<vec_unique_ptr<MessageBase>>> m_pending_messages_;
 
         std::atomic<bool> m_running_;
 
@@ -211,7 +211,7 @@ namespace Network
         }
 
         template <typename MessageType> requires std::is_base_of_v <MessageBase, MessageType>
-        bool send( const size_t index, std::unique_ptr<MessageType>&& message )
+        bool send( const size_t index, vec_unique_ptr<MessageType>&& message )
         {
             if ( !m_running_ )
             {
@@ -234,7 +234,7 @@ namespace Network
                     buffer,
                                             [ this, index, unique_ptr_addr ]( const boost::system::error_code& ec, const size_t sent ) 
                                             { 
-                                                m_pending_messages_.at( index ).erase( *reinterpret_cast<const std::unique_ptr<MessageBase>*>( unique_ptr_addr ) );
+                                                m_pending_messages_.at( index ).erase( *static_cast<const vec_unique_ptr<MessageBase>*>( unique_ptr_addr ) );
                                             } );
 
             return true;

@@ -21,14 +21,14 @@ void PingPongHandler::Handle( const size_t index, MessageBase& message )
     }
     
     CONSOLE_OUT( __FUNCTION__, "Received ping, reply with pong..." );
-    std::unique_ptr<PingPongMessage> reply = std::make_unique<PingPongMessage>();
+    vec_unique_ptr<PingPongMessage> reply = make_vec_unqiue<PingPongMessage>();
     GlobalScope::GetNetwork().send( index, std::move( reply ) );
 }
 
 void PingPongHandler::Ping( const size_t index )
 {
     CONSOLE_OUT( __FUNCTION__, "Send the ping..." );
-    std::unique_ptr<PingPongMessage> request = std::make_unique<PingPongMessage>();
+    vec_unique_ptr<PingPongMessage> request = make_vec_unqiue<PingPongMessage>();
     GlobalScope::GetNetwork().send( index, std::move( request ) );
 
     m_pong_waiting_.insert( index );

@@ -22,9 +22,9 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
         {
             auto& loginMessage = reinterpret_cast<LoginMessage&>( message );
 
-            const auto& replyFailed = []( size_t to )
+            const auto& replyFailed = []( const size_t to )
             {
-                auto reply          = std::make_unique<LoginStatusMessage>( UUID() );
+                auto reply          = make_vec_unqiue<LoginStatusMessage>( UUID() );
                 reply->success = false;
                 GlobalScope::GetNetwork().send<LoginStatusMessage>( to, std::move( reply ) );
             };
@@ -59,22 +59,28 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
                     }
                     return sessionId;
                 };
-                UUID sessionId = GenerateUUID();
 
-                while ( m_login_.contains( sessionId ) )
+                UUID sessionId{};
+                do
                 {
                     sessionId = GenerateUUID();
-                }
+                } while ( m_login_.contains( sessionId ) );
 
                 CONSOLE_OUT(__FUNCTION__, "Login Ok for {} with seesion ID {}", id, to_hex_string( sessionId ))
 
                 m_login_.insert( { sessionId, id } );
-                std::unique_ptr<LoginStatusMessage> reply = std::make_unique<LoginStatusMessage>( std::move( sessionId ) );
+                auto reply     = make_vec_unqiue<LoginStatusMessage>( std::move( sessionId ) );
                 reply->success = true;
-                GlobalScope::GetNetwork().send<LoginStatusMessage>( index, std::move( reply ) ); 
+                GlobalScope::GetNetwork().send<LoginStatusMessage>( index, std::move( reply ) );
+                break;
+            }
+            else
+            {
+                replyFailed( index );
+                break;
             }
 
-            // uncoverd condition
+            // uncovered condition
             assert( false );
             break;
         }
@@ -86,12 +92,17 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
                  m_login_.contains( logoutMessage.sessionId ) )
             {
                 m_login_.erase( logoutMessage.sessionId );
-                GlobalScope::GetNetwork().send<LogoutOKMessage>( index, std::make_unique<LogoutOKMessage>( true ) );
+                GlobalScope::GetNetwork().send<LogoutOKMessage>( index, make_vec_unqiue<LogoutOKMessage>( true ) );
+                break;
             }
             else
             {
-                GlobalScope::GetNetwork().send<LogoutOKMessage>( index, std::make_unique<LogoutOKMessage>( false ) );
+                GlobalScope::GetNetwork().send<LogoutOKMessage>( index, make_vec_unqiue<LogoutOKMessage>( false ) );
+                break;
             }
+
+            assert( false );
+            break;
         }
         default: break;
     }
