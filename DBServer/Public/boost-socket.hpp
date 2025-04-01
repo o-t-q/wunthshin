@@ -308,6 +308,7 @@ namespace Network
                                               {
                                                   m_recv_running_.at( index ) = true;
                                               }
+
                                               m_sockets_.at( index ).async_receive(
                                                       m_recv_buffers_[ index ],
                                                       std::bind( &NetworkContext::receiveHandler,

@@ -5,6 +5,9 @@
 
 #include "WSRegisterChannel.generated.h"
 
+DEFINE_CHANNEL_MESSAGE(RegisterChannel, EMessageChannelType::Register, RegisterRequest, EMessageType::Register);
+DEFINE_CHANNEL_MESSAGE(RegisterChannel, EMessageChannelType::Register, RegisterReply, EMessageType::RegisterStatus);
+
 UENUM()
 enum class ERegisterFailCodeUE : uint8
 {

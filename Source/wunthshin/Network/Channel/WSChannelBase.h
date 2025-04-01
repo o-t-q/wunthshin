@@ -13,11 +13,7 @@ struct FNet##ChannelName##Name##Message \
 { \
 	static_assert(CMessageConstraint<Enum>); \
 public: \
-	/** 지정된 연결의 제어 채널로 이 유형의 메시지를 보냅니다. \
-	* @note: const not used only because of the FArchive interface; the parameters are not modified \
-	*/ \
-	template <typename NewBunch> requires std::is_base_of_v<MessageBase, NewBunch> \
-	static void Send(UNetConnection* Conn, NewBunch& Bunch) \
+	static void Send(UNetConnection* Conn, MessageTypeResolver<Enum>::type& Bunch) \
 	{ \
 		if (Conn->Channels.IsValidIndex((int32_t)_ChannelIndex) && Conn->Channels[(int32_t)_ChannelIndex] != NULL) \
 		{ \
@@ -37,12 +33,13 @@ class WUNTHSHIN_API UWSChannelBase : public UChannel
 {
 	GENERATED_BODY()
 public:	
-	template <EMessageType MessageType> requires CMessageConstraint<MessageType>
-	void SendBunch(MessageT<MessageType>& Bunch)
+	template <typename T, EMessageType MessageType = T::message_type, typename U = MessageT<MessageType>> 
+		requires std::is_base_of_v<U, T> && CMessageConstraint<MessageType>
+	void SendBunch(T& Bunch)
 	{
 		FOutPacketTraits OutPacketTraits;
 		SendBunchInternal(MessageType, Bunch);
-		Connection->LowLevelSend((void*)&Bunch, G_MessageSize.at((size_t)MessageType), OutPacketTraits);
+		Connection->LowLevelSend((void*)&Bunch, G_MessageSize.at( (size_t)MessageType ), OutPacketTraits);
 	}
 	virtual void ReceivedBunch(MessageBase& Bunch) {};
 

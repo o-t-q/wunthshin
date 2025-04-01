@@ -14,7 +14,7 @@ struct Inventory
 
     static bool Insert( const size_t owner, pqxx::work&& tx)
     {
-        const pqxx::result result = tx.exec( "INSERT INTO inventory VALUES ($1, DEFAULT, DEFAULT)", pqxx::params{ owner } );
+        const pqxx::result result = tx.exec( "INSERT INTO inventory VALUES ($1, array[]::bigint[], array[]::bigint[])", pqxx::params{ owner } );
         const size_t row_count = result.affected_rows();
         tx.commit();
         return row_count;
