@@ -22,6 +22,9 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
         {
             std::unique_ptr<LoginStatusMessage> reply;
             auto& loginMessage = reinterpret_cast<LoginMessage&>( message );
+
+            // todo: validate the id, hash value sanity
+
             if ( const auto id = user_table->Execute<size_t>(
                          &UserProfile::TryLoginVarChar, loginMessage.name, loginMessage.hashedPassword );
                 id != 0 )
@@ -65,6 +68,8 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
         {
             const auto& logoutMessage = reinterpret_cast<LogoutMessage&>( message );
             
+            // todo: validate the session id sanity
+
             if ( m_login_.contains( logoutMessage.sessionId ) )
             {
                 m_login_.erase( logoutMessage.sessionId );
