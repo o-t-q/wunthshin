@@ -26,16 +26,14 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
     decltype( registerMessage.name )::const_iterator nameNullTrailing;
     decltype( registerMessage.email )::const_iterator emailNullTrailing;
 
-    if ( nameNullTrailing = std::ranges::find( registerMessage.name, '\0' );
-         nameNullTrailing == registerMessage.name.end() )
+    if ( !check_null_trailing(registerMessage.name, nameNullTrailing ) )
     {
         CONSOLE_OUT( __FUNCTION__, "Empty name given" )
         success  = false;
         failCode = ERegistrationFailCode::Name;
     }
 
-    if ( emailNullTrailing = std::ranges::find(registerMessage.email, '\0'); 
-         emailNullTrailing == registerMessage.email.end())
+    if ( !check_null_trailing(registerMessage.email, emailNullTrailing) )
     {
         CONSOLE_OUT( __FUNCTION__, "Empty email given" )
         success  = false;
