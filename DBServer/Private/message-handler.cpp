@@ -1,6 +1,7 @@
 #include <memory>
 #include "../Public/message-handler.h"
 #include "../Public/message.h"
+#include "../Public/utility.hpp"
 
 std::unique_ptr<MessageHandler> GlobalScope::G_MessageHandler = {};
 
@@ -12,6 +13,7 @@ void MessageHandler::Handle( size_t                           index,
     if (read <= 0)
     {
         // Invalid read
+        CONSOLE_OUT( __FUNCTION__, "Invalid read size" )
         return;
     }
 
@@ -21,11 +23,13 @@ void MessageHandler::Handle( size_t                           index,
     if ( integerValue < 0 || integerValue >= GetMaxMessageIndex() )
     {
         // Unknown message
+        CONSOLE_OUT( __FUNCTION__, "Invalid message type" )
         return;
     }
 
     if ( G_MessageSize.at(integerValue) != read )
     {
+        CONSOLE_OUT( __FUNCTION__, "Invalid packet size" )
         // invalid size
         return;
     }

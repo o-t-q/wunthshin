@@ -27,8 +27,8 @@ void RunClientThread()
 
     {
         RegisterMessage registerMessage;
-        registerMessage.name = "name";
-        registerMessage.email = "test@test.com";
+        std::ranges::copy("name", registerMessage.name.begin());
+        std::ranges::copy( "test@test.com", registerMessage.email.begin() );
         std::ranges::fill( registerMessage.hashedPassword, (std::byte)0 );
         boost::asio::const_buffer registerBuffer( &registerMessage, sizeof(registerMessage) );
         assert( socket.send( registerBuffer ) != 0 );

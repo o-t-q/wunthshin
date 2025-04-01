@@ -5,14 +5,16 @@
 
 struct UserProfile
 {
-    std::string            name;
-    std::string            email;
-    std::array<std::byte, 32> hashedPassword;
+    Varchar   name;
+    Varchar   email;
+    HashArray hashedPassword;
 
     static bool   Insert( const UserProfile& table, pqxx::work&& tx )
     {
         pqxx::bytes_view   hashedPasswordView( table.hashedPassword.data(), table.hashedPassword.size() );
-        const pqxx::result result = tx.exec( "INSERT INTO users VALUES (DEFAULT, $1, $2, $3);", { table.name, table.email, hashedPasswordView } );
+        std::string_view   nameStringify( table.name.data() );
+        std::string_view   emailStringify( table.email.data() );
+        const pqxx::result result = tx.exec( "INSERT INTO users VALUES (DEFAULT, $1, $2, $3);", { nameStringify, emailStringify, hashedPasswordView } );
         const size_t row_count = result.affected_rows();
         tx.commit();
         return row_count;
@@ -42,7 +44,7 @@ struct UserProfile
 
     static size_t TryLoginVarChar(const Varchar& name, const HashArray& hashedPassword, pqxx::work&& tx)
     {
-        std::string stringify( name.begin(), name.end() );
+        std::string_view stringify( name.data() );
         return TryLoginStr( stringify, hashedPassword, std::move( tx ) );
     }
 

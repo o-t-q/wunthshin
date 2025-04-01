@@ -187,9 +187,11 @@ bool UWSServerSubsystem::TrySendRegister(const FString& InID, const FString& InE
 		return false;
 	}
 
-	RegisterMessage registerMessage;
-	const ANSICHAR* charArray = StringCast<ANSICHAR>(*InID).Get();
-	std::memcpy(registerMessage.name.data(), charArray, sizeof(InID.Len()));
+	RegisterMessage registerMessage{};
+	TStringConversion nameArray = StringCast<ANSICHAR>(*InID);
+	TStringConversion emailArray = StringCast<ANSICHAR>(*InEmail);
+	std::memcpy(registerMessage.name.data(), nameArray.Get(), nameArray.Length());
+	std::memcpy(registerMessage.email.data(), emailArray.Get(), emailArray.Length());
 	std::memcpy(registerMessage.hashedPassword.data(), HashedPassword.Signature, sizeof(registerMessage.hashedPassword));
 	FNetRegisterChannelRegisterRequestMessage::Send(NetDriver->ServerConnection, registerMessage);
 	return true;

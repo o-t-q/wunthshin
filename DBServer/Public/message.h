@@ -146,8 +146,8 @@ DEFINE_MSG_WITH_BODY(
         EMessageChannelType::Login,
            LogoutOKMessage(bool flag) : success(flag) {}
            bool success; )
-DEFINE_MSG_WITH_BODY( RegisterMessage, EMessageType::Register, EMessageChannelType::Register,
-           std::string name; std::string email; HashArray hashedPassword{}; )
+DEFINE_MSG_WITH_BODY( RegisterMessage, EMessageType::Register, EMessageChannelType::Register, 
+    Varchar name; Varchar email; HashArray hashedPassword{}; )
 DEFINE_MSG_WITH_BODY(
         RegisterStatusMessage, EMessageType::RegisterStatus, EMessageChannelType::Register,
            bool success = false; ERegistrationFailCode code = ERegistrationFailCode::None;
