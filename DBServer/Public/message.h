@@ -104,6 +104,8 @@ template <EMessageType MessageType>
     requires CMessageConstraint<MessageType>
 struct MessageT : MessageBase
 {
+    static constexpr EMessageType message_type = MessageType;
+
     constexpr MessageT() : MessageBase( MessageType )
     {
     }

@@ -132,13 +132,13 @@ FUniqueSocket UWSNetDriver::CreateAndBindSocket(TSharedRef<FInternetAddr> BindAd
 			int32 ActualRecvSize(0);
 			int32 ActualSendSize(0);
 
-			if (NewSocket->SetReceiveBufferSize(DesiredRecvSize, ActualRecvSize))
+			if (!NewSocket->SetReceiveBufferSize(DesiredRecvSize, ActualRecvSize))
 			{
 				UE_LOG(LogNet, Error, TEXT("SetReceiveBufferSize failed"));
 				return nullptr;
 			}
 
-			if (NewSocket->SetSendBufferSize(DesiredSendSize, ActualSendSize))
+			if (!NewSocket->SetSendBufferSize(DesiredSendSize, ActualSendSize))
 			{
 				UE_LOG(LogNet, Error, TEXT("SetSendBufferSize failed"));
 				return nullptr;
@@ -171,6 +171,8 @@ FUniqueSocket UWSNetDriver::CreateAndBindSocket(TSharedRef<FInternetAddr> BindAd
 					(int32)SocketSubsystem->GetLastErrorCode());
 				return nullptr;
 			}
+
+			return NewSocket;
 		}
 
 		Error = FString::Printf(TEXT("%s: socket failed (%i)"), SocketSubsystem->GetSocketAPIName(), (int32)SocketSubsystem->GetLastErrorCode());

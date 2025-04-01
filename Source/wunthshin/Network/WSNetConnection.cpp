@@ -61,12 +61,9 @@ void UWSNetConnection::TickDispatch(float DeltaTime)
 	{
 		FRawReceivedPacket IncomingPacket;
 		
-		while (bNetDriverRecvThread)
+		while ( bNetDriverRecvThread && ReceiveQueue.Dequeue(IncomingPacket) )
 		{
-			if ( ReceiveQueue.Dequeue(IncomingPacket) )
-			{
-				ProcessPacket(IncomingPacket);
-			}
+			ProcessPacket(IncomingPacket);
 		}
 	}
 
