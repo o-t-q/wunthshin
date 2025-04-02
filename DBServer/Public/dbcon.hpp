@@ -50,11 +50,11 @@ namespace Database
             }
         }
 
-        void RegisterTable( const std::string_view table_name, Table* table )
+        void RegisterTable( const std::string_view table_name )
         {
             if ( !m_tables_.contains( table_name.data() ) )
             {
-                m_tables_.emplace( table_name.data(), std::unique_ptr<Table>( table ) );
+                m_tables_.emplace( table_name.data(), make_vec_unique<Table>() );
             }
         }
 
@@ -65,7 +65,7 @@ namespace Database
                 return nullptr;
             }
 
-            return m_tables_.at( table_name.data() ).get();
+            return &m_tables_.at( table_name.data() );
         }
 
     private:
@@ -77,13 +77,21 @@ namespace Database
         }
 
         std::string                                             m_db_name_;
-        std::unordered_map<std::string, std::unique_ptr<Table>> m_tables_;
+        std::unordered_map<std::string, accessor<Table>> m_tables_;
         std::unique_ptr<pqxx::connection>                       m_connection_;
     };
 
     struct Table final
     {
         virtual ~Table()       = default;
+        
+        Table()
+        {
+            m_lock_ = false;
+        }
+
+        Table(const Table& other) {}
+        Table& operator=( const Table& other ) { return *this; }
 
         template <typename ReturnT, typename FuncT, typename... Args>
         [[nodiscard]] ReturnT Execute( FuncT func, Args&&... args ) const
@@ -131,6 +139,6 @@ struct TableRegistration
 {
     explicit TableRegistration(const std::string_view name)
     {
-        GlobalScope::GetDatabase().RegisterTable( name, new Database::Table() );
+        GlobalScope::GetDatabase().RegisterTable( name );
     }
 };

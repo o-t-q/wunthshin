@@ -73,16 +73,24 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
             failCode = ERegistrationFailCode::Email;
         }
 
-        if ( success && userTable->Execute<bool>( &UserProfile::Insert, newProfile ) )
+        if ( success )
         {
-            CONSOLE_OUT( __FUNCTION__, "Registration of user {} succeded", nameStringify )
-            const auto user_id = userTable->Execute<size_t>( &UserProfile::GetIdentifier, nameStringify );
-            // Possible database error
-            assert( inventoryTable->Execute<bool>( &Inventory::Insert, user_id ) );
-            CONSOLE_OUT( __FUNCTION__, "Registration of user {} inventory succeded", nameStringify )
+            if (userTable->Execute<bool>(&UserProfile::Insert, newProfile))
+            {
+                CONSOLE_OUT( __FUNCTION__, "Registration of user {} succeded", nameStringify )
+                const auto user_id = userTable->Execute<size_t>( &UserProfile::GetIdentifier, nameStringify );
+                // Possible database error
+                assert( inventoryTable->Execute<bool>( &Inventory::Insert, user_id ) );
+                CONSOLE_OUT( __FUNCTION__, "Registration of user {} inventory succeded", nameStringify )
+            }
+            else
+            {
+                assert( false );
+                success = false;
+            }            
         }
     }
 
-    auto registerReply = make_vec_unqiue<RegisterStatusMessage>( success, failCode );
+    auto registerReply = make_vec_unique<RegisterStatusMessage>( success, failCode );
     GlobalScope::GetNetwork().send<RegisterStatusMessage>( index, std::move( registerReply ) );
 }

@@ -72,18 +72,47 @@ auto& get_memory()
 }
 
 template <typename T>
+using vec_unique_ptr = std::unique_ptr<T, std::function<void(void*)>>;
+
+struct __declspec( align( 32 ) ) alloc_pair
+{
+    size_t  chunk;
+    uint8_t segment;
+    uint8_t bit;
+
+    bool operator==(const alloc_pair& other) const
+    {
+        return chunk == other.chunk && segment == other.segment && bit == other.bit;
+    }
+};
+
+template <>
+struct std::hash<alloc_pair>
+{
+    size_t operator()(const alloc_pair& key) const noexcept
+    {
+        std::hash<size_t> ull;
+        std::hash<uint8_t> c;
+        size_t             v = ull( key.chunk );
+        boost::hash_combine( v, c( key.segment ) );
+        boost::hash_combine( v, c( key.bit ) );
+        return v;
+    }
+};
+
+template <typename T>
+auto& get_instances()
+{
+    static std::unordered_map<alloc_pair, vec_unique_ptr<T>> instance_created;
+    return instance_created;
+}
+
+template <typename T>
 auto& get_alloc_masks()
 {
     static std::vector<__m256i> alloc_mask{};
     return alloc_mask;
 }
-
-struct __declspec( align( 32 ) ) alloc_pair
-{
-    size_t chunk;
-    uint8_t segment;
-    uint8_t bit;
-};
 
 template <typename T>
 auto& get_alloc_map()
@@ -101,8 +130,24 @@ void do_lock( const bool value )
     while ( !mtx.compare_exchange_strong( expected, value ) ) {}
 }
 
+template <typename T>
+void deallocate( T* ptr )
+{
+    auto& alloc_masks = get_alloc_masks<T>();
+    auto& alloc_map   = get_alloc_map<T>();
+    auto& instances   = get_instances<T>();
+    do_lock<T>( true );
+    assert( alloc_map.contains( ptr ) );
+    const alloc_pair& mask = alloc_map.at( ptr );
+    alloc_masks[ mask.chunk ].m256i_u32[ mask.segment ] &= ~( 1 << mask.bit );
+    instances.erase( mask );
+    alloc_map.erase( ptr );
+    do_lock<T>( false );
+    ptr->~T();
+}
+
 template <typename T, typename... Args>
-T* allocate( Args&&... args )
+T* allocate( alloc_pair& index, Args&&... args )
 {
     auto& vec = get_memory<T>();
     auto& alloc_masks = get_alloc_masks<T>();
@@ -129,17 +174,40 @@ T* allocate( Args&&... args )
                 const uint32_t masks = _tzcnt_u32( ~alloc_masks[i].m256i_u32[j] );
                 alloc_masks[i].m256i_u32[j] |= 1 << masks;
                 size_t vec_loc = ( i * sizeof(__m256i) ) + ( sizeof(uint32_t) * j ) + masks;
+                index          = alloc_pair{ i, ( uint8_t )j, ( uint8_t )masks };
                 T* ptr = nullptr;
+                size_t prev_alloc_size = vec.capacity();
+
                 if ( vec.size() <= vec_loc )
                 {
                     ptr = &vec.emplace_back( std::forward<Args>( args )... );
+                    if ( prev_alloc_size != vec.capacity() )
+                    {
+                        alloc_map.clear();
+                        auto& instances = get_instances<T>();
+                        for ( int k = 0; k < vec.size(); ++k )
+                        {
+                            alloc_pair idx{ k / sizeof( __m256i ),
+                                              ( k / sizeof( uint32_t ) ) % ( sizeof( __m256i ) / sizeof(uint32_t) ),
+                                              k % sizeof( uint32_t ) };
+                            if ( !instances.contains(idx) )
+                            {
+                                continue;
+                            }
+                            new ( &instances.at( idx ) )
+                                    vec_unique_ptr<T>( &vec[ k ], []( void* ptr ) { deallocate<T>( ( T* )ptr ); } );
+                            alloc_map[ &vec[ k ] ] = idx;
+                        }
+                    }
+                    alloc_map.emplace( ptr, index );
                 }
                 else
                 {
                     ptr = &vec.at(vec_loc);
                     new(ptr)T( std::forward<Args>( args )... );
+                    alloc_map.emplace( ptr, index );
                 }
-                alloc_map.emplace( ptr, alloc_pair{ i, (uint8_t)j, (uint8_t)masks } );
+
                 do_lock<T>( false );
                 return ptr;
             }
@@ -152,25 +220,191 @@ T* allocate( Args&&... args )
 }
 
 template <typename T>
-void deallocate(T* ptr)
+struct accessor
 {
-    auto& alloc_masks = get_alloc_masks<T>();
-    auto& alloc_map = get_alloc_map<T>();
-    do_lock<T>( true );
-    assert( alloc_map.contains( ptr ) );
-    const alloc_pair& mask = alloc_map.at( ptr );
-    alloc_masks[ mask.chunk ].m256i_u32[ mask.segment ] &= ~( 1 << mask.bit );
-    alloc_map.erase( ptr );
-    do_lock<T>( false );
-    ptr->~T();
-}
+private:
+    std::function<vec_unique_ptr<T>*( const alloc_pair& )> acc;
+    alloc_pair                                             index{ ( size_t )-1, ( uint8_t )-1, ( uint8_t )-1 };
+
+public:
+    friend struct std::hash<accessor<T>>;
+
+    struct cast_access
+    {
+        template <typename U>
+            requires std::is_convertible_v<T*, U*>
+        vec_unique_ptr<U>* get( const alloc_pair& index )
+        {
+            auto& instances = get_instances<T>();
+            return (vec_unique_ptr<U>*)&instances.at( index );
+        }
+    };
+
+    using accessor_type = cast_access;
+    inline static accessor_type def_acc_for_t = {};
+
+    accessor()
+    {
+        acc = []( const alloc_pair& index ) { return def_acc_for_t.get<T>( index ); };
+        clear();
+    }
+    ~accessor()
+    {
+        reset();
+    }
+
+    void clear()
+    {
+        index = { ( size_t )-1, ( uint8_t )-1, ( uint8_t )-1 };
+    }
+
+    void reset()
+    {
+        if (index.chunk == -1 || index.segment == -1 || index.bit == -1)
+        {
+            return;
+        }
+
+        acc(index)->reset();
+    }
+
+    const alloc_pair& get_index() const
+    {
+        return index;
+    }
+
+    accessor& operator=( accessor&& other )
+    {
+        acc   = other.acc;
+        index = other.index;
+        other.clear();
+        return *this;
+    }
+
+    accessor(accessor&& other)
+    {
+        operator=( std::move( other ) );
+    }
+
+    template <typename U> requires std::is_convertible_v<U*, T*>
+    accessor& operator=(accessor<U>&& other)
+    {
+        acc   = []( const alloc_pair& index ) { return accessor<U>::def_acc_for_t.get<T>( index ); };
+        index = other.get_index();
+        other.clear();
+        return *this;
+    }
+
+    template <typename U> requires std::is_convertible_v<U*, T*>
+    accessor(accessor<U>&& other)
+    {
+        operator=( std::move( other ) );
+    }
+
+    accessor( const accessor& )            = delete;
+    accessor& operator=( const accessor& ) = delete;
+
+    explicit accessor( const alloc_pair& index ) : index( index ) 
+    {
+        acc = []( const alloc_pair& index ) { return def_acc_for_t.get<T>( index ); };
+    }
+
+    bool operator==(const accessor& other) const noexcept
+    {
+        return index == other.index;
+    }
+
+    T* operator&()
+    {
+        if ( T* ptr = &operator*() )
+        {
+            return ptr;
+        }
+
+        return nullptr;
+    }
+
+    T* operator&() const
+    {
+        if ( T* ptr = &operator*() )
+        {
+            return ptr;
+        }
+
+        return nullptr;
+    }
+
+    T* operator->()
+    {
+        if ( T* ptr = &operator*() )
+        {
+            return ptr;
+        }
+
+        return nullptr;
+    }
+
+    T* operator->() const
+    {
+        if ( T* ptr = &operator*() )
+        {
+            return ptr;
+        }
+
+        return nullptr;
+    }
+
+    T& operator*()
+    {
+        if (index.chunk == -1 || index.segment == -1 || index.bit == -1)
+        {
+            assert( false );
+        }
+
+        return *acc( index )->get();
+    }
+
+    T& operator*() const
+    {
+        if ( index.chunk == -1 || index.segment == -1 || index.bit == -1 )
+        {
+            assert( false );
+        }
+
+        return *acc( index )->get();
+    }
+};
 
 template <typename T>
-using vec_unique_ptr = std::unique_ptr<T, std::function<void(void*)>>;
-
-template <typename T, typename... Args>
-vec_unique_ptr<T> make_vec_unqiue( Args&&... args )
+struct std::hash<accessor<T>>
 {
-    vec_unique_ptr<T> unique( allocate<T>( std::forward<Args>( args )... ), [](void* ptr) { deallocate<T>( (T*)ptr ); } );
-    return unique;
+    size_t operator()(const accessor<T>& key) const noexcept
+    {
+        std::hash<alloc_pair> alloc_hash;
+        return alloc_hash( key.index );
+    }
+};
+
+
+template <typename T, typename Tag = void, typename... Args>
+accessor<T> make_vec_unique( Args&&... args )
+{
+    alloc_pair        index;
+
+    if constexpr (std::is_same_v<Tag, void>)
+    {
+        vec_unique_ptr<T> unique( allocate<T>( index, std::forward<Args>( args )... ),
+                                  []( void* ptr ) { deallocate<T>( ( T* )ptr ); } );
+        auto&             instances = get_instances<T>();
+        instances.emplace( index, std::move( unique ) );
+    }
+    else
+    {
+        vec_unique_ptr<T> unique( allocate<Tag>( index, std::forward<Args>( args )... ),
+                                  []( void* ptr ) { deallocate<T>( ( T* )ptr ); } );
+        auto&             instances = get_instances<Tag>();
+        instances.emplace( index, std::move( unique ) );
+    }
+    
+    return accessor<T>{ index };
 }

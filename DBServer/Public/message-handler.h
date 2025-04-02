@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 
+#include "utility.hpp"
 #include "DBServer.h"
 #include "message.h"
 
@@ -26,10 +27,14 @@ struct MessageHandler
         const boost::system::error_code& ec, 
         size_t read );
 
-    void RegisterHandler( HandlerImplementation* raw_ptr );
+    template <typename T>
+    void RegisterHandler()
+    {
+        m_handlers_.emplace_back( std::move( make_vec_unique<T>() ) );
+    }
 
 private:
-    std::vector<std::unique_ptr<HandlerImplementation>> m_handlers_;
+    std::vector<accessor<HandlerImplementation>> m_handlers_;
 };
 
 template <typename T>
@@ -37,6 +42,6 @@ struct HandlerRegistration
 {
     HandlerRegistration()
     {
-        GlobalScope::GetHandler().RegisterHandler( new T() );
+        GlobalScope::GetHandler().RegisterHandler<T>();
     }
 };

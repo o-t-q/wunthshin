@@ -14,7 +14,7 @@ std::future<void> FutureClientThread;
 void RunClientThread()
 {
     boost::asio::io_context context;
-    boost::asio::ip::tcp::socket socket( context, { boost::asio::ip::tcp::v4(), 8888 } );
+    boost::asio::ip::tcp::socket socket( context, { boost::asio::ip::tcp::v4(), 8889 } );
     boost::system::error_code    ec;
     socket.connect( { boost::asio::ip::make_address_v4( "127.0.0.1" ), 1337 }, ec );
 

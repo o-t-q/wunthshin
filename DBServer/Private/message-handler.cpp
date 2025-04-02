@@ -34,21 +34,11 @@ void MessageHandler::Handle( size_t                           index,
         return;
     }
 
-    for (const std::unique_ptr<HandlerImplementation>& impl : m_handlers_)
+    for (const accessor<HandlerImplementation>& impl : m_handlers_)
     {
         if (impl->ShouldHandle(message->GetType()))
         {
             impl->Handle( index, *message );
         }
-    }
-}
-
-void MessageHandler::RegisterHandler( HandlerImplementation* raw_ptr )
-{
-    if (std::find_if(m_handlers_.begin(), m_handlers_.end(), [ &raw_ptr ](const std::unique_ptr<HandlerImplementation>& element) 
-        { return element.get() == raw_ptr;
-        } ) == m_handlers_.end() )
-    {
-        m_handlers_.emplace_back( std::unique_ptr<HandlerImplementation>( raw_ptr ) );
     }
 }
