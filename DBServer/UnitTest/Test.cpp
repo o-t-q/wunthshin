@@ -46,7 +46,7 @@ struct ServerClientFixture
     void CleanUp( int signal )
     {
         CONSOLE_OUT( __FUNCTION__, "Signal received, cleanup..." );
-        GlobalScope::Destory();
+        GlobalScope::Destroy();
     }
 
     ~ServerClientFixture()

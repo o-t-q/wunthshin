@@ -20,6 +20,7 @@ struct HandlerImplementation
 
 struct RegistrationToken
 {
+    virtual                                 ~RegistrationToken() = default;
     virtual accessor<HandlerImplementation> Initialize() const = 0;
 };
 
