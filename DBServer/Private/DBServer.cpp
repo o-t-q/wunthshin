@@ -17,10 +17,10 @@ void GlobalScope::Initialize()
 {
     GetNetwork();
     GetHandler().Initialize();
-    GetDatabase();
+    GetDatabase().Initialize();
 }
 
-void GlobalScope::Destory()
+void GlobalScope::Destroy()
 {
     G_TcpProtocol.reset();
     G_Database.reset();

@@ -15,7 +15,7 @@ namespace Database
 struct GlobalScope
 {
     static void                           Initialize();
-    static void                           Destory();
+    static void                           Destroy();
     static Network::NetworkContext<1337>& GetNetwork();
     static MessageHandler&                GetHandler();
     static Database::DBConnection&        GetDatabase();

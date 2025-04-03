@@ -75,6 +75,7 @@ template <typename T,
 class pool_alloc_proxy
 {
 public:
+    using singleton_pool_type = boost::singleton_pool<boost::pool_allocator_tag, sizeof( T ), UserAllocator, Mutex, NextSize, MaxSize>;
     using pool_type = boost::pool_allocator<T, UserAllocator, Mutex, NextSize, MaxSize>;
     using value_type = typename pool_type::value_type;
     using user_allocator = typename pool_type::user_allocator;
@@ -86,15 +87,13 @@ public:
 
     pool_alloc_proxy()
     {
-        boost::singleton_pool<boost::pool_allocator_tag, sizeof( T ), UserAllocator, Mutex, NextSize, MaxSize>::is_from(
-                0 );
+        singleton_pool_type::is_from( 0 );
     }
 
     template <typename U>
     pool_alloc_proxy( const pool_alloc_proxy<U, UserAllocator, Mutex, NextSize, MaxSize>& )
     {
-        boost::singleton_pool<boost::pool_allocator_tag, sizeof( T ), UserAllocator, Mutex, NextSize, MaxSize>::is_from(
-                0 );
+        singleton_pool_type::is_from( 0 );
     }
 
     template <typename U>
@@ -128,7 +127,11 @@ auto& get_memory()
 {
     static std::vector<T, pool_alloc_proxy<T>> pool;
     static std::once_flag                           init;
-    std::call_once( init, []() { pool.reserve( 1 << 10 ); } );
+    std::call_once( init, []()
+    {
+        pool.reserve( 1 << 10 );
+        CONSOLE_OUT( "get_memory", "Static allocation for {} at the {:#010x}", typeid(T).name(), reinterpret_cast<uintptr_t>( pool.data() ) );
+    } );
     return pool;
 }
 
