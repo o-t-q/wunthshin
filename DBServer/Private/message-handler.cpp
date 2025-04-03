@@ -4,8 +4,27 @@
 #include "../Public/utility.hpp"
 
 std::unique_ptr<MessageHandler> GlobalScope::G_MessageHandler = {};
+std::unique_ptr<HandlerRegistrationTokenStorage> G_HandlerTokenStorage         = {};
 
-void MessageHandler::Handle( size_t                           index,
+HandlerRegistrationTokenStorage* AccessHandlerToken()
+{
+    if (!G_HandlerTokenStorage)
+    {
+        G_HandlerTokenStorage = std::make_unique<HandlerRegistrationTokenStorage>();
+    }
+
+    return G_HandlerTokenStorage.get();
+}
+
+void MessageHandler::Initialize()
+{
+    for ( const RegistrationToken* token : AccessHandlerToken()->GetTokens() )
+    {
+        m_handlers_.emplace_back( token->Initialize() );
+    }
+}
+
+void MessageHandler::Handle( size_t                             index,
                              const boost::asio::mutable_buffer&     buffer,
                              const boost::system::error_code& ec,
                              const size_t                     read )

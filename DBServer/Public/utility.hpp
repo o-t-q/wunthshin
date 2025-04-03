@@ -1,4 +1,5 @@
 #pragma once
+#include <mutex>
 #include <iostream>
 #include <string>
 #include <chrono>
@@ -11,8 +12,10 @@
 #include <boost/container_hash/hash.hpp>
 
 #define CONSOLE_OUT(PREFIX, FMT, ...) \
-    std::cout << std::format("[{} | {}]: ", std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::high_resolution_clock::now().time_since_epoch() ), PREFIX ); \
+    std::cout << std::format("[{} | {}]: ", std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::high_resolution_clock::now().time_since_epoch() ), PREFIX ); \
     std::cout << std::format(FMT, __VA_ARGS__) << '\n';
+
+struct message_tag { };
 
 template <typename ContainerT> requires std::is_same_v<typename ContainerT::value_type, std::byte>
 inline std::string to_hex_string(const ContainerT& byte_vec)
@@ -64,10 +67,68 @@ std::atomic<bool>& get_spinlock()
     return lock;
 }
 
+template <typename T, 
+    typename UserAllocator = boost::default_user_allocator_new_delete, 
+    typename Mutex = std::mutex, 
+    unsigned NextSize = 32U, 
+    unsigned MaxSize = 0U>
+class pool_alloc_proxy
+{
+public:
+    using pool_type = boost::pool_allocator<T, UserAllocator, Mutex, NextSize, MaxSize>;
+    using value_type = typename pool_type::value_type;
+    using user_allocator = typename pool_type::user_allocator;
+    using mutex = typename pool_type::mutex;
+    using pointer = typename pool_type::pointer;
+    using const_pointer = typename pool_type::const_pointer;
+    using reference = typename pool_type::reference;
+    using const_reference = typename pool_type::const_reference;
+
+    pool_alloc_proxy()
+    {
+        boost::singleton_pool<boost::pool_allocator_tag, sizeof( T ), UserAllocator, Mutex, NextSize, MaxSize>::is_from(
+                0 );
+    }
+
+    template <typename U>
+    pool_alloc_proxy( const pool_alloc_proxy<U, UserAllocator, Mutex, NextSize, MaxSize>& )
+    {
+        boost::singleton_pool<boost::pool_allocator_tag, sizeof( T ), UserAllocator, Mutex, NextSize, MaxSize>::is_from(
+                0 );
+    }
+
+    template <typename U>
+    struct rebind
+    {
+        typedef pool_alloc_proxy<U, UserAllocator, Mutex, NextSize, MaxSize> other;
+    };
+
+    template <typename U, typename... Args>
+    static void construct( U* ptr, Args&&... args ) 
+    { }
+
+    static void destroy( const typename pool_type::pointer ptr ) { }
+
+    static typename pool_type::pointer allocate( const typename pool_type::size_type n )
+    {
+        return pool_type::allocate( n );
+    }
+    static typename pool_type::pointer allocate( const typename pool_type::size_type n, const void* const )
+    {
+        return pool_type::allocate( n );
+    }
+    static void deallocate( const typename pool_type::pointer ptr, const typename pool_type::size_type n )
+    {
+        pool_type::deallocate( ptr, n );
+    }
+};
+
 template <typename T>
 auto& get_memory()
 {
-    static std::vector<T, boost::pool_allocator<T>> pool;
+    static std::vector<T, pool_alloc_proxy<T>> pool;
+    static std::once_flag                           init;
+    std::call_once( init, []() { pool.reserve( 1 << 10 ); } );
     return pool;
 }
 
@@ -103,7 +164,12 @@ struct std::hash<alloc_pair>
 template <typename T>
 auto& get_instances()
 {
-    static std::unordered_map<alloc_pair, vec_unique_ptr<T>> instance_created;
+    static std::unordered_map<
+        alloc_pair, 
+        vec_unique_ptr<T>, 
+        std::hash<alloc_pair>, 
+        std::equal_to<alloc_pair>, 
+        boost::fast_pool_allocator<std::pair<const alloc_pair, vec_unique_ptr<T>>>> instance_created;
     return instance_created;
 }
 
@@ -204,9 +270,10 @@ T* allocate( alloc_pair& index, Args&&... args )
                 else
                 {
                     ptr = &vec.at(vec_loc);
-                    new(ptr)T( std::forward<Args>( args )... );
-                    alloc_map.emplace( ptr, index );
                 }
+
+                new ( ptr ) T( std::forward<Args>( args )... );
+                alloc_map.emplace( ptr, index );
 
                 do_lock<T>( false );
                 return ptr;
@@ -236,7 +303,12 @@ public:
         vec_unique_ptr<U>* get( const alloc_pair& index )
         {
             auto& instances = get_instances<T>();
-            return (vec_unique_ptr<U>*)&instances.at( index );
+            if ( instances.contains( index ) )
+            {
+                return ( vec_unique_ptr<U>* )&instances.at( index );
+            }
+
+            return nullptr;
         }
     };
 
@@ -258,14 +330,35 @@ public:
         index = { ( size_t )-1, ( uint8_t )-1, ( uint8_t )-1 };
     }
 
+    bool index_valid() const
+    {
+        if ( index.chunk == -1 || index.segment == -1 || index.bit == -1 )
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool allocation_valid() const
+    {
+        return acc( index ) != nullptr;
+    }
+
+    bool valid() const
+    {
+        return index_valid() && allocation_valid();
+    }
+
     void reset()
     {
-        if (index.chunk == -1 || index.segment == -1 || index.bit == -1)
+        if ( !valid() )
         {
+            clear();
             return;
         }
 
-        acc(index)->reset();
+        acc( index )->reset();
     }
 
     const alloc_pair& get_index() const
@@ -273,7 +366,7 @@ public:
         return index;
     }
 
-    accessor& operator=( accessor&& other )
+    accessor& operator=( accessor&& other ) noexcept
     {
         acc   = other.acc;
         index = other.index;
@@ -281,7 +374,7 @@ public:
         return *this;
     }
 
-    accessor(accessor&& other)
+    accessor(accessor&& other) noexcept
     {
         operator=( std::move( other ) );
     }

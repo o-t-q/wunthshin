@@ -126,6 +126,7 @@ namespace Network
         accessor<typename Protocol::socket> m_pending_socket_;
         boost::asio::mutable_buffer               m_pending_buffer_;
 
+        std::atomic<bool> m_accepting_;
         std::atomic<bool> m_running_;
 
     public:
@@ -143,7 +144,7 @@ namespace Network
 
             const auto& thread_count = std::min<uint32_t>( std::thread::hardware_concurrency(), 4 );
             const auto& bind_error_handler =
-                    std::bind( &NetworkContext::contextErrorHandler, this, std::placeholders::_1 );
+                    std::bind( &NetworkContext::contextErrorHandler, std::placeholders::_1 );
 
             std::generate_n( std::back_inserter( m_io_threads_ ),
                              thread_count,
@@ -187,15 +188,13 @@ namespace Network
 
             const auto& [ iter, _ ] = m_pending_messages_[ index ].emplace( std::move( message ) );
             boost::asio::const_buffer buffer( &( *iter ), sizeof( MessageType ) );
-            const void*               unique_ptr_addr = reinterpret_cast<const void*>( &( *iter ) );
 
             // todo: fix to not use the pointer hack.
             m_sockets_.at( index )->async_send(
                     buffer,
-                    [ this, index, unique_ptr_addr ]( const boost::system::error_code& ec, const size_t sent )
+                    [ this, index, iter ]( const boost::system::error_code& ec, const size_t sent )
                     {
-                        m_pending_messages_.at( index ).erase(
-                                *static_cast<const accessor<MessageBase>*>( unique_ptr_addr ) );
+                        m_pending_messages_.at( index ).erase( iter );
                     } );
 
             return true;
@@ -212,7 +211,6 @@ namespace Network
                 socket.reset();
             }
 
-            m_work_gurad_.reset();
             m_context_.stop();
 
             std::ranges::for_each( m_io_threads_,
@@ -223,6 +221,8 @@ namespace Network
                                            elem.join();
                                        }
                                    } );
+
+            m_work_gurad_.reset();
 
             for ( boost::asio::mutable_buffer& buffer : m_recv_buffers_ | std::views::values )
             {
@@ -306,9 +306,13 @@ namespace Network
                 }
                 else
                 {
-                    m_sockets_.at( index )->cancel();
-                    m_sockets_.at( index )->close();
-                    m_sockets_.at( index ).reset();
+                    if ( m_sockets_.at( index ).valid() )
+                    {
+                        m_sockets_.at( index )->cancel();
+                        m_sockets_.at( index )->close();
+                        m_sockets_.at( index ).reset();
+                    }
+
                     m_sockets_.erase( index );
                 }
             }
@@ -331,7 +335,7 @@ namespace Network
             }
         }
 
-        void contextErrorHandler( const std::exception& e )
+        static void contextErrorHandler( const std::exception& e )
         {
             CONSOLE_OUT( __FUNCTION__, "contextRunner throws exception with {}", e.what() )
         }
