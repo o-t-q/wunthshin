@@ -1,10 +1,30 @@
 #include <memory>
 #include "../Public/message-handler.h"
 #include "../Public/message.h"
+#include "../Public/utility.hpp"
 
 std::unique_ptr<MessageHandler> GlobalScope::G_MessageHandler = {};
+std::unique_ptr<HandlerRegistrationTokenStorage> G_HandlerTokenStorage         = {};
 
-void MessageHandler::Handle( size_t                           index,
+HandlerRegistrationTokenStorage* AccessHandlerToken()
+{
+    if (!G_HandlerTokenStorage)
+    {
+        G_HandlerTokenStorage = std::make_unique<HandlerRegistrationTokenStorage>();
+    }
+
+    return G_HandlerTokenStorage.get();
+}
+
+void MessageHandler::Initialize()
+{
+    for ( const RegistrationToken* token : AccessHandlerToken()->GetTokens() )
+    {
+        m_handlers_.emplace_back( token->Initialize() );
+    }
+}
+
+void MessageHandler::Handle( size_t                             index,
                              const boost::asio::mutable_buffer&     buffer,
                              const boost::system::error_code& ec,
                              const size_t                     read )
@@ -12,6 +32,7 @@ void MessageHandler::Handle( size_t                           index,
     if (read <= 0)
     {
         // Invalid read
+        CONSOLE_OUT( __FUNCTION__, "Invalid read size" )
         return;
     }
 
@@ -21,30 +42,22 @@ void MessageHandler::Handle( size_t                           index,
     if ( integerValue < 0 || integerValue >= GetMaxMessageIndex() )
     {
         // Unknown message
+        CONSOLE_OUT( __FUNCTION__, "Invalid message type" )
         return;
     }
 
     if ( G_MessageSize.at(integerValue) != read )
     {
+        CONSOLE_OUT( __FUNCTION__, "Invalid packet size" )
         // invalid size
         return;
     }
 
-    for (const std::unique_ptr<HandlerImplementation>& impl : m_handlers_)
+    for (const accessor<HandlerImplementation>& impl : m_handlers_)
     {
         if (impl->ShouldHandle(message->GetType()))
         {
             impl->Handle( index, *message );
         }
-    }
-}
-
-void MessageHandler::RegisterHandler( HandlerImplementation* raw_ptr )
-{
-    if (std::find_if(m_handlers_.begin(), m_handlers_.end(), [ &raw_ptr ](const std::unique_ptr<HandlerImplementation>& element) 
-        { return element.get() == raw_ptr;
-        } ) == m_handlers_.end() )
-    {
-        m_handlers_.emplace_back( std::unique_ptr<HandlerImplementation>( raw_ptr ) );
     }
 }

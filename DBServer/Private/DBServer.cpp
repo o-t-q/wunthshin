@@ -13,41 +13,18 @@
 std::unique_ptr<Network::NetworkContext<1337>> GlobalScope::G_TcpProtocol = {};
 std::unique_ptr<Database::DBConnection>        GlobalScope::G_Database    = {};
 
-void CleanUp( int signal )
-{
-    CONSOLE_OUT( __FUNCTION__, "Signal received, cleanup..." );
-    GlobalScope::GetNetwork().Destroy();
-}
-
-int main()
-{
-    CONSOLE_OUT(__FUNCTION__, "Starting the Server");
-    std::mutex              SleepLock;
-    std::unique_lock        Lock( SleepLock );
-    std::condition_variable SleepCondVar;
-    GlobalScope::Initialize();
-
-    GlobalScope::GetNetwork().accept( std::bind( &MessageHandler::Handle,
-                                                  &GlobalScope::GetHandler(),
-                                                  std::placeholders::_1,
-                                                  std::placeholders::_2,
-                                                  std::placeholders::_3,
-                                                  std::placeholders::_4 ) );
-
-    std::signal( SIGINT | SIGTERM | SIGSEGV | SIGABRT | SIGFPE, CleanUp );
-
-#ifdef _DEBUG
-    StartTestClient();
-#endif
-
-    SleepCondVar.wait( Lock );
-}
-
 void GlobalScope::Initialize()
 {
     GetNetwork();
-    GetHandler();
+    GetHandler().Initialize();
     GetDatabase();
+}
+
+void GlobalScope::Destory()
+{
+    G_TcpProtocol.reset();
+    G_Database.reset();
+    G_MessageHandler.reset();
 }
 
 Network::NetworkContext<1337>& GlobalScope::GetNetwork()

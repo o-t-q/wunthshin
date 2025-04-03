@@ -14,53 +14,83 @@ bool RegisterHandler::ShouldHandle( EMessageType messageType )
 
 void RegisterHandler::Handle( const size_t index, MessageBase& message )
 {
-    static std::regex emailValidation( R"(^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$)" );
+    static std::regex emailValidation( R"(^[\w-\.]+@{1}([\w-]+\.)+[\w-]{2,4}$)" );
     static std::regex idValidation( R"(^[a-zA-Z0-9]+$)") ;
     const auto&       registerMessage = reinterpret_cast<RegisterMessage&>( message );
 
     const Database::Table* userTable = GlobalScope::GetDatabase().GetTable( "User" );
     const Database::Table* inventoryTable = GlobalScope::GetDatabase().GetTable( "Inventory" );
 
-    UserProfile newProfile;
-    newProfile.name           = registerMessage.name;
-    newProfile.email          = registerMessage.email;
-    newProfile.hashedPassword = registerMessage.hashedPassword;
-
     bool success  = true;
     auto failCode = ERegistrationFailCode::None;
+    decltype( registerMessage.name )::const_iterator nameNullTrailing;
+    decltype( registerMessage.email )::const_iterator emailNullTrailing;
 
-    if ( userTable->Execute<bool>( &UserProfile::FindName, newProfile.name ) )
+    if ( !check_null_trailing(registerMessage.name, nameNullTrailing ) )
     {
-        CONSOLE_OUT( __FUNCTION__, "Registration failed due to the duplicated name" )
-        success = false;
+        CONSOLE_OUT( __FUNCTION__, "Empty name given" )
+        success  = false;
         failCode = ERegistrationFailCode::Name;
     }
 
-    if ( std::cmatch matchResult;
-         !std::regex_match( newProfile.name.c_str(), matchResult, idValidation ) && matchResult.size() == 0 )
+    if ( !check_null_trailing(registerMessage.email, emailNullTrailing) )
     {
-        CONSOLE_OUT( __FUNCTION__, "Registration failed due to the name rule" )
-        success = false;
-        failCode = ERegistrationFailCode::Name;
-    }
-
-    if ( std::cmatch matchResult;
-         !std::regex_match( newProfile.email.c_str(), matchResult, emailValidation ) && matchResult.size() != 1 )
-    {
-        CONSOLE_OUT( __FUNCTION__, "Registration failed due to the email rule" )
-        success = false;
+        CONSOLE_OUT( __FUNCTION__, "Empty email given" )
+        success  = false;
         failCode = ERegistrationFailCode::Email;
     }
 
-    if ( success && userTable->Execute<bool>( &UserProfile::Insert, newProfile ) )
+    if ( success )
     {
-        CONSOLE_OUT( __FUNCTION__, "Registration of user {} succeded", newProfile.name )
-        const auto user_id = userTable->Execute<size_t>( &UserProfile::GetIdentifier, newProfile.name );
-        // Possible database error
-        assert( inventoryTable->Execute<bool>( &Inventory::Insert, user_id ) );
-        CONSOLE_OUT( __FUNCTION__, "Registration of user {} inventory succeded", newProfile.name )
+        UserProfile newProfile{};
+        std::copy( registerMessage.name.begin(), nameNullTrailing, newProfile.name.begin() );
+        std::copy( registerMessage.email.begin(), emailNullTrailing, newProfile.email.begin() );
+        newProfile.hashedPassword = registerMessage.hashedPassword;
+
+        std::string_view nameStringify( newProfile.name.data() );
+        std::string_view emailStringify( newProfile.email.data() );
+
+        if ( userTable->Execute<bool>( &UserProfile::FindName, nameStringify ) )
+        {
+            CONSOLE_OUT( __FUNCTION__, "Registration failed due to the duplicated name" )
+            success  = false;
+            failCode = ERegistrationFailCode::Name;
+        }
+
+        if ( std::cmatch matchResult;
+             !std::regex_match( nameStringify.data(), matchResult, idValidation ) || matchResult.empty() )
+        {
+            CONSOLE_OUT( __FUNCTION__, "Registration failed due to the name rule" )
+            success  = false;
+            failCode = ERegistrationFailCode::Name;
+        }
+
+        if ( std::cmatch matchResult;
+             !std::regex_match( emailStringify.data(), matchResult, emailValidation ) || matchResult.empty() )
+        {
+            CONSOLE_OUT( __FUNCTION__, "Registration failed due to the email rule" )
+            success  = false;
+            failCode = ERegistrationFailCode::Email;
+        }
+
+        if ( success )
+        {
+            if (userTable->Execute<bool>(&UserProfile::Insert, newProfile))
+            {
+                CONSOLE_OUT( __FUNCTION__, "Registration of user {} succeded", nameStringify )
+                const auto user_id = userTable->Execute<size_t>( &UserProfile::GetIdentifier, nameStringify );
+                // Possible database error
+                assert( inventoryTable->Execute<bool>( &Inventory::Insert, user_id ) );
+                CONSOLE_OUT( __FUNCTION__, "Registration of user {} inventory succeded", nameStringify )
+            }
+            else
+            {
+                assert( false );
+                success = false;
+            }            
+        }
     }
 
-    auto registerReply = std::make_unique<RegisterStatusMessage>( success, failCode );
+    auto registerReply = make_vec_unique<RegisterStatusMessage>( success, failCode );
     GlobalScope::GetNetwork().send<RegisterStatusMessage>( index, std::move( registerReply ) );
 }

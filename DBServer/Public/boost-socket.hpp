@@ -95,45 +95,6 @@ namespace Network
         {
             static constexpr size_t value = std::numeric_limits<uint16_t>::max();
         };
-
-        template <typename Protocol>
-        struct Acceptor
-        {
-            void accept() { };
-        };
-
-        template <>
-        struct Acceptor<boost::asio::ip::tcp>
-        {
-            using protocol_type = boost::asio::ip::tcp;
-            using endpoint_type = protocol_type::endpoint;
-            using socket_type   = protocol_type::socket;
-
-            using ReadToken = std::function<void( const endpoint_type&, const boost::system::error_code& )>;
-
-            Acceptor() : m_acceptor_( m_dummy_context_ ), m_initialized_( false )
-            { }
-
-            explicit Acceptor( boost::asio::io_context&              context,
-                               boost::asio::ip::tcp::socket&         socket,
-                               const boost::asio::ip::tcp::endpoint& endpoint )
-                : m_acceptor_( context, endpoint ), m_socket_ptr_( &socket ), m_initialized_( true )
-            { }
-
-            void accept( ReadToken&& predicate )
-            {
-                // Not initialized
-                assert( m_initialized_ );
-                m_acceptor_.async_accept(
-                        *m_socket_ptr_,
-                        std::bind( predicate, m_socket_ptr_->remote_endpoint(), std::placeholders::_1 ) );
-            }
-
-            inline static boost::asio::io_context m_dummy_context_ = {};
-            bool                                  m_initialized_;
-            boost::asio::ip::tcp::acceptor        m_acceptor_;
-            boost::asio::ip::tcp::socket*         m_socket_ptr_;
-        };
     } // namespace details
 
     using ReceiveHandlerSignature =
@@ -152,15 +113,20 @@ namespace Network
         boost::asio::executor_work_guard<decltype( m_context_ )::executor_type> m_work_gurad_{
             boost::asio::make_work_guard( m_context_ )
         };
+
         std::vector<std::thread> m_io_threads_;
         endpoint_type            m_local_endpoint_;
 
-        std::unordered_map<endpoint_type, size_t>                m_remote_endpoint_map_;
-        std::unordered_map<size_t, typename Protocol::socket>    m_sockets_;
-        std::unordered_map<size_t, std::atomic<bool>>            m_recv_running_;
-        std::unordered_map<size_t, boost::asio::mutable_buffer>  m_recv_buffers_;
-        std::unordered_map<size_t, std::unordered_set<std::unique_ptr<MessageBase>>> m_pending_messages_;
+        std::unordered_map<endpoint_type, size_t>                                   m_remote_endpoint_map_;
+        std::unordered_map < size_t, accessor< typename Protocol::socket >> m_sockets_;
+        std::unordered_map<size_t, boost::asio::mutable_buffer>                     m_recv_buffers_;
+        std::unordered_map<size_t, std::unordered_set<accessor<MessageBase>>> m_pending_messages_;
 
+        size_t                                    m_next_idx_ = 0;
+        accessor<typename Protocol::socket> m_pending_socket_;
+        boost::asio::mutable_buffer               m_pending_buffer_;
+
+        std::atomic<bool> m_accepting_;
         std::atomic<bool> m_running_;
 
     public:
@@ -172,15 +138,13 @@ namespace Network
         NetworkContext()
         {
             m_acceptor_ = std::make_unique<Protocol::acceptor>(
-                m_context_,
-                Protocol::endpoint{ boost::asio::ip::tcp::v4(), Port }
-            );
+                    m_context_, Protocol::endpoint{ boost::asio::ip::tcp::v4(), Port } );
 
             m_local_endpoint_ = { boost::asio::ip::tcp::v4(), Port };
 
             const auto& thread_count = std::min<uint32_t>( std::thread::hardware_concurrency(), 4 );
             const auto& bind_error_handler =
-                    std::bind( &NetworkContext::contextErrorHandler, this, std::placeholders::_1 );
+                    std::bind( &NetworkContext::contextErrorHandler, std::placeholders::_1 );
 
             std::generate_n( std::back_inserter( m_io_threads_ ),
                              thread_count,
@@ -200,18 +164,14 @@ namespace Network
                 return;
             }
 
-            const size_t receiving_threads = std::min<size_t>( std::thread::hardware_concurrency(), 4 );
-
-            for ( size_t i = 0; i < receiving_threads; ++i )
-            {
-                startAccept( i, std::move( predicate ) );
-            }
+            startAccept( std::move( predicate ) );
 
             m_running_.store( true );
         }
 
-        template <typename MessageType> requires std::is_base_of_v <MessageBase, MessageType>
-        bool send( const size_t index, std::unique_ptr<MessageType>&& message )
+        template <typename MessageType>
+            requires std::is_base_of_v<MessageBase, MessageType>
+        bool send( const size_t index, accessor<MessageType>&& message )
         {
             if ( !m_running_ )
             {
@@ -219,23 +179,23 @@ namespace Network
             }
 
 #ifdef _DEBUG
-            assert( m_recv_running_.contains( index ) );
+            assert( m_sockets_.contains( index ) );
 #endif
-            if ( !m_recv_running_.at( index ) )
+            if ( !m_sockets_.contains( index ) )
             {
                 return false;
             }
 
-            const auto& [iter, _] = m_pending_messages_[ index ].emplace( std::move( message ) );
-            boost::asio::const_buffer buffer( ( *iter ).get(), sizeof( MessageType ) );
-            const void*               unique_ptr_addr = reinterpret_cast<const void*>( &( *iter ) );
+            const auto& [ iter, _ ] = m_pending_messages_[ index ].emplace( std::move( message ) );
+            boost::asio::const_buffer buffer( &( *iter ), sizeof( MessageType ) );
 
-            m_sockets_.at( index ).async_send(
+            // todo: fix to not use the pointer hack.
+            m_sockets_.at( index )->async_send(
                     buffer,
-                                            [ this, index, unique_ptr_addr ]( const boost::system::error_code& ec, const size_t sent ) 
-                                            { 
-                                                m_pending_messages_.at( index ).erase( *reinterpret_cast<const std::unique_ptr<MessageBase>*>( unique_ptr_addr ) );
-                                            } );
+                    [ this, index, iter ]( const boost::system::error_code& ec, const size_t sent )
+                    {
+                        m_pending_messages_.at( index ).erase( iter );
+                    } );
 
             return true;
         }
@@ -244,21 +204,13 @@ namespace Network
         {
             m_running_ = false;
 
-            for ( auto& [ index, flag ] : m_recv_running_ )
+            for ( auto& [ index, socket ] : m_sockets_ )
             {
-                if ( flag )
-                {
-                    bool expected = true;
-                    while ( !flag.compare_exchange_strong( expected, false ) )
-                    {
-                    }
-
-                    m_sockets_.at( index ).cancel();
-                    m_sockets_.at( index ).close();
-                }
+                socket->cancel();
+                socket->close();
+                socket.reset();
             }
 
-            m_work_gurad_.reset();
             m_context_.stop();
 
             std::ranges::for_each( m_io_threads_,
@@ -269,6 +221,8 @@ namespace Network
                                            elem.join();
                                        }
                                    } );
+
+            m_work_gurad_.reset();
 
             for ( boost::asio::mutable_buffer& buffer : m_recv_buffers_ | std::views::values )
             {
@@ -282,43 +236,47 @@ namespace Network
         }
 
     private:
-        void startAccept( size_t i, const ReceiveHandlerSignature& predicate )
+        void startAccept( const ReceiveHandlerSignature& predicate )
         {
-            m_sockets_.emplace( i, Protocol::socket{ m_context_ } );
-            if ( m_recv_buffers_[ i ].data() == nullptr )
-            {
-                m_recv_buffers_.at( i ) = boost::asio::mutable_buffer{
-                                                 details::allocate<Protocol>( details::MaxPacketSize<Protocol>::value ),
+            CONSOLE_OUT( __FUNCTION__, "Start Accepting" )
+
+            m_pending_buffer_ = { details::allocate<Protocol>( details::MaxPacketSize<Protocol>::value ),
                                                  details::MaxPacketSize<Protocol>::value };
-            }
+            m_pending_socket_ = make_vec_unique<Protocol::socket>( m_context_ );
 
-            CONSOLE_OUT( __FUNCTION__, "Start Accepting thread {}", i );
-            m_acceptor_->async_accept( m_sockets_.at( i ),
-                                      [ this, predicate, index = i ]( const boost::system::error_code& ec )
-                                      {
-                                          if ( !ec )
-                                          {
-                                              Protocol::endpoint endpoint = m_sockets_.at( index ).remote_endpoint();
-                                              CONSOLE_OUT( __FUNCTION__,
-                                                           "Accepting the connection of {}:{}",
-                                                           endpoint.address().to_v4().to_string(),
-                                                           endpoint.port() );
-                                              m_remote_endpoint_map_.emplace( endpoint, index );
-                                              if (m_recv_running_[index] == false)
-                                              {
-                                                  m_recv_running_.at( index ) = true;
-                                              }
+            m_acceptor_->async_accept(
+                    *m_pending_socket_,
+                    [ this, predicate, index = m_next_idx_ ]( const boost::system::error_code& ec ) mutable
+                    {
+                        if ( !ec )
+                        {
+                            while ( m_sockets_.contains( index ) )
+                            {
+                                index++;
+                            }
 
-                                              m_sockets_.at( index ).async_receive(
-                                                      m_recv_buffers_[ index ],
-                                                      std::bind( &NetworkContext::receiveHandler,
-                                                                 this,
-                                                                 index,
-                                                                 predicate,
-                                                                 std::placeholders::_1,
-                                                                 std::placeholders::_2 ) );
-                                          }
-                                      } );
+                            m_sockets_.emplace( index, std::move( m_pending_socket_ ) );
+                            m_recv_buffers_.emplace( index, std::move( m_pending_buffer_ ) );
+                            Protocol::endpoint endpoint = m_sockets_.at( index )->remote_endpoint();
+                            CONSOLE_OUT( __FUNCTION__,
+                                         "Accepting the connection of {}:{}",
+                                         endpoint.address().to_v4().to_string(),
+                                         endpoint.port() );
+
+                            m_remote_endpoint_map_.emplace( endpoint, index );
+
+                            m_sockets_.at( index )->async_receive( m_recv_buffers_[ index ],
+                                                                   std::bind( &NetworkContext::receiveHandler,
+                                                                              this,
+                                                                              index,
+                                                                              predicate,
+                                                                              std::placeholders::_1,
+                                                                              std::placeholders::_2 ) );
+
+                            startAccept( predicate );
+                        }
+                    } );
+            ++m_next_idx_;
         }
 
         void receiveHandler( const size_t                     index,
@@ -333,30 +291,29 @@ namespace Network
 
             if constexpr ( std::is_same_v<Protocol, boost::asio::ip::tcp> )
             {
-#ifdef _DEBUG
-                assert( m_recv_running_.contains( index ) );
-#endif
-                if ( !ec && m_recv_running_.at( index ) )
+                if ( !ec )
                 {
 #ifdef _DEBUG
                     assert( m_sockets_.contains( index ) );
 #endif
-                    m_sockets_.at( index ).async_read_some( m_recv_buffers_[ index ],
-                                                       std::bind( &NetworkContext::receiveHandler,
-                                                                  this,
-                                                                  index,
-                                                                  predicate,
-                                                                  std::placeholders::_1,
-                                                                  std::placeholders::_2 ) );
+                    m_sockets_.at( index )->async_read_some( m_recv_buffers_[ index ],
+                                                             std::bind( &NetworkContext::receiveHandler,
+                                                                        this,
+                                                                        index,
+                                                                        predicate,
+                                                                        std::placeholders::_1,
+                                                                        std::placeholders::_2 ) );
                 }
-                else if ( ec )
+                else
                 {
-                    if ( m_running_ )
+                    if ( m_sockets_.at( index ).valid() )
                     {
-                        m_sockets_.at( index ).cancel();
-                        m_sockets_.at( index ).close();
-                        startAccept( index, predicate );
+                        m_sockets_.at( index )->cancel();
+                        m_sockets_.at( index )->close();
+                        m_sockets_.at( index ).reset();
                     }
+
+                    m_sockets_.erase( index );
                 }
             }
         }
@@ -378,7 +335,7 @@ namespace Network
             }
         }
 
-        void contextErrorHandler( const std::exception& e )
+        static void contextErrorHandler( const std::exception& e )
         {
             CONSOLE_OUT( __FUNCTION__, "contextRunner throws exception with {}", e.what() )
         }

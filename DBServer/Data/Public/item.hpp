@@ -6,11 +6,12 @@
 
 struct Item
 {
-    std::string name;
+    Varchar name;
 
     static bool Insert( const Item& item, pqxx::work& tx )
     {
-        const pqxx::result result = tx.exec( "INSERT INTO items VALUES (DEFAULT, $1);", pqxx::params{ item.name } );
+        std::string_view   strView( item.name.data() );
+        const pqxx::result result    = tx.exec( "INSERT INTO items VALUES (DEFAULT, $1);", pqxx::params{ strView } );
         const size_t row_count = result.affected_rows();
         tx.commit();
         return row_count;
