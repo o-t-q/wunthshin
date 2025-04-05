@@ -10,7 +10,7 @@
 #include "../Public/DBServer.h"
 #include "../Public/utility.hpp"
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(WIN32)
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
@@ -22,10 +22,6 @@ void ReportMemoryLeak()
     _CrtDumpMemoryLeaks();
     CONSOLE_OUT( __FUNCTION__, "Memory Leak Tested" );
 }
-
-#define DBG_NEW new ( _NORMAL_BLOCK, __FILE__, __LINE__ )
-// Replace _NORMAL_BLOCK with _CLIENT_BLOCK if you want the
-// allocations to be of _CLIENT_BLOCK type
 #endif
 
 void CleanUp( int signal )

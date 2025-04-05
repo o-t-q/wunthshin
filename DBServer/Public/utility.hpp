@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+#include <type_traits>
 #include <execution>
 #include <immintrin.h>
 #include <boost/pool/pool_alloc.hpp>
@@ -62,6 +63,21 @@ inline bool is_null_container_unseq( const ContainerT& cont )
 static const __m256i mm256_all_mask = _mm256_set1_epi32( std::numeric_limits<uint32_t>::max() );
 
 template <typename T>
+using vec_unique_ptr = std::unique_ptr<T, std::function<void( void* )>>;
+
+struct __declspec( align( 32 ) ) alloc_pair
+{
+    size_t  chunk;
+    uint8_t segment;
+    uint8_t bit;
+
+    bool operator==( const alloc_pair& other ) const
+    {
+        return chunk == other.chunk && segment == other.segment && bit == other.bit;
+    }
+};
+
+template <typename T>
 std::atomic<bool>& get_spinlock()
 {
     static std::atomic<bool> lock;
@@ -79,19 +95,58 @@ void do_lock( const bool value )
     }
 }
 
+#if defined(_DEBUG) && defined(WIN32)
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#include <iostream>
+
+struct debug_new_delete
+{
+    typedef std::size_t size_type;
+    //!< An unsigned integral type that can represent the size of the largest object to be allocated.
+    typedef std::ptrdiff_t difference_type;
+    //!< A signed integral type that can represent the difference of any two pointers.
+
+    static char* malloc( const size_type bytes )
+    {
+        //! Attempts to allocate n bytes from the system. Returns 0 if out-of-memory
+#define DBG_NEW new ( _NORMAL_BLOCK, __FILE__, __LINE__ )
+        // Replace _NORMAL_BLOCK with _CLIENT_BLOCK if you want the
+        // allocations to be of _CLIENT_BLOCK type
+        return DBG_NEW char[ bytes ];
+#undef DBG_NEW
+    }
+
+    static void free( char* const block )
+    {
+        //! Attempts to de-allocate block.
+        //! \pre Block must have been previously returned from a call to UserAllocator::malloc.
+        delete [] block;
+    }
+};
+using user_allocator = debug_new_delete;
+#else
+using user_allocator = boost::default_user_allocator_new_delete;
+#endif
+
 template <typename T,
-    bool Construction,
-    typename UserAllocator = boost::default_user_allocator_new_delete, 
+    bool AllocateFast,
+    typename UserAllocator = user_allocator,
+    typename RebindFrom = T,
     typename Mutex = boost::details::pool::null_mutex, 
     unsigned NextSize = 32U, 
     unsigned MaxSize = 0U>
 class tag_pool_alloc
 {
-    struct crowded_tag
-    { };
+    template <typename Type, bool AF>
+    struct crowded_tag { };
 
 public:
-    using pool_type = boost::singleton_pool<crowded_tag, sizeof( T ), UserAllocator, Mutex, NextSize, MaxSize>;
+    inline static std::unordered_set<void(*)()> s_rebind_release = {};
+    inline static std::unordered_set<void(*)()> s_rebind_purge = {};
+
+    using pool_type = boost::singleton_pool<crowded_tag<RebindFrom, AllocateFast>, sizeof( T ), UserAllocator, Mutex, NextSize, MaxSize>;
     using value_type = T;
     using user_allocator = typename pool_type::user_allocator;
     using mutex = typename pool_type::mutex;
@@ -108,44 +163,98 @@ public:
     }
 
     template <typename U>
-    tag_pool_alloc( const tag_pool_alloc<U, Construction, UserAllocator, Mutex, NextSize, MaxSize>& )
+    tag_pool_alloc( const tag_pool_alloc<U, AllocateFast, UserAllocator, RebindFrom, Mutex, NextSize, MaxSize>& )
     {
+        using origin_allocator = tag_pool_alloc<RebindFrom, AllocateFast, UserAllocator, RebindFrom, Mutex, NextSize, MaxSize>;
+        origin_allocator::s_rebind_release.emplace( &release_memory );
+        origin_allocator::s_rebind_purge.emplace( &purge_memory );
         pool_type::is_from( 0 );
     }
 
     template <typename U>
     struct rebind
     {
-        typedef tag_pool_alloc<U, Construction, UserAllocator, Mutex, NextSize, MaxSize> other;
+        typedef tag_pool_alloc<U, AllocateFast, UserAllocator, RebindFrom, Mutex, NextSize, MaxSize> other;
     };
 
     template <typename U, typename... Args>
     static void construct( U* ptr, Args&&... args ) 
     {
-        if constexpr ( Construction )
+        if constexpr ( std::constructible_from<U, Args...> )
         {
-            new (ptr) U( std::forward<Args>( args )... );
+            new (ptr) U( std::forward<Args>( args )... );                
         }
     }
 
-    static void destroy( const pointer ptr ) 
-    { }
+    static void destroy( const pointer ptr )
+    {
+        if constexpr ( !std::is_same_v<T, RebindFrom> )
+        {
+            ptr->~T();   
+        }
+    }
 
     static pointer allocate( const size_type n )
     {
-        return ( pointer )pool_type::ordered_malloc( n );
+        if constexpr ( AllocateFast )
+        {
+            return ( pointer )pool_type::ordered_malloc( n );
+        }
+        else
+        {
+            if (n == 1)
+            {
+                return ( pointer )pool_type::malloc();
+            }
+            else
+            {
+                return ( pointer )pool_type::ordered_malloc( n );
+            }
+        }
     }
     static pointer allocate( const size_type n, const void* const )
     {
         return allocate( n );
     }
+
     static void deallocate(const pointer ptr)
     {
-        pool_type::ordered_free( ptr );
+        if constexpr ( AllocateFast )
+        {
+            pool_type::ordered_free( ptr );   
+        }
+        else
+        {
+            pool_type::free( ptr );
+        }
     }
     static void deallocate( const pointer ptr, const size_type n )
     {
-        pool_type::ordered_free( ptr, n );
+        if constexpr ( AllocateFast )
+        {
+            pool_type::ordered_free( ptr, n );   
+        }
+        else
+        {
+            if (n == 1)
+            {
+                pool_type::free( ptr );
+            }
+            else
+            {
+                pool_type::free( ptr, n );
+            }
+        }
+    }
+
+    static void release_memory()
+    {
+        pool_type::release_memory();
+    }
+
+    static void purge_memory()
+    {
+        pool_type::purge_memory();
     }
 };
 
@@ -168,7 +277,7 @@ struct storage_stack
     bool contains(pool_storage_base* pool_ptr)
     {
         do_lock<decltype( *this )>( true );
-        bool result = m_loaded_pool_.contains( pool_ptr );
+        const bool result = m_loaded_pool_.contains( pool_ptr );
         do_lock<decltype( *this )>( false );
         return result;
     }
@@ -186,8 +295,8 @@ struct storage_stack
     }
 
 private:
-    template <typename T>
-    friend struct pool_storage;
+    template <typename StorageType, typename ValueAllocator>
+    friend struct pool_storage_impl;
 
     void remove(pool_storage_base* pool_ptr)
     {
@@ -201,44 +310,12 @@ private:
 
 inline static storage_stack G_ManagedStorage = {};
 
-template <typename T>
-using vec_unique_ptr = std::unique_ptr<T, std::function<void( void* )>>;
-
-struct __declspec( align( 32 ) ) alloc_pair
+template <typename StorageType, typename ValueAllocator>
+struct pool_storage_impl : pool_storage_base
 {
-    size_t  chunk;
-    uint8_t segment;
-    uint8_t bit;
+    using Allocator = tag_pool_alloc<StorageType, true>;
 
-    bool operator==( const alloc_pair& other ) const
-    {
-        return chunk == other.chunk && segment == other.segment && bit == other.bit;
-    }
-};
-
-template <typename T>
-using instance_allocator = boost::fast_pool_allocator<std::pair<const alloc_pair, vec_unique_ptr<T>>>;
-
-template <typename T>
-auto& get_instances()
-{
-    static std::unordered_map<alloc_pair,
-                              vec_unique_ptr<T>,
-                              std::hash<alloc_pair>,
-                              std::equal_to<alloc_pair>,
-                              instance_allocator<T>>
-            instance_created;
-    return instance_created;
-}
-
-template <typename T>
-struct pool_storage : pool_storage_base
-{
-    using value_alloc = tag_pool_alloc<T, false>;
-    using storage_type = std::vector<T, value_alloc>;
-    using allocator = tag_pool_alloc<storage_type, true>;
-
-    ~pool_storage()
+    ~pool_storage_impl() override
     {
         dispose();
     }
@@ -253,13 +330,13 @@ struct pool_storage : pool_storage_base
         return *pool;
     }
 
-    void initialize()
+    void initialize() override
     {
         do_lock<decltype( *this )>( true );
         if ( !pool )
         {
-            pool = allocator::allocate( 1 );
-            allocator::construct( pool );
+            pool = Allocator::allocate( 1 );
+            Allocator::construct( pool );
         }
         if ( !m_initialized_ )
         {
@@ -271,20 +348,25 @@ struct pool_storage : pool_storage_base
         G_ManagedStorage.add( this );
     }
 
-    void destroy()
+    void destroy() override
     {
         do_lock<decltype( *this )>( true );
 
         if ( m_initialized_ )
         {
-            pool->resize( 0 );
-            pool->shrink_to_fit();
-            assert( value_alloc::pool_type::release_memory() );
-            assert( !value_alloc::pool_type::purge_memory() );
-            m_initialized_ = false;
+            if constexpr ( requires { pool->resize(0); } )
+            {
+                pool->resize( 0 );
+                pool->shrink_to_fit();
+            }
+            else
+            {
+                pool->erase( pool->begin(), pool->end() );    
+            }
 
-            get_instances<T>().clear();
-            // todo: cleanup instance pool allocator
+            ValueAllocator::pool_type::release_memory();
+            ValueAllocator::pool_type::purge_memory();
+            m_initialized_ = false;
 
             if ( G_ManagedStorage.contains( this ) )
             {
@@ -300,23 +382,59 @@ struct pool_storage : pool_storage_base
         destroy();
         if ( pool )
         {
-            allocator::destroy( pool );
-            allocator::deallocate( pool, 1 );
-            assert( allocator::pool_type::release_memory() );
-            assert( !allocator::pool_type::purge_memory() );
+            Allocator::destroy( pool );
+            Allocator::deallocate( pool );
+            Allocator::release_memory();
+            Allocator::purge_memory();
+        }
+        for (const auto& func : ValueAllocator::s_rebind_release)
+        {
+            func();
+        }
+        for (const auto& func : ValueAllocator::s_rebind_purge)
+        {
+            func();
         }
     }
 
 private:
     bool m_initialized_ = false;
-    storage_type* pool = nullptr;
+    StorageType* pool = nullptr;
 };
 
 template <typename T>
-auto& get_storage()
+struct unordered_pool_storage : pool_storage_impl<std::unordered_set<T, std::hash<T>, std::equal_to<T>, tag_pool_alloc<T, false>>, tag_pool_alloc<T, false>>
+{
+};
+
+template <typename KeyT, typename ValT, typename PairT = std::pair<const KeyT, ValT>>
+struct unordered_map_pool_storage : pool_storage_impl<std::unordered_map<KeyT, ValT, std::hash<KeyT>, std::equal_to<KeyT>, tag_pool_alloc<PairT, false>>, tag_pool_alloc<PairT, false>>
+{
+};
+
+template <typename T>
+struct pool_storage : pool_storage_impl<std::vector<T, tag_pool_alloc<T, true>>, tag_pool_alloc<T, true>>
+{
+};
+
+template <typename T>
+auto& get_internal_storage()
 {
     static pool_storage<T> storage;
     return storage.get();
+}
+
+template <typename KeyT, typename ValT>
+auto& get_storage()
+{
+    static unordered_map_pool_storage<KeyT, ValT> storage;
+    return storage.get();
+}
+
+template <typename T>
+auto& get_instances()
+{
+    return get_storage<alloc_pair, vec_unique_ptr<T>>();
 }
 
 template <>
@@ -366,7 +484,7 @@ void deallocate( T* ptr )
 template <typename T, typename... Args>
 T* allocate( alloc_pair& index, Args&&... args )
 {
-    auto& vec = get_storage<T>();
+    auto& vec = get_internal_storage<T>();
     auto& alloc_masks = get_alloc_masks<T>();
     auto& alloc_map = get_alloc_map<T>();
 
@@ -397,8 +515,7 @@ T* allocate( alloc_pair& index, Args&&... args )
 
                 if ( vec.size() <= vec_loc )
                 {
-                    vec.resize( vec_loc + 1 );
-                    ptr = &vec.at( vec_loc );
+                    ptr = &vec.emplace_back( std::forward<Args>( args )... );
                     if ( prev_alloc_size != vec.capacity() )
                     {
                         alloc_map.clear();
@@ -422,9 +539,9 @@ T* allocate( alloc_pair& index, Args&&... args )
                 else
                 {
                     ptr = &vec.at(vec_loc);
+                    new ( ptr ) T( std::forward<Args>( args )... );
                 }
-
-                new ( ptr ) T( std::forward<Args>( args )... );
+                
                 alloc_map.emplace( ptr, index );
 
                 do_lock<T>( false );

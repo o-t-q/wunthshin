@@ -19,6 +19,6 @@ struct LoginHandler : HandlerImplementation
     void Handle( const size_t index, MessageBase& message ) override;
 
 private:
-    std::unordered_map<UUID, size_t, std::hash<UUID>, std::equal_to<UUID>, boost::fast_pool_allocator<std::pair<const UUID, size_t>>> m_login_;
+    std::unordered_map<UUID, size_t> m_login_;
 
 };

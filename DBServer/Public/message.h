@@ -59,7 +59,6 @@ constexpr size_t GetMaxMessageIndex()
 }
 
 #define DEFINE_MSG(NAME, MSGTYPE, CHLTYPE) DEFINE_MSG_WITH_BODY(NAME, MSGTYPE, CHLTYPE, )
-
 #define DEFINE_MSG_WITH_BODY( NAME, MSGTYPE, CHLTYPE, BODY ) \
     struct NAME; \
     template <> \
@@ -72,26 +71,32 @@ constexpr size_t GetMaxMessageIndex()
         constexpr static EMessageChannelType value = CHLTYPE; \
     }; \
     struct NAME : MessageT<MSGTYPE> \
-    { BODY };
+    { \
+        NAME() = default; \
+        BODY \
+    }; \
 
 #pragma pack( push, 1 )
 struct MessageBase 
 {
-    explicit MessageBase( EMessageType InMessageType ) : messageType( InMessageType )
+    ~MessageBase() = default;
+    explicit MessageBase( EMessageType InMessageType ) : messageType{ InMessageType }
     { }
-
+    MessageBase(const MessageBase&) = delete;
+    MessageBase& operator=(const MessageBase&) = delete;
+    MessageBase& operator=(MessageBase&& other) noexcept
+    {
+        messageType = other.messageType;
+        other.messageType = EMessageType::Unspecified;
+        return *this;
+    }
     MessageBase(MessageBase&& other) noexcept
     {
         messageType = other.messageType;
         other.messageType = EMessageType::Unspecified;
     }
 
-    MessageBase(const MessageBase& other)
-    {
-        messageType = other.messageType;
-    }
-
-    EMessageType GetType() const
+    [[nodiscard]] EMessageType GetType() const
     {
         return messageType;
     }
@@ -106,11 +111,18 @@ struct MessageT : MessageBase
 {
     static constexpr EMessageType message_type = MessageType;
 
-    constexpr MessageT() : MessageBase( MessageType )
+    ~MessageT() = default;
+    MessageT() : MessageBase{ MessageType }
+    { }
+    MessageT(const MessageT&) = delete;
+    MessageT& operator=(const MessageT&) = delete;
+    MessageT( MessageT&& other ) noexcept : MessageBase( std::move( other ) )
+    { }
+    MessageT& operator=( MessageT&& other ) noexcept
     {
+        MessageBase::operator=( std::move( other ) );
+        return *this;
     }
-
-    MessageT( MessageT&& other ) noexcept : MessageBase( other ) {}
 };
 
 using Varchar = std::array<char, 256>;
@@ -126,37 +138,49 @@ DEFINE_MSG_WITH_BODY(
         LoginStatusMessage,
         EMessageType::LoginStatus,
         EMessageChannelType::Login,
-    LoginStatusMessage( UUID&& inSessionId )
-    {
-        sessionId = inSessionId;
-    }
-    bool success = false;    
-    UUID sessionId{};
-);
+LoginStatusMessage(const bool InSuccess, const UUID& InSessionId)
+{
+    success = InSuccess;
+    sessionId = InSessionId;
+}
+bool success = false;
+UUID sessionId{};)
+
 DEFINE_MSG_WITH_BODY(
         LogoutMessage,
         EMessageType::Logout,
         EMessageChannelType::Login,
-    LogoutMessage( UUID&& inSessionId ) : sessionId( inSessionId ) {}
-    UUID sessionId{};
-)
+LogoutMessage(const UUID& InSessionId)
+{
+    sessionId = InSessionId;
+}
+UUID sessionId{};)
+
 DEFINE_MSG_WITH_BODY(
         LogoutOKMessage,
         EMessageType::LogoutOK,
         EMessageChannelType::Login,
-           LogoutOKMessage(bool flag) : success(flag) {}
-           bool success; )
+LogoutOKMessage(const bool InSuccess)
+{
+    success = InSuccess;
+}
+bool success = false;)
+
 DEFINE_MSG_WITH_BODY( RegisterMessage, EMessageType::Register, EMessageChannelType::Register, 
-    Varchar name; Varchar email; HashArray hashedPassword{}; )
+    Varchar name{}; Varchar email{}; HashArray hashedPassword{};
+)
+
 DEFINE_MSG_WITH_BODY(
         RegisterStatusMessage, EMessageType::RegisterStatus, EMessageChannelType::Register,
-           bool success = false; ERegistrationFailCode code = ERegistrationFailCode::None;
-           RegisterStatusMessage() = default;
-           RegisterStatusMessage(bool inSuccess, ERegistrationFailCode inFailCode)
-           {
-               success = inSuccess;
-               code = inFailCode;
-           } )
+
+RegisterStatusMessage(bool InSucess, ERegistrationFailCode InCode)
+{
+    success = InSucess;
+    code = InCode;
+}
+bool success = false; 
+ERegistrationFailCode code = ERegistrationFailCode::None;)
+
 #pragma pack( pop )
 
 template <size_t... Values>
