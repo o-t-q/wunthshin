@@ -25,6 +25,7 @@ void GlobalScope::Destroy()
     G_TcpProtocol.reset();
     G_Database.reset();
     G_MessageHandler.reset();
+    G_ManagedStorage.purge();
 }
 
 Network::NetworkContext<1337>& GlobalScope::GetNetwork()

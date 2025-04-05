@@ -93,8 +93,7 @@ BOOST_FIXTURE_TEST_CASE( LoginAndOut, ServerClientFixture )
         boost::asio::const_buffer loginMessageBuffer( &loginMessage, sizeof( loginMessage ) );
         CONSOLE_OUT( __FUNCTION__, "Login request sent" );
         BOOST_CHECK( socket.send( loginMessageBuffer ) != 0 );
-        UUID                        container;
-        LoginStatusMessage          loginReply{ std::move( container ) };
+        LoginStatusMessage          loginReply{};
         boost::asio::mutable_buffer loginReceived( &loginReply, sizeof( loginReply ) );
         socket.receive( loginReceived );
         BOOST_CHECK( loginReply.success );
@@ -106,7 +105,7 @@ BOOST_FIXTURE_TEST_CASE( LoginAndOut, ServerClientFixture )
     }
 
     {
-        LogoutMessage             logoutMessage( std::move( sessionID ) );
+        LogoutMessage             logoutMessage( sessionID );
         boost::asio::const_buffer logoutBuffer( &logoutMessage, sizeof( logoutMessage ) );
         BOOST_CHECK( socket.send( logoutBuffer ) != 0 );
         CONSOLE_OUT( __FUNCTION__, "Logout request sent" );

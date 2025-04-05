@@ -4,7 +4,7 @@
 #include <SDKDDKVer.h>
 
 #include <boost/asio.hpp>
-#include <boost/pool/pool_alloc.hpp>
+#include <boost/pool/object_pool.hpp>
 #include <array>
 #include <thread>
 #include <atomic>
@@ -37,27 +37,6 @@ namespace Network
             }
         };
 #endif
-
-        using allocator_type = boost::fast_pool_allocator<unsigned char>;
-
-        template <typename Protocol>
-        static allocator_type& getAllocator()
-        {
-            static allocator_type alloc{};
-            return alloc;
-        }
-
-        template <typename Protocol>
-        static unsigned char* allocate( const size_t bytes )
-        {
-            return details::getAllocator<Protocol>().allocate( bytes );
-        }
-
-        template <typename Protocol>
-        static void deallocate( unsigned char* ptr, const size_t bytes )
-        {
-            details::getAllocator<Protocol>().deallocate( ptr, bytes );
-        }
 
         template <typename T>
         struct LocalAddressResolver
@@ -121,6 +100,30 @@ namespace Network
         std::unordered_map < size_t, accessor< typename Protocol::socket >> m_sockets_;
         std::unordered_map<size_t, boost::asio::mutable_buffer>                     m_recv_buffers_;
         std::unordered_map<size_t, std::unordered_set<accessor<MessageBase>>> m_pending_messages_;
+
+        struct MessagePool
+        {
+#pragma pack( push, 1 )
+            struct MessageBuffer
+            {
+                unsigned char data[ details::MaxPacketSize<Protocol>::value ];
+            };
+#pragma pack( pop )
+
+            unsigned char* allocate()
+            {
+                return ( unsigned char* )message_buffer_pool.malloc();
+            }
+
+            void deallocate( unsigned char* buffer )
+            {
+                message_buffer_pool.free( ( MessageBuffer* )buffer );
+            }
+
+        private:
+            boost::object_pool<MessageBuffer> message_buffer_pool;
+        } m_message_buffer_pool_;
+
 
         size_t                                    m_next_idx_ = 0;
         accessor<typename Protocol::socket> m_pending_socket_;
@@ -224,10 +227,22 @@ namespace Network
 
             m_work_gurad_.reset();
 
+            if (m_pending_buffer_.data())
+            {
+                m_message_buffer_pool_.deallocate( ( uint8_t* )m_pending_buffer_.data() );
+            }
+            m_pending_messages_.clear();
+            m_pending_socket_.reset();
+
             for ( boost::asio::mutable_buffer& buffer : m_recv_buffers_ | std::views::values )
             {
-                details::deallocate<Protocol>( ( uint8_t* )buffer.data(), buffer.size() );
+                if ( buffer.data() )
+                {
+                    m_message_buffer_pool_.deallocate( ( uint8_t* )buffer.data() );
+                }
             }
+
+            m_recv_buffers_.clear();
         }
 
         uint16_t GetListenPort() const
@@ -240,7 +255,7 @@ namespace Network
         {
             CONSOLE_OUT( __FUNCTION__, "Start Accepting" )
 
-            m_pending_buffer_ = { details::allocate<Protocol>( details::MaxPacketSize<Protocol>::value ),
+            m_pending_buffer_ = { m_message_buffer_pool_.allocate( ),
                                                  details::MaxPacketSize<Protocol>::value };
             m_pending_socket_ = make_vec_unique<Protocol::socket>( m_context_ );
 

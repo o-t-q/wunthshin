@@ -24,8 +24,7 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
 
             const auto& replyFailed = []( const size_t to )
             {
-                auto reply          = make_vec_unique<LoginStatusMessage>( UUID() );
-                reply->success = false;
+                auto reply     = make_vec_unique<LoginStatusMessage>( false, UUID() );
                 GlobalScope::GetNetwork().send<LoginStatusMessage>( to, std::move( reply ) );
             };
 
@@ -69,8 +68,7 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
                 CONSOLE_OUT(__FUNCTION__, "Login Ok for {} with seesion ID {}", id, to_hex_string( sessionId ))
 
                 m_login_.insert( { sessionId, id } );
-                auto reply     = make_vec_unique<LoginStatusMessage>( std::move( sessionId ) );
-                reply->success = true;
+                auto reply     = make_vec_unique<LoginStatusMessage>( true, sessionId );
                 GlobalScope::GetNetwork().send<LoginStatusMessage>( index, std::move( reply ) );
                 break;
             }
