@@ -20,7 +20,7 @@ void MessageHandler::Initialize()
 {
     for ( const RegistrationToken* token : AccessHandlerToken()->GetTokens() )
     {
-        m_handlers_.emplace_back( token->Initialize() );
+        m_handlers_.emplace_back( std::move( token->Initialize() ) );
     }
 }
 
@@ -55,6 +55,7 @@ void MessageHandler::Handle( size_t                             index,
 
     for (const accessor<HandlerImplementation>& impl : m_handlers_)
     {
+        assert( impl.get() != nullptr );
         if (impl->ShouldHandle(message->GetType()))
         {
             impl->Handle( index, *message );
