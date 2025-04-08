@@ -17,6 +17,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UWSLoginChannel* GetLoginChannel() { return LoginChannel; }
 
+	UFUNCTION(BlueprintCallable)
+	UWSRegisterChannel* GetRegisterChannel() { return RegisterChannel; }
+
 	bool HashPassword(const FString& InPlainPassword, FSHA256Signature& OutSignature, const FString& InSalt = TEXT("")) const;
 
 	bool TrySendLoginRequest(const FString& InID, const FSHA256Signature& HashedPassword);

@@ -42,28 +42,6 @@ void AwunthshinPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	GetPlayerState<AwunthshinPlayerState>()->OnPlayerAlivenessChanged.AddUniqueDynamic(this, &AwunthshinPlayerController::UpdateByAlive);
-
-	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
-	{
-		if (CharacterSubsystem->GetCharacter(1) == nullptr)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("%hs: SPWANING TEST YEONMU"), __FUNCTION__);
-			AA_WSCharacter* Yeonmu = GetWorld()->SpawnActorDeferred<AA_WSCharacter>
-			(
-				AA_WSCharacter::StaticClass(),
-				FTransform::Identity,
-				this,
-				nullptr,
-				ESpawnActorCollisionHandlingMethod::AlwaysSpawn
-			);
-			Yeonmu->SetAssetName("Yeonmu");
-			Yeonmu->SetActorEnableCollision(false);
-			Yeonmu->SetActorHiddenInGame(true);
-			Yeonmu->FinishSpawning(FTransform::Identity);
-
-			GetGameInstance()->GetSubsystem<UCharacterSubsystem>()->AddCharacter(Yeonmu, 1);
-		}
-	}
 }
 
 void AwunthshinPlayerController::OnPossess(APawn* InPawn)
