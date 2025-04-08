@@ -39,6 +39,14 @@ void UWSNetConnection::LowLevelSend(void* Data, int32 CountBits, FOutPacketTrait
 		check(false);
 		return;
 	}
+
+	ISocketSubsystem* SocketSubsystem = ISocketSubsystem::Get();
+	if (ESocketErrors ErrorCode = SocketSubsystem->GetLastErrorCode();
+		ErrorCode != SE_NO_ERROR && ErrorCode != SE_EWOULDBLOCK )
+	{
+		check(false);
+		return;
+	}
 }
 
 void UWSNetConnection::OnConnect(bool bInNetDriverRecvThread)
@@ -75,11 +83,6 @@ void UWSNetConnection::TickDispatch(float DeltaTime)
 
 bool UWSNetConnection::ReadPacketSome(const uint32 InReadSize)
 {
-	if (InReadSize == 0)
-	{
-		return false;
-	}
-
 	const int32 MaxRecvSize = RecvPacketSize + InReadSize;
 	if (MaxRecvSize > RecvBuffer.PacketBytes.Num())
 	{
@@ -88,7 +91,8 @@ bool UWSNetConnection::ReadPacketSome(const uint32 InReadSize)
 	}
 
 	int32 BytesRead = 0;
-	if (Socket->Recv(&RecvBuffer.PacketBytes[RecvPacketSize], InReadSize, BytesRead))
+	if ( const bool bReceived = Socket->Recv(&RecvBuffer.PacketBytes[RecvPacketSize], RecvBuffer.PacketBytes.Num(), BytesRead);
+		 bReceived )
 	{
 		RecvPacketSize += BytesRead;
 
@@ -103,37 +107,34 @@ bool UWSNetConnection::ReadPacketSome(const uint32 InReadSize)
 			}
 			else
 			{
+				SetConnectionState(USOCK_Closed);
 				check(false);
+				return false;
 			}
 		}
 
 		return true;
 	}
-	else if (BytesRead == 0)
-	{
-		SetConnectionState(EConnectionState::USOCK_Closed);
-		return false;
-	}
 
-	check(false);
 	return false;
 }
 
 bool UWSNetConnection::ReadPacket()
 {
-	MessageBase* Bunch = reinterpret_cast<MessageBase*>(RecvBuffer.PacketBytes.GetData());
-	if ((size_t)Bunch->GetType() < 0 || (size_t)Bunch->GetType() >= (size_t)EMessageType::MAX)
-	{
-		// Array out of range
-		return false;
-	}
+	const bool bRead = ReadPacketSome(0);
 
-	const int32 PacketSize = G_MessageSize[ (size_t)Bunch->GetType() ];
-	const int32 ReadPacketSize = PacketSize - RecvPacketSize;
-	const bool bRead = ReadPacketSome(ReadPacketSize);
-
-	if ((bRead || ReadPacketSize == 0) && RecvPacketSize >= PacketSize)
+	if ( bRead )
 	{
+		MessageBase* Bunch = reinterpret_cast<MessageBase*>(RecvBuffer.PacketBytes.GetData());
+		const int32 PacketSize = G_MessageSize[(size_t)Bunch->GetType()];
+		const int32 ReadPacketSize = PacketSize - RecvPacketSize;
+
+		if ((size_t)Bunch->GetType() < 0 || (size_t)Bunch->GetType() >= (size_t)EMessageType::MAX)
+		{
+			// Array out of range
+			return false;
+		}
+
 		if (RecvPacketSize != PacketSize)
 		{
 			return false;
