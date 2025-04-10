@@ -11,11 +11,129 @@
 #include <boost/pool/pool.hpp>
 #include <unordered_set>
 #include <unordered_map>
+#include <future>
 #include <boost/container_hash/hash.hpp>
+#include <boost/circular_buffer.hpp>
 
-#define CONSOLE_OUT(PREFIX, FMT, ...) \
-    std::cout << std::format("[{} | {}]: ", std::chrono::duration_cast<std::chrono::milliseconds>( std::chrono::high_resolution_clock::now().time_since_epoch() ), PREFIX ); \
-    std::cout << std::format(FMT, __VA_ARGS__) << '\n';
+#include <boost/preprocessor/punctuation/comma_if.hpp>
+#include <boost/preprocessor/repetition/repeat.hpp>
+
+#include <utility>
+
+template <char... Cs>
+struct TString
+{
+    constexpr static const char str[ sizeof...( Cs ) + 1 ] = { Cs..., '\0' };
+        
+    static constexpr std::string_view GetString() noexcept
+    {
+        return str;
+    }
+};
+
+template <typename T, std::size_t... Is>
+constexpr auto as_chars_impl( std::index_sequence<Is...> )
+{
+    return TString<T::str()[ Is ]...>{};
+}
+
+template <typename T>
+constexpr auto as_chars()
+{
+    return as_chars_impl<T>( std::make_index_sequence<sizeof( T::str() ) - 1>{} );
+}
+
+#define STR( literal )                                                                                                 \
+    []                                                                                                                 \
+    {                                                                                                                  \
+        struct literal_to_chars                                                                                        \
+        {                                                                                                              \
+            static constexpr decltype( auto ) str()                                                                    \
+            {                                                                                                          \
+                return literal;                                                                                        \
+            }                                                                                                          \
+        };                                                                                                             \
+        return as_chars<literal_to_chars>();                                                                           \
+    }()
+
+struct LogFragmentBase
+{
+    virtual ~LogFragmentBase() = default;
+    virtual void print()       = 0;
+};
+
+template <typename Format, typename... Args>
+struct LogFragment : LogFragmentBase
+{
+    virtual ~LogFragment() override = default;
+
+    constexpr LogFragment( std::string_view prefix, Args&&... args )
+        : m_prefix_( prefix ), m_values_( std::forward<Args>( args )... )
+    { }
+
+    template <size_t... Index>
+    void print_unwrap_tuple(std::index_sequence<Index...>)
+    {
+        std::cout << std::format( Format::GetString(), std::get<Index>( m_values_ )... ) << '\n';
+    }
+
+    void print() override
+    {
+        std::cout << std::format( "[{} | {}]: ",
+                                  std::chrono::duration_cast<std::chrono::milliseconds>(
+                                          std::chrono::high_resolution_clock::now().time_since_epoch() ),
+                                  m_prefix_.data() );
+        print_unwrap_tuple( std::make_index_sequence<std::tuple_size_v<decltype( m_values_ )>>{} );
+    }
+
+    std::string_view m_prefix_;
+    std::tuple<Args...> m_values_;
+};
+
+struct Logger
+{
+    void start()
+    {
+        m_running_.store( true );
+        m_consumer_thread_ = std::async( std::launch::async, &Logger::run, this );
+    }
+
+    void stop()
+    {
+        m_running_.store( false );
+        m_consumer_thread_.wait();
+    }
+
+    template <typename Format, typename... Args>
+    void push( std::string_view prefix, Args&&... args )
+    {
+        m_messages_.push_back(
+                std::make_unique<LogFragment<Format, Args...>>( prefix, std::forward<Args>( args )... ) );
+    }
+
+private:
+    void run()
+    {
+        while ( m_running_ )
+        {
+            if ( !m_messages_.empty() )
+            {
+                m_messages_.front()->print();
+                m_messages_.pop_front();
+            }
+        }
+    }
+
+    std::atomic<bool>                                        m_running_;
+    std::future<void>                                        m_consumer_thread_;
+    boost::circular_buffer<std::unique_ptr<LogFragmentBase>> m_messages_{ 1 << 10 };
+};
+
+inline Logger S_Logger{};
+
+#define CONSOLE_OUT(PREFIX, FORMAT, ...) \
+    S_Logger.push<decltype( STR( FORMAT ) )>(##PREFIX, __VA_ARGS__ );
+
 
 struct message_tag { };
 
