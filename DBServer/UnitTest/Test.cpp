@@ -22,6 +22,7 @@ struct ServerClientFixture
 
     ServerClientFixture()
     {
+        CONSOLE_OUT( __FUNCTION__, "================ Test Start ================" )
         GlobalScope::Initialize();
         GlobalScope::GetNetwork().accept( std::bind( &MessageHandler::Handle,
                                                      &GlobalScope::GetHandler(),
@@ -68,22 +69,30 @@ BOOST_FIXTURE_TEST_CASE( Register, ServerClientFixture )
         RegisterStatusMessage       registerResponse;
         boost::asio::mutable_buffer registerResponseBuffer( &registerResponse, sizeof( registerResponse ) );
         socket.receive( registerResponseBuffer );
+        BOOST_CHECK( registerResponse.success );
+        CONSOLE_OUT( __FUNCTION__, "Register success" )
 
-        if ( registerResponse.success )
-        {
-            CONSOLE_OUT( __FUNCTION__, "Register success" )
-        }
-        else
-        {
-            CONSOLE_OUT( __FUNCTION__,
-                         "Register failed, reason : {}",
-                         magic_enum::enum_name<ERegistrationFailCode>( registerResponse.code ) )
-        }
+        GlobalScope::GetDatabase().Clear( "users" );
+        GlobalScope::GetDatabase().Clear( "inventory" );
     }
 }
 
 BOOST_FIXTURE_TEST_CASE( LoginAndOut, ServerClientFixture )
 {
+    {
+        RegisterMessage registerMessage;
+        std::ranges::copy( "name", registerMessage.name.begin() );
+        std::ranges::copy( "test@test.com", registerMessage.email.begin() );
+        std::ranges::fill( registerMessage.hashedPassword, ( std::byte )1 );
+        boost::asio::const_buffer registerBuffer( &registerMessage, sizeof( registerMessage ) );
+        BOOST_CHECK( socket.send( registerBuffer ) != 0 );
+        CONSOLE_OUT( __FUNCTION__, "Register request sent" )
+        RegisterStatusMessage       registerResponse;
+        boost::asio::mutable_buffer registerResponseBuffer( &registerResponse, sizeof( registerResponse ) );
+        socket.receive( registerResponseBuffer );
+        BOOST_CHECK( registerResponse.success );
+    }
+
     UUID sessionID;
     {
         LoginMessage   loginMessage;
@@ -115,6 +124,9 @@ BOOST_FIXTURE_TEST_CASE( LoginAndOut, ServerClientFixture )
         BOOST_CHECK( logoutReply.success );
         CONSOLE_OUT( __FUNCTION__, "Logout OK" );
     }
+
+    GlobalScope::GetDatabase().Clear( "users" );
+    GlobalScope::GetDatabase().Clear( "inventory" );
 }
 
 BOOST_FIXTURE_TEST_CASE( PingPong, ServerClientFixture )
@@ -131,76 +143,132 @@ BOOST_FIXTURE_TEST_CASE( PingPong, ServerClientFixture )
 
 BOOST_FIXTURE_TEST_CASE( AddItemToInventory, ServerClientFixture )
 {
+    {
+        RegisterMessage registerMessage;
+        std::ranges::copy( "name", registerMessage.name.begin() );
+        std::ranges::copy( "test@test.com", registerMessage.email.begin() );
+        std::ranges::fill( registerMessage.hashedPassword, ( std::byte )1 );
+        boost::asio::const_buffer registerBuffer( &registerMessage, sizeof( registerMessage ) );
+        BOOST_CHECK( socket.send( registerBuffer ) != 0 );
+        CONSOLE_OUT( __FUNCTION__, "Register request sent" )
+        RegisterStatusMessage       registerResponse;
+        boost::asio::mutable_buffer registerResponseBuffer( &registerResponse, sizeof( registerResponse ) );
+        socket.receive( registerResponseBuffer );
+        BOOST_CHECK( registerResponse.success );
+    }
     UUID sessionID;
-    LoginMessage   loginMessage;
-    constexpr char username[] = "name";
-    strcpy_s( loginMessage.name.data(), std::size( username ), username );
-    std::ranges::fill( loginMessage.hashedPassword, ( std::byte )1 );
-    boost::asio::const_buffer loginMessageBuffer( &loginMessage, sizeof( loginMessage ) );
-    CONSOLE_OUT( __FUNCTION__, "Login request sent" );
-    BOOST_CHECK( socket.send( loginMessageBuffer ) != 0 );
-    LoginStatusMessage          loginReply{};
-    boost::asio::mutable_buffer loginReceived( &loginReply, sizeof( loginReply ) );
-    socket.receive( loginReceived );
-    BOOST_CHECK( loginReply.success );
-    BOOST_CHECK( !std::ranges::all_of( loginReply.sessionId.begin(),
-                                        loginReply.sessionId.end(),
-                                        []( const std::byte& b ) { return b == ( std::byte )0; } ) );
-    CONSOLE_OUT( __FUNCTION__, "Login OK, Session ID : {}", to_hex_string( loginReply.sessionId ) );
-    sessionID = loginReply.sessionId;
+    {
+        LoginMessage   loginMessage;
+        constexpr char username[] = "name";
+        strcpy_s( loginMessage.name.data(), std::size( username ), username );
+        std::ranges::fill( loginMessage.hashedPassword, ( std::byte )1 );
+        boost::asio::const_buffer loginMessageBuffer( &loginMessage, sizeof( loginMessage ) );
+        CONSOLE_OUT( __FUNCTION__, "Login request sent" );
+        BOOST_CHECK( socket.send( loginMessageBuffer ) != 0 );
+        LoginStatusMessage          loginReply{};
+        boost::asio::mutable_buffer loginReceived( &loginReply, sizeof( loginReply ) );
+        socket.receive( loginReceived );
+        BOOST_CHECK( loginReply.success );
+        BOOST_CHECK( !std::ranges::all_of( loginReply.sessionId.begin(),
+                                           loginReply.sessionId.end(),
+                                           []( const std::byte& b ) { return b == ( std::byte )0; } ) );
+        CONSOLE_OUT( __FUNCTION__, "Login OK, Session ID : {}", to_hex_string( loginReply.sessionId ) );
+        sessionID = loginReply.sessionId;
+    }
+    {
+        AddItemRequestMessage Message;
+        Message.newItem   = 1;
+        Message.count     = 1;
+        Message.sessionId = sessionID;
+        boost::asio::const_buffer request( &Message, sizeof( Message ) );
+        CONSOLE_OUT( __FUNCTION__, "Client send the add item" );
+        BOOST_CHECK( socket.send( request ) != 0 );
+        AddItemResponseMessage      Reply;
+        boost::asio::mutable_buffer received( &Reply, sizeof( Reply ) );
+        socket.receive( received );
+        CONSOLE_OUT( __FUNCTION__, "Client received the add item result" );
+        BOOST_CHECK( Reply.success );
+    }
 
-    AddItemRequestMessage Message;
-    Message.newItem = 1;
-    Message.count   = 1;
-    Message.sessionId = sessionID;
-    boost::asio::const_buffer request( &Message, sizeof( Message ) );
-    CONSOLE_OUT( __FUNCTION__, "Client send the add item" );
-    BOOST_CHECK( socket.send( request ) != 0 );
-    AddItemResponseMessage Reply;
-    boost::asio::mutable_buffer received( &Reply, sizeof( Reply ) );
-    socket.receive( received );
-    CONSOLE_OUT( __FUNCTION__, "Client received the add item result" );
-    BOOST_CHECK( Reply.success );
+    GlobalScope::GetDatabase().Clear( "users" );
+    GlobalScope::GetDatabase().Clear( "inventory" );
 }
 
 BOOST_FIXTURE_TEST_CASE( GetItemsFromInventory, ServerClientFixture )
 {
-    UUID           sessionID;
-    LoginMessage   loginMessage;
-    constexpr char username[] = "name";
-    strcpy_s( loginMessage.name.data(), std::size( username ), username );
-    std::ranges::fill( loginMessage.hashedPassword, ( std::byte )1 );
-    boost::asio::const_buffer loginMessageBuffer( &loginMessage, sizeof( loginMessage ) );
-    CONSOLE_OUT( __FUNCTION__, "Login request sent" );
-    BOOST_CHECK( socket.send( loginMessageBuffer ) != 0 );
-    LoginStatusMessage          loginReply{};
-    boost::asio::mutable_buffer loginReceived( &loginReply, sizeof( loginReply ) );
-    socket.receive( loginReceived );
-    BOOST_CHECK( loginReply.success );
-    BOOST_CHECK( !std::ranges::all_of( loginReply.sessionId.begin(),
-                                       loginReply.sessionId.end(),
-                                       []( const std::byte& b ) { return b == ( std::byte )0; } ) );
-    CONSOLE_OUT( __FUNCTION__, "Login OK, Session ID : {}", to_hex_string( loginReply.sessionId ) );
-    sessionID = loginReply.sessionId;
+    {
+        RegisterMessage registerMessage;
+        std::ranges::copy( "name", registerMessage.name.begin() );
+        std::ranges::copy( "test@test.com", registerMessage.email.begin() );
+        std::ranges::fill( registerMessage.hashedPassword, ( std::byte )1 );
+        boost::asio::const_buffer registerBuffer( &registerMessage, sizeof( registerMessage ) );
+        BOOST_CHECK( socket.send( registerBuffer ) != 0 );
+        CONSOLE_OUT( __FUNCTION__, "Register request sent" )
+        RegisterStatusMessage       registerResponse;
+        boost::asio::mutable_buffer registerResponseBuffer( &registerResponse, sizeof( registerResponse ) );
+        socket.receive( registerResponseBuffer );
+        BOOST_CHECK( registerResponse.success );
+    }
+    UUID sessionID;
+    {
+        LoginMessage   loginMessage;
+        constexpr char username[] = "name";
+        strcpy_s( loginMessage.name.data(), std::size( username ), username );
+        std::ranges::fill( loginMessage.hashedPassword, ( std::byte )1 );
+        boost::asio::const_buffer loginMessageBuffer( &loginMessage, sizeof( loginMessage ) );
+        CONSOLE_OUT( __FUNCTION__, "Login request sent" );
+        BOOST_CHECK( socket.send( loginMessageBuffer ) != 0 );
+        LoginStatusMessage          loginReply{};
+        boost::asio::mutable_buffer loginReceived( &loginReply, sizeof( loginReply ) );
+        socket.receive( loginReceived );
+        BOOST_CHECK( loginReply.success );
+        BOOST_CHECK( !std::ranges::all_of( loginReply.sessionId.begin(),
+                                           loginReply.sessionId.end(),
+                                           []( const std::byte& b ) { return b == ( std::byte )0; } ) );
+        CONSOLE_OUT( __FUNCTION__, "Login OK, Session ID : {}", to_hex_string( loginReply.sessionId ) );
+        sessionID = loginReply.sessionId;
+    }
+    {
+        AddItemRequestMessage Message;
+        Message.newItem   = 1;
+        Message.count     = 1;
+        Message.sessionId = sessionID;
+        boost::asio::const_buffer request( &Message, sizeof( Message ) );
+        CONSOLE_OUT( __FUNCTION__, "Client send the add item" );
+        BOOST_CHECK( socket.send( request ) != 0 );
+        AddItemResponseMessage      Reply;
+        boost::asio::mutable_buffer received( &Reply, sizeof( Reply ) );
+        socket.receive( received );
+        CONSOLE_OUT( __FUNCTION__, "Client received the add item result" );
+        BOOST_CHECK( Reply.success );
+    }
 
-    GetItemsRequestMessage Message;
-    Message.page      = 0;
-    Message.sessionId = sessionID;
-    boost::asio::const_buffer request( &Message, sizeof( Message ) );
-    CONSOLE_OUT( __FUNCTION__, "Client send the add item" );
-    BOOST_CHECK( socket.send( request ) != 0 );
-    GetItemsResponseMessage      Reply;
-    boost::asio::mutable_buffer received( &Reply, sizeof( Reply ) );
-    socket.receive( received );
-    CONSOLE_OUT( __FUNCTION__, "Client received the add item result" );
-    BOOST_CHECK( Reply.success );
-    ItemAndCount Empty{};
+    {
+        GetItemsRequestMessage Message;
+        Message.page      = 0;
+        Message.sessionId = sessionID;
+        boost::asio::const_buffer request( &Message, sizeof( Message ) );
+        CONSOLE_OUT( __FUNCTION__, "Client send the get item" );
+        BOOST_CHECK( socket.send( request ) != 0 );
+        GetItemsResponseMessage     Reply;
+        boost::asio::mutable_buffer received( &Reply, sizeof( Reply ) );
+        socket.receive( received );
+        CONSOLE_OUT( __FUNCTION__, "Client received the get item result" );
+        BOOST_CHECK( Reply.success );
+        ItemAndCount Empty{};
 
-    CONSOLE_OUT( __FUNCTION__, "Inventory Result : ID: {}, Count: {}", Reply.items.begin()->itemID, Reply.items.begin()->count )
+        CONSOLE_OUT( __FUNCTION__,
+                     "Inventory Result : ID: {}, Count: {}",
+                     Reply.items.begin()->itemID,
+                     Reply.items.begin()->count )
 
-    bool test = std::all_of( Reply.items.begin(),
-                             Reply.items.end(),
-                             [ &Empty ]( const ItemAndCount& Element )
-                             { return Element.itemID == Empty.itemID && Element.count == Empty.count; } );
-    BOOST_CHECK( !test );
+        bool test = std::all_of( Reply.items.begin(),
+                                 Reply.items.end(),
+                                 [ &Empty ]( const ItemAndCount& Element )
+                                 { return Element.itemID == Empty.itemID && Element.count == Empty.count; } );
+        BOOST_CHECK( !test );
+    }
+    
+    GlobalScope::GetDatabase().Clear( "users" );
+    GlobalScope::GetDatabase().Clear( "inventory" );
 }

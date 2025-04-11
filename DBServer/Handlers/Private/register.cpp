@@ -18,7 +18,7 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
     static std::regex idValidation( R"(^[a-zA-Z0-9]+$)") ;
     const auto&       registerMessage = reinterpret_cast<RegisterMessage&>( message );
 
-    const Database::Table* userTable = GlobalScope::GetDatabase().GetTable( "user" );
+    const Database::Table* userTable = GlobalScope::GetDatabase().GetTable( "users" );
     const Database::Table* inventoryTable = GlobalScope::GetDatabase().GetTable( "inventory" );
 
     bool success  = true;
