@@ -206,14 +206,6 @@ namespace Network
         void Destroy()
         {
             m_running_ = false;
-
-            for ( auto& [ index, socket ] : m_sockets_ )
-            {
-                socket->cancel();
-                socket->close();
-                socket.reset();
-            }
-
             m_context_.stop();
 
             std::ranges::for_each( m_io_threads_,
@@ -323,9 +315,12 @@ namespace Network
                 {
                     if ( m_sockets_.at( index ).valid() )
                     {
-                        m_sockets_.at( index )->cancel();
-                        m_sockets_.at( index )->close();
-                        m_sockets_.at( index ).reset();
+                        if ( m_sockets_.at( index )->is_open() )
+                        {
+                            m_sockets_.at( index )->cancel();
+                            m_sockets_.at( index )->close();
+                            m_sockets_.at( index ).reset();
+                        }
                     }
 
                     m_sockets_.erase( index );

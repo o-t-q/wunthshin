@@ -15,6 +15,7 @@ std::unique_ptr<Database::DBConnection>        GlobalScope::G_Database    = {};
 
 void GlobalScope::Initialize()
 {
+    G_Logger.start();
     GetNetwork();
     GetHandler().Initialize();
     GetDatabase().Initialize();
@@ -26,6 +27,7 @@ void GlobalScope::Destroy()
     G_Database.reset();
     G_MessageHandler.reset();
     G_ManagedStorage.purge();
+    G_Logger.stop();
 }
 
 Network::NetworkContext<1337>& GlobalScope::GetNetwork()

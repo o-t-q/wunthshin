@@ -199,6 +199,7 @@
     <ClCompile Include="Private\DBServer.cpp" />
     <ClCompile Include="Private\message-handler.cpp" />
     <ClCompile Include="Private\test_client.cpp" />
+    <ClCompile Include="Private\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Data\Public\inventory.hpp" />

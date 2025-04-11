@@ -4,6 +4,7 @@
       "boost-asio",
       "boost-uuid",
       "boost-container-hash",
+      "boost-circular-buffer",
       "libpqxx",
       "magic-enum"
     ]
