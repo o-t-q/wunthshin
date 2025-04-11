@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <vector>
+#include <ranges>
 #include <type_traits>
 #include <string>
 
@@ -14,6 +15,10 @@ enum class EMessageType : int32_t
     LogoutOK,
     Register,
     RegisterStatus,
+    AddItem,
+    AddItemResponse,
+    GetItemsRequest,
+    AllItemResponse,
     MAX
 };
 
@@ -23,6 +28,7 @@ enum class EMessageChannelType : int32_t
     Comm,
     Login,
     Register,
+    Item,
     MAX
 };
 
@@ -131,55 +137,83 @@ using UUID = std::array<std::byte, 16>;
 
 DEFINE_MSG( UnspecifiedMessage, EMessageType::Unspecified, EMessageChannelType::Unspecified )
 DEFINE_MSG( PingPongMessage, EMessageType::PingPong, EMessageChannelType::Comm )
-DEFINE_MSG_WITH_BODY( LoginMessage, EMessageType::Login, EMessageChannelType::Login,
-    Varchar name{}; 
-    HashArray hashedPassword{}; )
+DEFINE_MSG_WITH_BODY( LoginMessage, EMessageType::Login, EMessageChannelType::Login, Varchar name{};
+                      HashArray hashedPassword{}; )
 DEFINE_MSG_WITH_BODY(
         LoginStatusMessage,
         EMessageType::LoginStatus,
         EMessageChannelType::Login,
-LoginStatusMessage(const bool InSuccess, const UUID& InSessionId)
-{
-    success = InSuccess;
-    sessionId = InSessionId;
-}
-bool success = false;
-UUID sessionId{};)
+        LoginStatusMessage( const bool InSuccess, const UUID& InSessionId ) {
+            success   = InSuccess;
+            sessionId = InSessionId;
+        } bool success = false;
+        UUID   sessionId{}; )
 
 DEFINE_MSG_WITH_BODY(
-        LogoutMessage,
-        EMessageType::Logout,
-        EMessageChannelType::Login,
-LogoutMessage(const UUID& InSessionId)
-{
-    sessionId = InSessionId;
-}
-UUID sessionId{};)
+        LogoutMessage, EMessageType::Logout, EMessageChannelType::Login, LogoutMessage( const UUID& InSessionId ) {
+            sessionId = InSessionId;
+        } UUID sessionId{}; )
 
 DEFINE_MSG_WITH_BODY(
-        LogoutOKMessage,
-        EMessageType::LogoutOK,
-        EMessageChannelType::Login,
-LogoutOKMessage(const bool InSuccess)
-{
-    success = InSuccess;
-}
-bool success = false;)
+        LogoutOKMessage, EMessageType::LogoutOK, EMessageChannelType::Login, LogoutOKMessage( const bool InSuccess ) {
+            success = InSuccess;
+        } bool success = false; )
 
-DEFINE_MSG_WITH_BODY( RegisterMessage, EMessageType::Register, EMessageChannelType::Register, 
-    Varchar name{}; Varchar email{}; HashArray hashedPassword{};
-)
+DEFINE_MSG_WITH_BODY( RegisterMessage, EMessageType::Register, EMessageChannelType::Register, Varchar name{};
+                      Varchar   email{};
+                      HashArray hashedPassword{}; )
 
 DEFINE_MSG_WITH_BODY(
-        RegisterStatusMessage, EMessageType::RegisterStatus, EMessageChannelType::Register,
+        RegisterStatusMessage,
+        EMessageType::RegisterStatus,
+        EMessageChannelType::Register,
 
-RegisterStatusMessage(bool InSucess, ERegistrationFailCode InCode)
+        RegisterStatusMessage( bool InSucess, ERegistrationFailCode InCode ) {
+            success = InSucess;
+            code    = InCode;
+        } bool                success = false;
+        ERegistrationFailCode code    = ERegistrationFailCode::None; )
+
+DEFINE_MSG_WITH_BODY(
+        AddItemRequestMessage, EMessageType::AddItem, EMessageChannelType::Login, UUID sessionId{}; uint32_t newItem = -1;
+        uint32_t count = 0;
+        AddItemRequestMessage( const UUID& InSessionId, uint32_t InID, uint32_t InCount ) {
+            sessionId = InSessionId;
+            newItem   = InID;
+            count     = InCount;
+        } )
+
+DEFINE_MSG_WITH_BODY(
+        AddItemResponseMessage, EMessageType::AddItemResponse, EMessageChannelType::Item, bool success = false;
+        AddItemResponseMessage( bool InSuccess ) { success = InSuccess; } )
+
+DEFINE_MSG_WITH_BODY(
+        GetItemsRequestMessage, EMessageType::GetItemsRequest, EMessageChannelType::Item, UUID sessionId{}; uint32_t page;
+        GetItemsRequestMessage( const uint32_t InPage, const UUID& InSessionId ) {
+            page      = InPage;
+            sessionId = InSessionId;
+        } )
+
+struct ItemAndCount
 {
-    success = InSucess;
-    code = InCode;
-}
-bool success = false; 
-ERegistrationFailCode code = ERegistrationFailCode::None;)
+    uint32_t itemID;
+    uint32_t count;
+};
+
+using ItemArray = std::array<ItemAndCount, 100>;
+
+DEFINE_MSG_WITH_BODY(
+        GetItemsResponseMessage, EMessageType::AllItemResponse, EMessageChannelType::Item, ItemArray items{};
+        uint32_t section = 0;
+        bool success = false;
+        bool end     = true;
+        GetItemsResponseMessage(
+                uint32_t InSection, const bool InSuccess, const bool IsEnd, const ItemArray& InItems ) {
+            section = InSection;
+            items   = InItems;
+            success = InSuccess;
+            end     = IsEnd;
+        } )
 
 #pragma pack( pop )
 

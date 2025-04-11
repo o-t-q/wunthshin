@@ -161,6 +161,41 @@ namespace Database
             }
         }
 
+        template <typename ReturnT, typename FuncT, typename... Args>
+        [[nodiscard]] std::pair<ReturnT, pqxx::work&&> ExecuteChild( pqxx::work&& tx, FuncT func, Args&&... args ) const
+        {
+            bool success = false;
+            bool lock    = false;
+            while ( !m_lock_.compare_exchange_strong( lock, true ) )
+            {
+            }
+            ReturnT result;
+
+            try
+            {
+                result  = std::invoke( func, std::forward<Args>( args )..., std::move( tx ) );
+                success = true;
+            }
+            catch ( std::exception& e )
+            {
+                CONSOLE_OUT( __FUNCTION__, "Execute failed: {}", e.what() )
+            }
+
+            bool unlock = true;
+            while ( !m_lock_.compare_exchange_strong( unlock, false ) )
+            {
+            }
+
+            if ( success )
+            {
+                return { result, std::move( tx ) };
+            }
+            else
+            {
+                return { ReturnT{}, std::move( tx ) };
+            }
+        }
+
     private:
         mutable std::atomic<bool> m_lock_;
     };
