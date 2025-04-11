@@ -92,6 +92,14 @@ struct LogFragment : LogFragmentBase
 
 struct Logger
 {
+    ~Logger()
+    {
+        if (m_running_)
+        {
+            stop();
+        }
+    }
+
     void start()
     {
         m_running_.store( true );
@@ -129,10 +137,10 @@ private:
     boost::circular_buffer<std::unique_ptr<LogFragmentBase>> m_messages_{ 1 << 10 };
 };
 
-inline Logger S_Logger{};
+extern Logger G_Logger;
 
 #define CONSOLE_OUT(PREFIX, FORMAT, ...) \
-    S_Logger.push<decltype( STR( FORMAT ) )>(##PREFIX, __VA_ARGS__ );
+    G_Logger.push<decltype( STR( FORMAT ) )>(##PREFIX, __VA_ARGS__ );
 
 
 struct message_tag { };
@@ -876,25 +884,14 @@ struct std::hash<accessor<T>>
 };
 
 
-template <typename T, typename Tag = void, typename... Args>
+template <typename T, typename... Args>
 accessor<T> make_vec_unique( Args&&... args )
 {
     alloc_pair        index;
-
-    if constexpr (std::is_same_v<Tag, void>)
-    {
-        vec_unique_ptr<T> unique( allocate<T>( index, std::forward<Args>( args )... ),
-                                  []( void* ptr ) { deallocate<T>( ( T* )ptr ); } );
-        auto&             instances = get_instances<T>();
-        instances.emplace( index, std::move( unique ) );
-    }
-    else
-    {
-        vec_unique_ptr<T> unique( allocate<Tag>( index, std::forward<Args>( args )... ),
-                                  []( void* ptr ) { deallocate<T>( ( T* )ptr ); } );
-        auto&             instances = get_instances<Tag>();
-        instances.emplace( index, std::move( unique ) );
-    }
+    vec_unique_ptr<T> unique( allocate<T>( index, std::forward<Args>( args )... ),
+                              []( void* ptr ) { deallocate<T>( ( T* )ptr ); } );
+    auto&             instances = get_instances<T>();
+    instances.emplace( index, std::move( unique ) );
     
     return accessor<T>{ index };
 }
