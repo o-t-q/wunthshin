@@ -70,7 +70,7 @@ struct Inventory
 
 	static bool   NewItem( const size_t owner, const size_t item_id, const size_t count, pqxx::work&& tx )
     {
-        const Database::Table* item_table = GlobalScope::GetDatabase().GetTable( "Item" );
+        const Database::Table* item_table = GlobalScope::GetDatabase().GetTable( "item" );
         const auto&            returnValue = item_table->ExecuteChild<bool>( std::move( tx ), &Item::Find, item_id );
         if ( !returnValue.first )
         {
