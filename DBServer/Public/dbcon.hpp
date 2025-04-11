@@ -100,6 +100,9 @@ namespace Database
             return &m_tables_.at( table_name.data() );
         }
 
+        void Clear( std::string_view table_name );
+
+
     private:
         friend struct Table;
 

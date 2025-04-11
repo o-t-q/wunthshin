@@ -56,4 +56,4 @@ struct UserProfile
     }
 };
 
-static TableRegistration<UserProfile> UserTableRegistration( "user" );
+static TableRegistration<UserProfile> UserTableRegistration( "users" );
