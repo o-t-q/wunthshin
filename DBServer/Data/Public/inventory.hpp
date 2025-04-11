@@ -26,7 +26,7 @@ struct Inventory
 
         const Database::Table* inventory_table = GlobalScope::GetDatabase().GetTable( "inventory" );
         const pqxx::result     inventory_query =
-                tx.exec( "SELECT item_id, count FROM inventory WHERE owner=$1", pqxx::params{ owner } );
+                tx.exec( "SELECT item_id, item_count FROM inventory WHERE owner=$1", pqxx::params{ owner } );
 
         const pqxx::row user_row       = inventory_query.one_row();
         const auto&     itemArray      = user_row[ "item_id" ].as_sql_array<size_t>();
@@ -86,16 +86,33 @@ struct Inventory
         const pqxx::row user_row       = inventory_query.one_row();
         const auto&     itemArray      = user_row["item_id"].as_sql_array<size_t>();
         const auto&     itemCountArray = user_row["item_count"].as_sql_array<size_t>();
+       
+        bool   exist = false;
+        size_t index = -1;
+
         for ( size_t i = 0; i < itemArray.size(); ++i )
         {
+            if (itemArray[i] == item_id)
+            {
+                exist = true;
+                index = i;
+            }
             newItemList.emplace_back( itemArray[i] );
         }
         for ( size_t i = 0; i < itemCountArray.size(); ++i )
         {
             newItemCount.emplace_back( itemCountArray[i] );
         }
-        newItemList.emplace_back( item_id );
-        newItemCount.emplace_back( count );
+
+        if ( !exist )
+        {
+            newItemList.emplace_back( item_id );
+            newItemCount.emplace_back( count );
+        }
+        else
+        {
+            newItemCount[ index ] += count;
+        }
 
         const pqxx::result result    = returnValue.second.exec( "UPDATE inventory SET item_id=$1, item_count=$2 WHERE owner=$3",
                                                                 { newItemList, newItemCount, owner } );
