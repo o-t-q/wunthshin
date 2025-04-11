@@ -162,3 +162,45 @@ BOOST_FIXTURE_TEST_CASE( AddItemToInventory, ServerClientFixture )
     CONSOLE_OUT( __FUNCTION__, "Client received the add item result" );
     BOOST_CHECK( Reply.success );
 }
+
+BOOST_FIXTURE_TEST_CASE( GetItemsFromInventory, ServerClientFixture )
+{
+    UUID           sessionID;
+    LoginMessage   loginMessage;
+    constexpr char username[] = "name";
+    strcpy_s( loginMessage.name.data(), std::size( username ), username );
+    std::ranges::fill( loginMessage.hashedPassword, ( std::byte )1 );
+    boost::asio::const_buffer loginMessageBuffer( &loginMessage, sizeof( loginMessage ) );
+    CONSOLE_OUT( __FUNCTION__, "Login request sent" );
+    BOOST_CHECK( socket.send( loginMessageBuffer ) != 0 );
+    LoginStatusMessage          loginReply{};
+    boost::asio::mutable_buffer loginReceived( &loginReply, sizeof( loginReply ) );
+    socket.receive( loginReceived );
+    BOOST_CHECK( loginReply.success );
+    BOOST_CHECK( !std::ranges::all_of( loginReply.sessionId.begin(),
+                                       loginReply.sessionId.end(),
+                                       []( const std::byte& b ) { return b == ( std::byte )0; } ) );
+    CONSOLE_OUT( __FUNCTION__, "Login OK, Session ID : {}", to_hex_string( loginReply.sessionId ) );
+    sessionID = loginReply.sessionId;
+
+    GetItemsRequestMessage Message;
+    Message.page      = 0;
+    Message.sessionId = sessionID;
+    boost::asio::const_buffer request( &Message, sizeof( Message ) );
+    CONSOLE_OUT( __FUNCTION__, "Client send the add item" );
+    BOOST_CHECK( socket.send( request ) != 0 );
+    GetItemsResponseMessage      Reply;
+    boost::asio::mutable_buffer received( &Reply, sizeof( Reply ) );
+    socket.receive( received );
+    CONSOLE_OUT( __FUNCTION__, "Client received the add item result" );
+    BOOST_CHECK( Reply.success );
+    ItemAndCount Empty{};
+
+    CONSOLE_OUT( __FUNCTION__, "Inventory Result : ID: {}, Count: {}", Reply.items.begin()->itemID, Reply.items.begin()->count )
+
+    bool test = std::all_of( Reply.items.begin(),
+                             Reply.items.end(),
+                             [ &Empty ]( const ItemAndCount& Element )
+                             { return Element.itemID == Empty.itemID && Element.count == Empty.count; } );
+    BOOST_CHECK( !test );
+}
