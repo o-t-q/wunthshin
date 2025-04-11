@@ -21,7 +21,10 @@ struct HandlerImplementation
 struct RegistrationToken
 {
     virtual                                 ~RegistrationToken() = default;
+    RegistrationToken( std::string_view name ) : handlerName( name ) { }
     virtual accessor<HandlerImplementation> Initialize() const = 0;
+
+    std::string_view handlerName;
 };
 
 struct HandlerRegistrationTokenStorage
@@ -54,8 +57,20 @@ struct MessageHandler
         const boost::system::error_code& ec, 
         size_t read );
 
+    template <typename T>
+    T* GetHandler(std::string_view handlerName)
+    {
+        if (m_mapped_handler.contains(handlerName))
+        {
+            return static_cast<T*>( m_handlers_[ m_mapped_handler[ handlerName ] ].get() );
+        }
+
+        return nullptr;
+    }
+
 private:
     std::vector<accessor<HandlerImplementation>> m_handlers_;
+    std::unordered_map<std::string_view, size_t> m_mapped_handler;
 };
 
 extern HandlerRegistrationTokenStorage* AccessHandlerToken();
@@ -63,7 +78,7 @@ extern HandlerRegistrationTokenStorage* AccessHandlerToken();
 template <typename T>
 struct HandlerRegistration : RegistrationToken
 {
-    HandlerRegistration()
+    HandlerRegistration( std::string_view name ) : RegistrationToken( name )
     {
         AccessHandlerToken()->RegisterHandler( this );
     }

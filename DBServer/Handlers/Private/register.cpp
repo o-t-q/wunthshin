@@ -5,7 +5,7 @@
 #include "../../Data/Public/inventory.hpp"
 #include "../../Public/dbcon.hpp"
 
-HandlerRegistration<RegisterHandler> RegisterHandlerRegistration = {};
+HandlerRegistration<RegisterHandler> RegisterHandlerRegistration( "register" );
 
 bool RegisterHandler::ShouldHandle( EMessageType messageType )
 {
@@ -18,8 +18,8 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
     static std::regex idValidation( R"(^[a-zA-Z0-9]+$)") ;
     const auto&       registerMessage = reinterpret_cast<RegisterMessage&>( message );
 
-    const Database::Table* userTable = GlobalScope::GetDatabase().GetTable( "User" );
-    const Database::Table* inventoryTable = GlobalScope::GetDatabase().GetTable( "Inventory" );
+    const Database::Table* userTable = GlobalScope::GetDatabase().GetTable( "users" );
+    const Database::Table* inventoryTable = GlobalScope::GetDatabase().GetTable( "inventory" );
 
     bool success  = true;
     auto failCode = ERegistrationFailCode::None;
