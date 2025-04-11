@@ -8,13 +8,19 @@ struct Item
 {
     Varchar name;
 
-    static bool Insert( const Item& item, pqxx::work& tx )
+    static bool Insert( const Item& item, pqxx::work&& tx )
     {
         std::string_view   strView( item.name.data() );
         const pqxx::result result    = tx.exec( "INSERT INTO items VALUES (DEFAULT, $1);", pqxx::params{ strView } );
         const size_t row_count = result.affected_rows();
         tx.commit();
         return row_count;
+    }
+
+    static bool Find( const size_t id, pqxx::work&& tx )
+    {
+        const pqxx::result result = tx.exec( "SELECT FROM items WHERE id=$1", pqxx::params{ id } );
+        return result.size();
     }
 
     static size_t GetIdentifier( const std::string_view name, pqxx::work&& tx )

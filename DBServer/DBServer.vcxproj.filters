@@ -48,6 +48,9 @@
     <ClCompile Include="Private\dbconn.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Handlers\Private\inventory.cpp">
+      <Filter>소스 파일\Handlers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Handlers\Public\pingpong.h">
@@ -87,6 +90,12 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Public\utility.hpp">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Handlers\Public\inventory.h">
+      <Filter>헤더 파일\Handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Public\net-utility.hpp">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

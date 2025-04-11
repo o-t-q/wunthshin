@@ -17,8 +17,10 @@ struct LoginHandler : HandlerImplementation
 {
     bool ShouldHandle( EMessageType messageType ) override;
     void Handle( const size_t index, MessageBase& message ) override;
+    size_t GetLoginUser( const UUID& InSessionId ) const;
 
 private:
+    mutable std::atomic<bool>        m_mtx_;
     std::unordered_map<UUID, size_t> m_login_;
 
 };

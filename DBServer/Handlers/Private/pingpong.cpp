@@ -4,7 +4,7 @@
 #include "../../Public/DBServer.h"
 #include "../../Public/boost-socket.hpp"
 
-HandlerRegistration<PingPongHandler> PingPongRegistration = {};
+HandlerRegistration<PingPongHandler> PingPongRegistration( "pingpong" );
 
 bool PingPongHandler::ShouldHandle( EMessageType messageType )
 {

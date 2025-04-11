@@ -5,7 +5,7 @@
 #include "../../Data/Public/inventory.hpp"
 #include "../../Public/dbcon.hpp"
 
-HandlerRegistration<RegisterHandler> RegisterHandlerRegistration = {};
+HandlerRegistration<RegisterHandler> RegisterHandlerRegistration( "register" );
 
 bool RegisterHandler::ShouldHandle( EMessageType messageType )
 {
