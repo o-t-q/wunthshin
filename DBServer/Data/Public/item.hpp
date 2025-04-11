@@ -31,4 +31,4 @@ struct Item
     }
 };
 
-static TableRegistration<Item> ItemTableRegistration( "Item" );
+static TableRegistration<Item> ItemTableRegistration( "item" );

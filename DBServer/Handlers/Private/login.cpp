@@ -14,7 +14,7 @@ bool LoginHandler::ShouldHandle( EMessageType messageType )
 
 void LoginHandler::Handle( const size_t index, MessageBase& message )
 {
-    const Database::Table* user_table   = GlobalScope::GetDatabase().GetTable( "User" );
+    const Database::Table* user_table   = GlobalScope::GetDatabase().GetTable( "user" );
 
     switch ( message.GetType() )
     {
