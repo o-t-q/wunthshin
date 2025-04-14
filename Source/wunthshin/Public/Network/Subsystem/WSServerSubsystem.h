@@ -40,6 +40,10 @@ public:
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
+public:
+	UFUNCTION(BlueprintCallable, Category = "Hashing")
+	FString HashFStringToSHA256(const FString& PlainText);
+
 protected:
 	void Tick(float DeltaTime) override;
 
