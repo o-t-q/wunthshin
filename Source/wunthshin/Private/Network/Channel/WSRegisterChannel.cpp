@@ -8,6 +8,7 @@ void UWSRegisterChannel::ReceivedBunch(MessageBase& Bunch)
 	{
 		RegisterStatusMessage& registerMessage = reinterpret_cast<RegisterStatusMessage&>(Bunch);
 		LastRegistrationStatus.Broadcast( registerMessage.success, (ERegisterFailCodeUE)registerMessage.code );
+		break;
 	}
 	default: check(false);
 	}

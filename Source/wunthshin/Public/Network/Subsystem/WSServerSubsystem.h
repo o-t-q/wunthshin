@@ -17,6 +17,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	UWSLoginChannel* GetLoginChannel() { return LoginChannel; }
 
+	UFUNCTION(BlueprintCallable)
+	UWSRegisterChannel* GetRegisterChannel() { return RegisterChannel; }
+
 	bool HashPassword(const FString& InPlainPassword, FSHA256Signature& OutSignature, const FString& InSalt = TEXT("")) const;
 
 	bool TrySendLoginRequest(const FString& InID, const FSHA256Signature& HashedPassword);
@@ -36,6 +39,10 @@ public:
 	void ConnectToServer(const FString& InHost, int32 InPort);
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Hashing")
+	FString HashFStringToSHA256(const FString& PlainText);
 
 protected:
 	void Tick(float DeltaTime) override;
