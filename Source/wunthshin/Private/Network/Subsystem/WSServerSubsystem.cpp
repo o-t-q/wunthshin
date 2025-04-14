@@ -4,6 +4,8 @@
 #include "Network/Channel/WSItemChannel.h"
 #include "Misc/sha256.h"
 #include "message.h"
+#include "Misc/Paths.h"
+#include "Misc/outputdeviceNull.h"
 
 constexpr static size_t IDSizeLimit = sizeof(decltype(std::declval<LoginMessage>().name._Elems));
 
@@ -51,7 +53,7 @@ bool UWSServerSubsystem::TrySendLoginRequest(const FString& InID, const FSHA256S
 
 	static const FRegexPattern Alphanumerical(R"([\w]+)");
 	if (FRegexMatcher Match(Alphanumerical, InID); !Match.FindNext())
-	{
+	{ 
 		return false; // Alphanumerical only
 	}
 
@@ -62,8 +64,8 @@ bool UWSServerSubsystem::TrySendLoginRequest(const FString& InID, const FSHA256S
 	}
 	
 	LoginMessage loginMessage;
-	const ANSICHAR* charArray = StringCast<ANSICHAR>(*InID).Get();
-	std::memcpy( loginMessage.name.data(), charArray, sizeof(InID.Len()) );
+	TStringConversion charArray = StringCast<ANSICHAR>(*InID);
+	std::memcpy( loginMessage.name.data(), charArray.Get(), charArray.Length() );
 	std::memcpy( loginMessage.hashedPassword.data(), HashedPassword.Signature, sizeof(loginMessage.hashedPassword) );
 	FNetLoginChannelLoginRequestMessage::Send(NetDriver->ServerConnection, loginMessage);
 	return true;
@@ -246,4 +248,42 @@ bool UWSServerSubsystem::IsTickable() const
 TStatId UWSServerSubsystem::GetStatId() const
 {
 	RETURN_QUICK_DECLARE_CYCLE_STAT(UWSServerSubsystem, STATGROUP_Tickables);
+}
+
+
+// FString을 std::string으로 변환하는 함수
+std::string FStringToStdString(const FString& FStringInput)
+{
+	// FString을 UTF-8로 변환
+	std::string StdStringInput(TCHAR_TO_UTF8(*FStringInput));
+	return StdStringInput;
+}
+
+// SHA256 해시 생성 함수
+FString UWSServerSubsystem::HashFStringToSHA256(const FString& PlainText)
+{
+	// FString을 std::string으로 변환
+	std::string stdStringInput = FStringToStdString(PlainText);
+
+	// SHA256 객체 생성
+	SHA256 sha256;
+
+	// SHA256 초기화
+	sha256.init();
+
+	// 데이터를 해시 함수에 추가
+	sha256.update(reinterpret_cast<const unsigned char*>(stdStringInput.c_str()), stdStringInput.length());
+
+	// 해시 계산
+	unsigned char hashOutput[SHA256::DIGEST_SIZE];
+	sha256.final(hashOutput);
+
+	// 해시값을 FString으로 변환
+	FString HashString;
+	for (int i = 0; i < SHA256::DIGEST_SIZE; ++i)
+	{
+		HashString += FString::Printf(TEXT("%02x"), hashOutput[i]);
+	}
+
+	return HashString;
 }

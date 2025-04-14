@@ -8,7 +8,7 @@
 DEFINE_CHANNEL_MESSAGE(RegisterChannel, EMessageChannelType::Register, RegisterRequest, EMessageType::Register);
 DEFINE_CHANNEL_MESSAGE(RegisterChannel, EMessageChannelType::Register, RegisterReply, EMessageType::RegisterStatus);
 
-UENUM()
+UENUM(BlueprintType)
 enum class ERegisterFailCodeUE : uint8
 {
 	None = (uint8)ERegistrationFailCode::None,
