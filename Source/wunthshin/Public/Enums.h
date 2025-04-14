@@ -1,13 +1,15 @@
 #pragma once
+#include "message.h"
 
 #include "Enums.generated.h"
 
 UENUM()
 enum class EItemType : uint8 
 {
-	Consumable,
-	Weapon,
-	Max,
+	Unknown = EDBItemType::Unknown,
+	Consumable = EDBItemType::Consumable,
+	Weapon = EDBItemType::Weapon,
+	Max = EDBItemType::MAX
 };
 
 UENUM()

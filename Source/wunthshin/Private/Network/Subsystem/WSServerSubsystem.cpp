@@ -1,6 +1,7 @@
 #include "Network/Subsystem/WSServerSubsystem.h"
 #include "Network/Channel/WSLoginChannel.h"
 #include "Network/Channel/WSRegisterChannel.h"
+#include "Network/Channel/WSItemChannel.h"
 #include "Misc/sha256.h"
 #include "message.h"
 
@@ -138,7 +139,39 @@ void UWSServerSubsystem::ConnectToServer(const FString& InHost, int32 InPort)
 #if !UE_SERVER
 	LoginChannel = Cast<UWSLoginChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Login]);
 	RegisterChannel = Cast<UWSRegisterChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Register]);
+	ItemChannel = Cast<UWSItemChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Item]);
 #endif
+}
+
+bool UWSServerSubsystem::TryAddItem( const EItemType ItemType, int32 ItemID, int32 Count )
+{
+	AddItemRequestMessage Message({}, (EDBItemType)ItemType, ItemID, Count);
+	FNetItemChannelAddItemMessage::Send( NetDriver->ServerConnection, Message );
+	return true;
+}
+
+bool UWSServerSubsystem::TryGetItems( int32 Page )
+{
+	GetItemsRequestMessage ItemRequest(Page, {});
+	FNetItemChannelGetItemsMessage::Send( NetDriver->ServerConnection, ItemRequest );
+	return true;
+}
+
+FUUIDWrapper UWSServerSubsystem::GetSessionID() const
+{
+	UUID returnValue{};
+	if (LoginChannel)
+	{
+		check(LoginChannel->HasLogin());
+		FUUIDWrapper SessionID = LoginChannel->GetSessionID();
+
+		if (LoginChannel->HasLogin() && SessionID.IsValid())
+		{
+			std::copy(SessionID.uuid.begin(), SessionID.uuid.end(), returnValue.begin());
+		}
+	}
+
+	return FUUIDWrapper(returnValue);
 }
 
 void UWSServerSubsystem::Initialize(FSubsystemCollectionBase& Collection)

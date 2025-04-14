@@ -4,6 +4,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <SDKDDKVer.h>
 #include <boost/asio.hpp>
+#include <boost/mpl/range_c.hpp>
 #include <csignal>
 #include <future>
 
@@ -187,11 +188,36 @@ BOOST_FIXTURE_TEST_CASE( AddItemToInventory, ServerClientFixture )
         boost::asio::mutable_buffer received( &Reply, sizeof( Reply ) );
         socket.receive( received );
         CONSOLE_OUT( __FUNCTION__, "Client received the add item result" );
-        BOOST_CHECK( Reply.success );
+        BOOST_CHECK( Reply.itemID == Message.newItem );
     }
 
     GlobalScope::GetDatabase().Clear( "users" );
     GlobalScope::GetDatabase().Clear( "inventory" );
+}
+
+struct MessageTestPredicator
+{
+    template <int Value>
+    void operator()( boost::mpl::integral_c<int, Value> iterator) const
+    {
+        using actual_type = MessageTypeResolver<( EMessageType )Value>::type;
+        using func_invoke_result = std::invoke_result_t<decltype(CastTo<( EMessageType )Value>), MessageBase&>;
+        constexpr static bool test = std::is_same_v<actual_type, std::remove_reference_t<func_invoke_result>>;
+
+        CONSOLE_OUT( __FUNCTION__,
+                     "{} : {}, match : {}",
+                     typeid( actual_type ).name(),
+                     typeid( func_invoke_result ).name(),
+                     test )
+        BOOST_CHECK( test );
+    }
+};
+
+BOOST_AUTO_TEST_CASE( MessageCastTest )
+{
+    CONSOLE_OUT( __FUNCTION__, "================ Test Start ================" )
+    boost::mpl::for_each<boost::mpl::range_c<int, 0, (int)EMessageType::MAX>>(
+            MessageTestPredicator() );
 }
 
 BOOST_FIXTURE_TEST_CASE( GetItemsFromInventory, ServerClientFixture )
@@ -230,6 +256,7 @@ BOOST_FIXTURE_TEST_CASE( GetItemsFromInventory, ServerClientFixture )
     }
     {
         AddItemRequestMessage Message;
+        Message.ItemType  = EDBItemType::Consumable;
         Message.newItem   = 1;
         Message.count     = 1;
         Message.sessionId = sessionID;
@@ -240,7 +267,7 @@ BOOST_FIXTURE_TEST_CASE( GetItemsFromInventory, ServerClientFixture )
         boost::asio::mutable_buffer received( &Reply, sizeof( Reply ) );
         socket.receive( received );
         CONSOLE_OUT( __FUNCTION__, "Client received the add item result" );
-        BOOST_CHECK( Reply.success );
+        BOOST_CHECK( Reply.Success );
     }
 
     {
@@ -258,14 +285,15 @@ BOOST_FIXTURE_TEST_CASE( GetItemsFromInventory, ServerClientFixture )
         ItemAndCount Empty{};
 
         CONSOLE_OUT( __FUNCTION__,
-                     "Inventory Result : ID: {}, Count: {}",
-                     Reply.items.begin()->itemID,
-                     Reply.items.begin()->count )
+                     "Inventory Result : Type: {}, ID: {}, Count: {}",
+                     magic_enum::enum_name<EDBItemType>(Reply.items.begin()->ItemType),
+                     Reply.items.begin()->ItemID,
+                     Reply.items.begin()->Count )
 
         bool test = std::all_of( Reply.items.begin(),
                                  Reply.items.end(),
                                  [ &Empty ]( const ItemAndCount& Element )
-                                 { return Element.itemID == Empty.itemID && Element.count == Empty.count; } );
+                                 { return Element.ItemType == EDBItemType::Unknown && Element.ItemID == Empty.ItemID && Element.Count == Empty.Count; } );
         BOOST_CHECK( !test );
     }
     

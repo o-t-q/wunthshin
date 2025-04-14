@@ -2,10 +2,13 @@
 #include "CoreMinimal.h"
 #include "../WSNetDriver.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+
 #include "WSServerSubsystem.generated.h"
 
+struct FUUIDWrapper;
 class UWSLoginChannel;
 class UWSRegisterChannel;
+class UWSItemChannel;
 
 // https://unrealcommunity.wiki/config-files-read-and-write-to-config-files-zuoaht01
 UCLASS(Config = Engine)
@@ -16,6 +19,9 @@ class WUNTHSHIN_API UWSServerSubsystem : public UGameInstanceSubsystem, public F
 public:
 	UFUNCTION(BlueprintCallable)
 	UWSLoginChannel* GetLoginChannel() { return LoginChannel; }
+
+	UFUNCTION(BlueprintCallable)
+	UWSItemChannel* GetItemChannel() { return ItemChannel; }
 
 	bool HashPassword(const FString& InPlainPassword, FSHA256Signature& OutSignature, const FString& InSalt = TEXT("")) const;
 
@@ -34,6 +40,14 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ConnectToServer(const FString& InHost, int32 InPort);
+
+	UFUNCTION(BlueprintCallable)
+	bool TryAddItem(const EItemType ItemType, int32 ItemID, int32 Count);
+
+	UFUNCTION(BlueprintCallable)
+	bool TryGetItems(int32 Page);
+
+	FUUIDWrapper GetSessionID() const;
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
@@ -57,4 +71,6 @@ private:
 	UWSLoginChannel* LoginChannel = nullptr;
 
 	UWSRegisterChannel* RegisterChannel = nullptr;
+
+	UWSItemChannel* ItemChannel = nullptr;
 };

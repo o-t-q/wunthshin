@@ -20,24 +20,28 @@ struct Inventory
         return row_count;
     }
 
-    static bool GetAllItems(const size_t owner, const size_t page, bool& end, ItemArray& out_array, pqxx::work&& tx)
+    static bool GetAllItems(const size_t owner, const size_t page, bool& end, size_t& count, ItemArray& out_array, pqxx::work&& tx)
     {
         out_array = {};
 
         const Database::Table* inventory_table = GlobalScope::GetDatabase().GetTable( "inventory" );
         const pqxx::result     inventory_query =
-                tx.exec( "SELECT item_id, item_count FROM inventory WHERE owner=$1", pqxx::params{ owner } );
+                tx.exec( "SELECT item_type, item_id, item_count FROM inventory WHERE owner=$1", pqxx::params{ owner } );
 
         const pqxx::row user_row       = inventory_query.one_row();
+        // todo: optimize
+        const auto&     itemTypeArray  = user_row[ "item_type" ].as_sql_array<size_t>();
         const auto&     itemArray      = user_row[ "item_id" ].as_sql_array<size_t>();
         const auto&     itemCountArray = user_row[ "item_count" ].as_sql_array<size_t>();
 
-        if ( itemArray.size() != itemCountArray.size() )
+        if ( itemTypeArray.size() != itemArray.size() &&
+             itemArray.size() != itemCountArray.size() )
         {
             CONSOLE_OUT( __FUNCTION__, "User {} inventory seems invalid, no returing the items", owner );
             return false;
         }
 
+        auto itemTypeIterator  = itemTypeArray.cbegin() + ( page * 100 );
         auto itemIterator = itemArray.cbegin() + (page * 100);
         auto itemCountIterator = itemCountArray.cbegin() + ( page * 100 );
 
@@ -57,33 +61,50 @@ struct Inventory
                 break;
             }
 
-            out_array[ iteration ].itemID = *itemIterator;
-            out_array[ iteration ].count  = *itemCountIterator;
+            out_array[ iteration ].ItemType = (EDBItemType)(*itemTypeIterator);
+            out_array[ iteration ].ItemID = *itemIterator;
+            out_array[ iteration ].Count  = *itemCountIterator;
 
             iteration++;
             ++itemIterator;
             ++itemCountIterator;
         }
+        count = iteration;
 
         return true;
     }
 
-	static bool   NewItem( const size_t owner, const size_t item_id, const size_t count, pqxx::work&& tx )
+	static bool   NewItem( const size_t owner, const EDBItemType item_type, const size_t item_id, const size_t count, pqxx::work&& tx )
     {
-        const Database::Table* item_table = GlobalScope::GetDatabase().GetTable( "items" );
-        const auto&            returnValue = item_table->ExecuteChild<bool>( std::move( tx ), &Item::Find, item_id );
+        const Database::Table* table = [ &item_type ]()
+        {
+            switch ( item_type )
+            {
+                case EDBItemType::Consumable:
+                    return GlobalScope::GetDatabase().GetTable( "items" );
+                case EDBItemType::Weapon:
+                    return GlobalScope::GetDatabase().GetTable( "weapons" );
+                default:
+                    return ( Database::Table* )nullptr;
+            }
+        }();
+
+        const auto&            returnValue = table->ExecuteChild<bool>( std::move( tx ), &Item::Find, item_id );
         if ( !returnValue.first )
         {
             CONSOLE_OUT( __FUNCTION__, "Requested unknown item {}", item_id );
             return false;
         }
 
+        std::vector<size_t> newItemTypes;
         std::vector<size_t> newItemList;
         std::vector<size_t> newItemCount;
 
-        const pqxx::result inventory_query = returnValue.second.exec( "SELECT item_id, item_count FROM inventory WHERE owner=$1", pqxx::params{ owner } );
+        const pqxx::result inventory_query = returnValue.second.exec( "SELECT item_type, item_id, item_count FROM inventory WHERE owner=$1", pqxx::params{ owner } );
 
         const pqxx::row user_row       = inventory_query.one_row();
+        // todo: optimize
+        const auto&     itemTypeArray  = user_row[ "item_type" ].as_sql_array<size_t>();
         const auto&     itemArray      = user_row["item_id"].as_sql_array<size_t>();
         const auto&     itemCountArray = user_row["item_count"].as_sql_array<size_t>();
        
@@ -92,11 +113,14 @@ struct Inventory
 
         for ( size_t i = 0; i < itemArray.size(); ++i )
         {
-            if (itemArray[i] == item_id)
+            if ( itemArray[ i ] == item_id && 
+                 itemTypeArray[ i ] == ( int32_t )item_type )
             {
                 exist = true;
                 index = i;
             }
+
+            newItemTypes.emplace_back( itemTypeArray[ i ] );
             newItemList.emplace_back( itemArray[i] );
         }
         for ( size_t i = 0; i < itemCountArray.size(); ++i )
@@ -106,6 +130,7 @@ struct Inventory
 
         if ( !exist )
         {
+            newItemTypes.emplace_back( ( int32_t )item_type );
             newItemList.emplace_back( item_id );
             newItemCount.emplace_back( count );
         }
@@ -114,8 +139,8 @@ struct Inventory
             newItemCount[ index ] += count;
         }
 
-        const pqxx::result result    = returnValue.second.exec( "UPDATE inventory SET item_id=$1, item_count=$2 WHERE owner=$3",
-                                                                { newItemList, newItemCount, owner } );
+        const pqxx::result result    = returnValue.second.exec( "UPDATE inventory SET item_type=$1, item_id=$2, item_count=$3 WHERE owner=$3",
+                                                                { newItemTypes, newItemList, newItemCount, owner } );
         const size_t row_count = result.affected_rows();
         returnValue.second.commit();
         return row_count;

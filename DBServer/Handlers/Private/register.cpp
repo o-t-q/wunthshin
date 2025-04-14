@@ -16,7 +16,7 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
 {
     static std::regex emailValidation( R"(^[\w-\.]+@{1}([\w-]+\.)+[\w-]{2,4}$)" );
     static std::regex idValidation( R"(^[a-zA-Z0-9]+$)") ;
-    const auto&       registerMessage = reinterpret_cast<RegisterMessage&>( message );
+    const auto&       registerMessage = CastTo<EMessageType::Register>( message );
 
     const Database::Table* userTable = GlobalScope::GetDatabase().GetTable( "users" );
     const Database::Table* inventoryTable = GlobalScope::GetDatabase().GetTable( "inventory" );

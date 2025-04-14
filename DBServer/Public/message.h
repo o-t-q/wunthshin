@@ -32,6 +32,14 @@ enum class EMessageChannelType : int32_t
     MAX
 };
 
+enum class EDBItemType : uint8_t
+{
+    Unknown,
+    Consumable,
+    Weapon,
+    MAX
+};
+
 template <EMessageType MessageType>
 concept CMessageConstraintSimple = ( int32_t )MessageType >= 0 && ( int32_t )MessageType < ( size_t )EMessageType::MAX;
 
@@ -50,6 +58,9 @@ concept CChannelConstraintSimple =
 template <EMessageType MessageType>
     requires CMessageConstraint<MessageType>
 struct MessageChannelTypeResolver;
+
+template <EDBItemType ItemType>
+concept CDBItemTypeConstraintSimple = ( uint8_t )ItemType >= 0 && ( uint8_t )ItemType < ( uint8_t )EDBItemType::MAX;
 
 
 enum class ERegistrationFailCode : uint8_t
@@ -175,20 +186,31 @@ DEFINE_MSG_WITH_BODY(
         ERegistrationFailCode code    = ERegistrationFailCode::None; )
 
 DEFINE_MSG_WITH_BODY(
-        AddItemRequestMessage, EMessageType::AddItem, EMessageChannelType::Login, UUID sessionId{}; uint32_t newItem = -1;
-        uint32_t count = 0;
-        AddItemRequestMessage( const UUID& InSessionId, uint32_t InID, uint32_t InCount ) {
+        AddItemRequestMessage, EMessageType::AddItem, EMessageChannelType::Login, UUID sessionId{};
+        uint32_t  newItem  = -1;
+        uint32_t  count    = 0;
+        EDBItemType ItemType = EDBItemType::Unknown;
+        AddItemRequestMessage(
+                const UUID& InSessionId, const EDBItemType InItemType, uint32_t InID, uint32_t InCount ) {
             sessionId = InSessionId;
+            ItemType  = InItemType;
             newItem   = InID;
             count     = InCount;
         } )
 
 DEFINE_MSG_WITH_BODY(
-        AddItemResponseMessage, EMessageType::AddItemResponse, EMessageChannelType::Item, bool success = false;
-        AddItemResponseMessage( bool InSuccess ) { success = InSuccess; } )
+        AddItemResponseMessage, EMessageType::AddItemResponse, EMessageChannelType::Item, bool Success = false;
+        uint32_t  itemID   = -1;
+        EDBItemType ItemType = EDBItemType::Unknown;
+        AddItemResponseMessage( bool InSuccess, const EDBItemType InItemType, uint32_t InItemID ) {
+            Success  = InSuccess;
+            itemID   = InItemID;
+            ItemType = InItemType;
+        } )
 
 DEFINE_MSG_WITH_BODY(
-        GetItemsRequestMessage, EMessageType::GetItemsRequest, EMessageChannelType::Item, UUID sessionId{}; uint32_t page;
+        GetItemsRequestMessage, EMessageType::GetItemsRequest, EMessageChannelType::Item, UUID sessionId{};
+        uint32_t page = -1;
         GetItemsRequestMessage( const uint32_t InPage, const UUID& InSessionId ) {
             page      = InPage;
             sessionId = InSessionId;
@@ -196,8 +218,9 @@ DEFINE_MSG_WITH_BODY(
 
 struct ItemAndCount
 {
-    uint32_t itemID;
-    uint32_t count;
+    EDBItemType ItemType = EDBItemType::Unknown;
+    uint32_t  ItemID   = ( uint32_t )-1;
+    uint32_t  Count    = 0;
 };
 
 using ItemArray = std::array<ItemAndCount, 100>;
@@ -205,12 +228,17 @@ using ItemArray = std::array<ItemAndCount, 100>;
 DEFINE_MSG_WITH_BODY(
         GetItemsResponseMessage, EMessageType::AllItemResponse, EMessageChannelType::Item, ItemArray items{};
         uint32_t section = 0;
+        size_t   count   = 0;
         bool success = false;
         bool end     = true;
-        GetItemsResponseMessage(
-                uint32_t InSection, const bool InSuccess, const bool IsEnd, const ItemArray& InItems ) {
+        GetItemsResponseMessage( uint32_t         InSection,
+                                 const bool       InSuccess,
+                                 const bool       IsEnd,
+                                 const size_t     InItemCount,
+                                 const ItemArray& InItems ) {
             section = InSection;
             items   = InItems;
+            count   = InItemCount;
             success = InSuccess;
             end     = IsEnd;
         } )
@@ -255,3 +283,9 @@ constexpr auto resolve_message_channels()
 
 static constexpr auto G_MessageSize = []() { return resolve_message_sizes(); }();
 static constexpr auto G_MessageChannels = []() { return resolve_message_channels(); }();
+
+template <EMessageType MessageType> requires CMessageConstraint<MessageType>
+auto& CastTo( MessageBase& InMessage )
+{
+    return reinterpret_cast<MessageTypeResolver<MessageType>::type&>( InMessage );
+}

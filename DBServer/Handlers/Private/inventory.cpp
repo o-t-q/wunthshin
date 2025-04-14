@@ -28,12 +28,12 @@ void InventoryHandler::Handle( const size_t index, MessageBase& message )
 void InventoryHandler::HandleAllItem( const size_t index, MessageBase& message )
 { 
     const auto login          = GlobalScope::GetHandler().GetHandler<LoginHandler>( "login" );
-    auto&      allItemMessage = reinterpret_cast<GetItemsRequestMessage&>( message );
+    auto&      allItemMessage = CastTo<EMessageType::GetItemsRequest>( message );
     const auto userId         = login->GetLoginUser( allItemMessage.sessionId );
 
     const auto& replyFailed = [ &index ]()
     {
-        SendMessage<GetItemsResponseMessage>( index, 0, false, true, ItemArray{} );
+        SendMessage<GetItemsResponseMessage>( index, 0, false, true, 0, ItemArray{} );
     };
 
     if ( userId == -1 )
@@ -45,11 +45,12 @@ void InventoryHandler::HandleAllItem( const size_t index, MessageBase& message )
 
     const Database::Table* inventoryTable = GlobalScope::GetDatabase().GetTable( "inventory" );
     ItemArray              result{};
+    size_t                 count = 0;
     bool                   isEnd          = false;
 
-    if ( inventoryTable->Execute<bool>( &Inventory::GetAllItems, userId, allItemMessage.page, isEnd, result ) )
+    if ( inventoryTable->Execute<bool>( &Inventory::GetAllItems, userId, allItemMessage.page, isEnd, count, result ) )
     {
-        SendMessage<GetItemsResponseMessage>( index, allItemMessage.page, true, isEnd, result );
+        SendMessage<GetItemsResponseMessage>( index, allItemMessage.page, true, isEnd, count, result );
     }
     else
     {
@@ -61,10 +62,10 @@ void InventoryHandler::HandleAllItem( const size_t index, MessageBase& message )
 void InventoryHandler::HandleAddItem( const size_t index, MessageBase& message )
 {
     const auto login          = GlobalScope::GetHandler().GetHandler<LoginHandler>( "login" );
-    auto&      addItemMessage = reinterpret_cast<AddItemRequestMessage&>( message );
+    auto&      addItemMessage = CastTo<EMessageType::AddItem>( message );
     const auto userId         = login->GetLoginUser( addItemMessage.sessionId );
 
-    const auto& replyFailed = [ &index ]() { SendMessage<AddItemResponseMessage>( index, false ); };
+    const auto& replyFailed = [ &index ]() { SendMessage<AddItemResponseMessage>( index, false, EDBItemType::Unknown, -1 ); };
 
     if ( userId == -1 )
     {
@@ -75,9 +76,9 @@ void InventoryHandler::HandleAddItem( const size_t index, MessageBase& message )
 
     const Database::Table* inventoryTable = GlobalScope::GetDatabase().GetTable( "inventory" );
 
-    if ( inventoryTable->Execute<bool>( &Inventory::NewItem, userId, addItemMessage.newItem, addItemMessage.count ) )
+    if ( inventoryTable->Execute<bool>( &Inventory::NewItem, userId, addItemMessage.ItemType, addItemMessage.newItem, addItemMessage.count ) )
     {
-        SendMessage<AddItemResponseMessage>( index, true );
+        SendMessage<AddItemResponseMessage>( index, true, addItemMessage.ItemType, addItemMessage.newItem );
         return;
     }
     else

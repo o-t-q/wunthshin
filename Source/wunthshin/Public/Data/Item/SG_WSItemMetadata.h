@@ -32,6 +32,9 @@ public:
 	
 private:
 	UPROPERTY(VisibleAnywhere)
+	int32 ID;
+
+	UPROPERTY(VisibleAnywhere)
 	FName AssetName;
 
 	UPROPERTY(VisibleAnywhere)
@@ -52,6 +55,7 @@ public:
 
 	const FEffectParameter& GetItemParameter() const;
 	
+	int32 GetID() const { return ID; }
 	FName GetAssetName() const { return AssetName; }
 	UTexture2D* GetItemIcon() const { return ItemIcon; }
 	FName GetItemDescription() const { return ItemDescription; }

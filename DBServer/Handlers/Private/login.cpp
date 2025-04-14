@@ -20,7 +20,7 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
     {
         case EMessageType::Login:
         {
-            auto& loginMessage = reinterpret_cast<LoginMessage&>( message );
+            auto& loginMessage = CastTo<EMessageType::Login>( message );
 
             const auto& replyFailed = []( const size_t to )
             {
@@ -90,7 +90,7 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
         }
         case EMessageType::Logout:
         {
-            const auto& logoutMessage = reinterpret_cast<LogoutMessage&>( message );
+            const auto& logoutMessage = CastTo<EMessageType::Logout>( message );
             
             do_lock( m_mtx_, true );
             if ( !is_null_container_unseq( logoutMessage.sessionId ) && 
