@@ -18,7 +18,7 @@ enum class EMessageType : int32_t
     AddItem,
     AddItemResponse,
     GetItemsRequest,
-    AllItemResponse,
+    GetItemsResponse,
     MAX
 };
 
@@ -37,6 +37,7 @@ enum class EDBItemType : uint8_t
     Unknown,
     Consumable,
     Weapon,
+    LootingBox,
     MAX
 };
 
@@ -200,11 +201,13 @@ DEFINE_MSG_WITH_BODY(
 
 DEFINE_MSG_WITH_BODY(
         AddItemResponseMessage, EMessageType::AddItemResponse, EMessageChannelType::Item, bool Success = false;
-        uint32_t  itemID   = -1;
+        uint32_t    itemID   = -1;
+        uint32_t    Count    = 0;
         EDBItemType ItemType = EDBItemType::Unknown;
-        AddItemResponseMessage( bool InSuccess, const EDBItemType InItemType, uint32_t InItemID ) {
+        AddItemResponseMessage( bool InSuccess, const EDBItemType InItemType, uint32_t InItemID, uint32_t InCount ) {
             Success  = InSuccess;
             itemID   = InItemID;
+            Count    = InCount;
             ItemType = InItemType;
         } )
 
@@ -226,7 +229,7 @@ struct ItemAndCount
 using ItemArray = std::array<ItemAndCount, 100>;
 
 DEFINE_MSG_WITH_BODY(
-        GetItemsResponseMessage, EMessageType::AllItemResponse, EMessageChannelType::Item, ItemArray items{};
+        GetItemsResponseMessage, EMessageType::GetItemsResponse, EMessageChannelType::Item, ItemArray items{};
         uint32_t section = 0;
         size_t   count   = 0;
         bool success = false;

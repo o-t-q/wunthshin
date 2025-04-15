@@ -20,8 +20,8 @@ class WUNTHSHIN_API UWeaponSubsystem : public UGameInstanceSubsystem, public IIt
 {
 	GENERATED_BODY()
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta=(AllowPrivateAccess = "true"))
-	TMap<FName, USG_WSItemMetadata*> Metadata;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
+	FWSMetadataPair WeaponMetadata;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Table", meta=(AllowPrivateAccess = "true"))
 	UDataTable* DataTable;
@@ -30,5 +30,6 @@ public:
 	UWeaponSubsystem();
 
 	virtual void                Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual USG_WSItemMetadata* GetMetadata(const FName& InAssetName) override;
+	virtual USG_WSItemMetadata* GetMetadata(const EItemType InItemType, const FName& InAssetName) override;
+	virtual USG_WSItemMetadata* GetMetadata(const EItemType InItemType, const int32 InID) override;
 };

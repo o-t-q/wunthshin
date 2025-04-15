@@ -8,6 +8,7 @@
 
 #include "Interface/DataTableQuery.h"
 #include "Interface/ItemMetadataGetter.h"
+#include "Subsystem/ItemSubsystem.h"
 
 #include "ItemEditorSubsystem.generated.h"
 
@@ -21,9 +22,11 @@ class WUNTHSHINEDITORMODULE_API UItemEditorSubsystem : public UEditorSubsystem, 
 {
 	GENERATED_BODY()
 
-	// 아이템 고유 메타데이터
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta=(AllowPrivateAccess = "true"))
-	TMap<FName, USG_WSItemMetadata*> Metadata;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
+	FWSMetadataPair ItemMetadata;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
+	FWSMetadataPair LootingBoxMetadata;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
 	UDataTable* DataTable;
@@ -34,6 +37,7 @@ public:
 	UItemEditorSubsystem();
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	virtual USG_WSItemMetadata* GetMetadata(const FName& InAssetName) override;
+	virtual USG_WSItemMetadata* GetMetadata(const EItemType InItemType, const FName& InAssetName) override;
+	virtual USG_WSItemMetadata* GetMetadata(const EItemType InItemType, const int32 InID) override;
 	virtual bool IsEditorOnly() const override { return true; }
 };

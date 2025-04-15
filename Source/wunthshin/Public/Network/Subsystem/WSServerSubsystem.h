@@ -10,12 +10,14 @@ class UWSLoginChannel;
 class UWSRegisterChannel;
 class UWSItemChannel;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnServerSubsystemInitialized);
+extern FOnServerSubsystemInitialized GOnServerSubsystemInitialized;
+
 // https://unrealcommunity.wiki/config-files-read-and-write-to-config-files-zuoaht01
 UCLASS(Config = Engine)
 class WUNTHSHIN_API UWSServerSubsystem : public UGameInstanceSubsystem, public FTickableGameObject, public FNetworkNotify
 {
 	GENERATED_BODY()
-
 public:
 	UFUNCTION(BlueprintCallable)
 	UWSLoginChannel* GetLoginChannel() { return LoginChannel; }

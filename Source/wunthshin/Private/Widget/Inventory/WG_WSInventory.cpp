@@ -15,6 +15,7 @@
 #include "Data/Item/SG_WSItemMetadata.h"
 #include "Widget/MainGame/WG_WSInGameBundle.h"
 #include "Component/C_WSCharacterInventory.h"
+#include "Subsystem/ItemSubsystem.h"
 
 
 void UWG_WSInventory::NativeConstruct()
@@ -45,9 +46,9 @@ void UWG_WSInventory::NativeConstruct()
 	const AA_WSCharacter* Player = Cast<AA_WSCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	PlayerInventory = Player->GetComponentByClass<UC_WSCharacterInventory>();
 
-	if (UC_WSCharacterInventory* InventoryComponent = Player->GetComponentByClass<UC_WSCharacterInventory>())
+	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
 	{
-		InventoryComponent->OnCharacterInventoryUpdated.AddUniqueDynamic(this, &UWG_WSInventory::RefreshListItem);
+		ItemSubsystem->OnCharacterInventoryUpdated.AddUniqueDynamic(this, &UWG_WSInventory::RefreshListItem);
 	}
 
 	// 값 초기화
@@ -83,7 +84,7 @@ void UWG_WSInventory::RefreshListItem()
 
 	for (auto& Item : Items)
 	{
-		auto Type = Item.Metadata->ItemType;
+		auto Type = Item.Metadata->GetItemType();
 		if(CurrentCategory != Type) continue;
 		
 		auto newItem = NewObject<UInventoryEntryData>(this);

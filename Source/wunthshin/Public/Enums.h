@@ -9,6 +9,7 @@ enum class EItemType : uint8
 	Unknown = EDBItemType::Unknown,
 	Consumable = EDBItemType::Consumable,
 	Weapon = EDBItemType::Weapon,
+	LootingBox = EDBItemType::LootingBox,
 	Max = EDBItemType::MAX
 };
 

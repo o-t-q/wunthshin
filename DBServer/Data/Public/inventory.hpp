@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <pqxx/pqxx>
+#include <magic_enum/magic_enum.hpp>
 
 #include "item.hpp"
 #include "../../Public/dbcon.hpp"
@@ -14,7 +15,7 @@ struct Inventory
 
     static bool Insert( const size_t owner, pqxx::work&& tx )
     {
-        const pqxx::result result = tx.exec( "INSERT INTO inventory VALUES ($1, array[]::bigint[], array[]::bigint[])", pqxx::params{ owner } );
+        const pqxx::result result = tx.exec( "INSERT INTO inventory VALUES ($1, array[]::bigint[], array[]::bigint[], array[]::bigint[])", pqxx::params{ owner } );
         const size_t row_count = result.affected_rows();
         tx.commit();
         return row_count;
@@ -88,8 +89,20 @@ struct Inventory
                     return ( Database::Table* )nullptr;
             }
         }();
+        const auto& func = [ &item_type ]()
+        {
+            switch ( item_type )
+            {
+                case EDBItemType::Consumable:
+                    return &Item::Find;
+                case EDBItemType::Weapon:
+                    return &Weapon::Find;
+                default:
+                    assert( false );
+            }
+        }();
 
-        const auto&            returnValue = table->ExecuteChild<bool>( std::move( tx ), &Item::Find, item_id );
+        const auto&            returnValue = table->ExecuteChild<bool>( std::move( tx ), func, item_id );
         if ( !returnValue.first )
         {
             CONSOLE_OUT( __FUNCTION__, "Requested unknown item {}", item_id );
@@ -139,10 +152,11 @@ struct Inventory
             newItemCount[ index ] += count;
         }
 
-        const pqxx::result result    = returnValue.second.exec( "UPDATE inventory SET item_type=$1, item_id=$2, item_count=$3 WHERE owner=$3",
+        const pqxx::result result    = returnValue.second.exec( "UPDATE inventory SET item_type=$1, item_id=$2, item_count=$3 WHERE owner=$4",
                                                                 { newItemTypes, newItemList, newItemCount, owner } );
         const size_t row_count = result.affected_rows();
         returnValue.second.commit();
+        CONSOLE_OUT( __FUNCTION__, "Inventory for user {} updated, {}, {}, {}", owner, magic_enum::enum_name<EDBItemType>(item_type), item_id, count )
         return row_count;
     }
 };

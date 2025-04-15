@@ -69,7 +69,13 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 	UPROPERTY(EditAnywhere)
 	FEffectParameter ItemParameter;
 
+	int32 GetID() const { return ID; }
+
 	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName) override;
+
+private:
+	UPROPERTY(VisibleAnywhere, meta=(AllowPrivateAccess="true"))
+	int32 ID;
 };
 
 USTRUCT()

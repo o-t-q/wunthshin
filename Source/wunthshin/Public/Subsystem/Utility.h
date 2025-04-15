@@ -62,23 +62,29 @@ struct FItemSubsystemUtility
 	static void UpdateTable
 	(
 		UDataTable* InDataTable, 
+		TArray<MetadataT*>& OutIDArray,
 		TMap<FName, MetadataT*>& OutMetadataMap,
 		bool bEmpty = true
 	)
 	{
 		check(InDataTable);
+
+		TArray<TableT*> Rows;
+		InDataTable->GetAllRows<TableT>(TEXT(""), Rows);
+
 		if (bEmpty)
 		{
 			OutMetadataMap.Empty();	
+			OutMetadataMap.Reserve( Rows.Num() );
+			OutIDArray.Empty();
+			OutIDArray.SetNumUninitialized( Rows.Num() );
 		}
-		
-		TArray<TableT*> Rows;
-		InDataTable->GetAllRows<TableT>(TEXT(""), Rows);
 
 		for (const TableT* Row : Rows)
 		{
 			OutMetadataMap.Add(Row->ItemName);
 			OutMetadataMap[Row->ItemName] = NewObject<MetadataT>();
+			OutMetadataMap[Row->ItemName]->ID = Row->GetID();
 			OutMetadataMap[Row->ItemName]->AssetName = Row->ItemName;
 			OutMetadataMap[Row->ItemName]->ItemRarity = Row->ItemRarity;
 			OutMetadataMap[Row->ItemName]->ItemType = Row->ItemType;
@@ -86,6 +92,7 @@ struct FItemSubsystemUtility
 			OutMetadataMap[Row->ItemName]->ItemDescription = Row->ItemDescription;
 			OutMetadataMap[Row->ItemName]->ItemEffect = FEffectRowHandle(Row->ItemEffect);
 			OutMetadataMap[Row->ItemName]->ItemParameter = Row->ItemParameter;
+			OutIDArray[Row->GetID()] = OutMetadataMap[Row->ItemName];
 		}
 	}
 
@@ -103,7 +110,20 @@ struct FItemSubsystemUtility
 	}
 
 	template <typename MetadataT>
-	static MetadataT* GetMetadata(const UWorld* InWorld, const IDataTableFetcher* InDataTableFetcher, const FName& InAssetName)
+	static MetadataT* GetMetadataByIDTemplate(const TArray<MetadataT*>& InMetadataMap, const int32 InIndex)
+	{
+		if (InMetadataMap.IsValidIndex(InIndex))
+		{
+			return InMetadataMap[InIndex];
+		}
+
+		// 메타데이터가 생성되지 않았을 경우
+		check(false);
+		return nullptr;
+	}
+
+	template <typename MetadataT>
+	static MetadataT* GetMetadata(const UWorld* InWorld, const IDataTableFetcher* InDataTableFetcher, const EItemType InItemType, const FName& InAssetName)
 	{
 		USubsystem* Subsystem = nullptr;
 		MetadataT* OutValue = nullptr;
@@ -123,7 +143,7 @@ struct FItemSubsystemUtility
 			return nullptr;
 		}
 		
-		OutValue = MetadataGetter->GetMetadata(InAssetName);
+		OutValue = MetadataGetter->GetMetadata(InItemType, InAssetName);
 		return OutValue;
 	}
 };

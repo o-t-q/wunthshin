@@ -7,6 +7,7 @@
 #include "Misc/Paths.h"
 #include "Misc/outputdeviceNull.h"
 
+FOnServerSubsystemInitialized GOnServerSubsystemInitialized;
 constexpr static size_t IDSizeLimit = sizeof(decltype(std::declval<LoginMessage>().name._Elems));
 
 bool UWSServerSubsystem::HashPassword(const FString& InPlainPassword, FSHA256Signature& OutSignature, const FString& InSalt) const
@@ -179,6 +180,7 @@ FUUIDWrapper UWSServerSubsystem::GetSessionID() const
 void UWSServerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	ConnectToServer(Host, Port);
+	GOnServerSubsystemInitialized.Broadcast();
 }
 
 bool UWSServerSubsystem::TrySendRegister(const FString& InID, const FString& InEmail, const FSHA256Signature& HashedPassword)

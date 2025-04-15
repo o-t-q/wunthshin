@@ -63,7 +63,7 @@ void AA_LootingBox::InitializeLootingBox()
 		// 필수 아이템 초기화
 		for (auto& Item : EssentialItems)
 		{
-			auto MetaData = Subsystem->GetMetadata(Item.ItemRowHandle.RowName);
+			auto MetaData = Subsystem->GetMetadata(Item.ItemType, Item.ItemRowHandle.RowName);
 			uint64 Quantity = FMath::RandRange((double)Item.MinQuantity, (double)Item.MaxQuantity);
 			InventoryComponent->AddItem(MetaData, Quantity);
 		}
@@ -89,7 +89,7 @@ void AA_LootingBox::InitializeLootingBox()
 			for (FItemTableRow* Row : AllRows)
 			{
 					if(Type == Row->ItemType && Rarity == Row->ItemRarity)
-						FilteredItem.Add(FInventoryPair(Subsystem->GetMetadata(Row->ItemName),Quantity));
+						FilteredItem.Add(FInventoryPair(Subsystem->GetMetadata(Row->ItemType, Row->ItemName),Quantity));
 			}
 			// ItemDataTable->ForeachRow<FItemTableRow>(TEXT(""), [&,this](const FName Key, const FItemTableRow TableRow)
 			// {

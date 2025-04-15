@@ -12,12 +12,15 @@ void UWSItemChannel::ReceivedBunch(MessageBase& Bunch)
 	case EMessageType::AddItemResponse:
 	{
 		auto& AddItemMessage = CastTo<EMessageType::AddItemResponse>( Bunch );
-		OnItemAdded.Broadcast( AddItemMessage.itemID );
+		if (AddItemMessage.Success) 
+		{
+			OnItemAdded.Broadcast((EItemType)AddItemMessage.ItemType, AddItemMessage.itemID, AddItemMessage.Count);
+		}
 		break;
 	}
-	case EMessageType::AllItemResponse:
+	case EMessageType::GetItemsResponse:
 	{
-		auto& GetItemMessage = CastTo<EMessageType::AllItemResponse>( Bunch );
+		auto& GetItemMessage = CastTo<EMessageType::GetItemsResponse>( Bunch );
 		if (GetItemMessage.success)
 		{
 			TArray<FItemAndCountUE> Items;
@@ -40,14 +43,14 @@ void UWSItemChannel::SendBunchInternal(const EMessageType MessageType, MessageBa
 	case EMessageType::AddItem:
 	{
 		auto& AddItemMessage = CastTo<EMessageType::AddItem>(Bunch);
-		UWSServerSubsystem* Subsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSServerSubsystem>();
+		UWSServerSubsystem* Subsystem = GetSubsystem();
 		AddItemMessage.sessionId = Subsystem->GetSessionID().uuid;
 		break;
 	}
 	case EMessageType::GetItemsRequest:
 	{
 		auto& GetItemsMessage = CastTo<EMessageType::GetItemsRequest>( Bunch );
-		UWSServerSubsystem* Subsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSServerSubsystem>();
+		UWSServerSubsystem* Subsystem = GetSubsystem();
 		GetItemsMessage.sessionId = Subsystem->GetSessionID().uuid;
 		break;
 	}

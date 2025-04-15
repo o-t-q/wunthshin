@@ -29,7 +29,7 @@ struct FItemAndCountUE
 
 DEFINE_CHANNEL_MESSAGE(ItemChannel, EMessageChannelType::Item, AddItem, EMessageType::AddItem);
 DEFINE_CHANNEL_MESSAGE(ItemChannel, EMessageChannelType::Item, GetItems, EMessageType::GetItemsRequest);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnItemAdded, int32, ItemID);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnItemAdded, EItemType, ItemType, int32, ItemID, int32, Count);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FRequestItemReceived, bool, IsEnd, int32, Page, int32, Count, const TArray<FItemAndCountUE>&, Items);
 
 /**
