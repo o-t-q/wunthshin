@@ -113,7 +113,7 @@ struct Logger
     }
 
     template <typename Format, typename... Args>
-    void push( std::string_view prefix, Args&&... args )
+    void push( std::string_view prefix, Args... args )
     {
         m_messages_.push_back(
                 std::make_unique<LogFragment<Format, Args...>>( prefix, std::forward<Args>( args )... ) );

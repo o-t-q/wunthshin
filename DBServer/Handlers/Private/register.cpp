@@ -80,8 +80,10 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
                 CONSOLE_OUT( __FUNCTION__, "Registration of user {} succeded", nameStringify )
                 const auto user_id = userTable->Execute<size_t>( &UserProfile::GetIdentifier, nameStringify );
                 // Possible database error
-                assert( inventoryTable->Execute<bool>( &Inventory::Insert, user_id ) );
-                CONSOLE_OUT( __FUNCTION__, "Registration of user {} inventory succeded", nameStringify )
+                if (inventoryTable->Execute<bool>(&Inventory::Insert, user_id))
+                {
+                    CONSOLE_OUT( __FUNCTION__, "Registration of user {} inventory succeded", nameStringify )
+                }
             }
             else
             {
