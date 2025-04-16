@@ -50,6 +50,8 @@
     </ClCompile>
     <ClCompile Include="Handlers\Private\inventory.cpp">
       <Filter>소스 파일\Handlers</Filter>
+    <ClCompile Include="Private\utility.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
