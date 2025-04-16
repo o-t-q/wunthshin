@@ -5,7 +5,7 @@
 
 #include "../../Public/boost-socket.hpp"
 
-HandlerRegistration<LoginHandler> LoginHandlerRegistration = {};
+HandlerRegistration<LoginHandler> LoginHandlerRegistration( "login" );
 
 bool LoginHandler::ShouldHandle( EMessageType messageType )
 {
@@ -14,13 +14,13 @@ bool LoginHandler::ShouldHandle( EMessageType messageType )
 
 void LoginHandler::Handle( const size_t index, MessageBase& message )
 {
-    const Database::Table* user_table   = GlobalScope::GetDatabase().GetTable( "User" );
+    const Database::Table* user_table   = GlobalScope::GetDatabase().GetTable( "users" );
 
     switch ( message.GetType() )
     {
         case EMessageType::Login:
         {
-            auto& loginMessage = reinterpret_cast<LoginMessage&>( message );
+            auto& loginMessage = CastTo<EMessageType::Login>( message );
 
             const auto& replyFailed = []( const size_t to )
             {
@@ -60,14 +60,20 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
                 };
 
                 UUID sessionId{};
-                do
                 {
-                    sessionId = GenerateUUID();
-                } while ( m_login_.contains( sessionId ) );
+                    do_lock( m_mtx_, true );
+                    do
+                    {
+                        sessionId = GenerateUUID();
+                    }
+                    while ( m_login_.contains( sessionId ) );
 
-                CONSOLE_OUT(__FUNCTION__, "Login Ok for {} with seesion ID {}", id, to_hex_string( sessionId ))
+                    CONSOLE_OUT( __FUNCTION__, "Login Ok for {} with seesion ID {}", id, to_hex_string( sessionId ) )
 
-                m_login_.insert( { sessionId, id } );
+                    m_login_.insert( { sessionId, id } );
+                    do_lock( m_mtx_, false );
+                }
+
                 auto reply     = make_vec_unique<LoginStatusMessage>( true, sessionId );
                 GlobalScope::GetNetwork().send<LoginStatusMessage>( index, std::move( reply ) );
                 break;
@@ -84,24 +90,43 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
         }
         case EMessageType::Logout:
         {
-            const auto& logoutMessage = reinterpret_cast<LogoutMessage&>( message );
+            const auto& logoutMessage = CastTo<EMessageType::Logout>( message );
             
+            do_lock( m_mtx_, true );
             if ( !is_null_container_unseq( logoutMessage.sessionId ) && 
                  m_login_.contains( logoutMessage.sessionId ) )
             {
                 m_login_.erase( logoutMessage.sessionId );
                 GlobalScope::GetNetwork().send<LogoutOKMessage>( index, make_vec_unique<LogoutOKMessage>( true ) );
+                do_lock( m_mtx_, false );
                 break;
             }
             else
             {
                 GlobalScope::GetNetwork().send<LogoutOKMessage>( index, make_vec_unique<LogoutOKMessage>( false ) );
+                do_lock( m_mtx_, false );
                 break;
             }
 
+            do_lock( m_mtx_, false );
             assert( false );
             break;
         }
         default: break;
     }
+}
+
+size_t LoginHandler::GetLoginUser( const UUID& InSessionId ) const
+{
+    do_lock( m_mtx_, true );
+
+    if (m_login_.contains(InSessionId))
+    {
+        const auto returnValue = m_login_.at( InSessionId );
+        do_lock( m_mtx_, false );
+        return returnValue;
+    }
+
+    do_lock( m_mtx_, false );
+    return -1;
 }

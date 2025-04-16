@@ -8,11 +8,6 @@
 #include "Data/Item/LootingBoxTableRow.h"
 #include "Subsystem/Utility.h"
 
-USG_WSItemMetadata* UItemEditorSubsystem::GetMetadata(const FName& InAssetName)
-{
-	return FItemSubsystemUtility::GetMetadataTemplate(Metadata, InAssetName);
-}
-
 UItemEditorSubsystem::UItemEditorSubsystem()
 	: DataTable(nullptr),
 	  LootingBoxTable(nullptr) {}
@@ -25,8 +20,36 @@ void UItemEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	LootingBoxTable = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_LootingBoxTable.DT_LootingBoxTable'")));
 	check(LootingBoxTable);
 	
-	FItemSubsystemUtility::UpdateTable<FItemTableRow>(DataTable, Metadata);
-	FItemSubsystemUtility::UpdateTable<FLootingBoxTableRow>(LootingBoxTable, Metadata, false);
+	FItemSubsystemUtility::UpdateTable<FItemTableRow>(DataTable, ItemMetadata.MetadataByID, ItemMetadata.Metadata);
+	FItemSubsystemUtility::UpdateTable<FLootingBoxTableRow>(LootingBoxTable, LootingBoxMetadata.MetadataByID, LootingBoxMetadata.Metadata);
 	DataTableMapping.Emplace(FLootingBoxTableRow::StaticStruct(), LootingBoxTable);
 	DataTableMapping.Emplace(FItemTableRow::StaticStruct(), DataTable);
+}
+
+USG_WSItemMetadata* UItemEditorSubsystem::GetMetadata(const EItemType InItemType, const FName& InAssetName)
+{
+	switch (InItemType)
+	{
+	case EItemType::Consumable:
+		return FItemSubsystemUtility::GetMetadataTemplate(ItemMetadata.Metadata, InAssetName);
+	case EItemType::LootingBox:
+		return FItemSubsystemUtility::GetMetadataTemplate(LootingBoxMetadata.Metadata, InAssetName);
+	default: check(false);
+	}
+
+	return nullptr;
+}
+
+USG_WSItemMetadata* UItemEditorSubsystem::GetMetadata(const EItemType InItemType, const int32 InID)
+{
+	switch (InItemType)
+	{
+	case EItemType::Consumable:
+		return FItemSubsystemUtility::GetMetadataByIDTemplate(ItemMetadata.MetadataByID, InID);
+	case EItemType::LootingBox:
+		return FItemSubsystemUtility::GetMetadataByIDTemplate(LootingBoxMetadata.MetadataByID, InID);
+	default: check(false);
+	}
+
+	return nullptr;
 }

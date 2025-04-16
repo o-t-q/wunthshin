@@ -18,11 +18,28 @@ void UWeaponSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	DataTable = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_WeaponTable.DT_WeaponTable'")));
 	check(DataTable);
 	
-	FItemSubsystemUtility::UpdateTable<FWeaponTableRow>(DataTable, Metadata);
+	FItemSubsystemUtility::UpdateTable<FWeaponTableRow>(DataTable, WeaponMetadata.MetadataByID, WeaponMetadata.Metadata);
 	DataTableMapping.Emplace(FWeaponTableRow::StaticStruct(), DataTable);
 }
 
-USG_WSItemMetadata* UWeaponSubsystem::GetMetadata(const FName& InAssetName)
+USG_WSItemMetadata* UWeaponSubsystem::GetMetadata(const EItemType InItemType, const FName& InAssetName)
 {
-	return FItemSubsystemUtility::GetMetadataTemplate(Metadata, InAssetName);
+	if (InItemType == EItemType::Weapon)
+	{
+		return FItemSubsystemUtility::GetMetadataTemplate(WeaponMetadata.Metadata, InAssetName);
+	}
+
+	check(false);
+	return nullptr;
+}
+
+USG_WSItemMetadata* UWeaponSubsystem::GetMetadata(const EItemType InItemType, const int32 InID)
+{
+	if (InItemType == EItemType::Weapon)
+	{
+		return FItemSubsystemUtility::GetMetadataByIDTemplate(WeaponMetadata.MetadataByID, InID);
+	}
+
+	check(false);
+	return nullptr;
 }

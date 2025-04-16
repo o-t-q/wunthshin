@@ -210,15 +210,19 @@ std::atomic<bool>& get_spinlock()
     return lock;
 }
 
-template <typename T>
-void do_lock( const bool value )
+inline void do_lock( std::atomic<bool>& mtx, const bool value )
 {
-    std::atomic<bool>& mtx = get_spinlock<T>();
-
     bool expected = !value;
     while ( !mtx.compare_exchange_strong( expected, value ) )
     {
     }
+}
+
+template <typename T>
+void do_lock( const bool value )
+{
+    std::atomic<bool>& mtx = get_spinlock<T>();
+    do_lock( mtx, value );
 }
 
 #if defined(_DEBUG) && defined(WIN32)
@@ -895,3 +899,4 @@ accessor<T> make_vec_unique( Args&&... args )
     
     return accessor<T>{ index };
 }
+

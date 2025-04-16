@@ -11,6 +11,17 @@ void FItemTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FNam
 	FTableRowBase::OnDataTableChanged(InDataTable, InRowName);
 
 #ifdef WITH_EDITOR
+	TArray<FItemTableRow*> Rows;
+	InDataTable->GetAllRows("", Rows);
+	for (int i = 0; i < Rows.Num(); ++i)
+	{
+		if (Rows[i] == this) 
+		{
+			ID = i;
+			break;
+		}
+	}
+
 	if (GIsRunning)
 	{
 		if (bCollision)

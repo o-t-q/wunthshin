@@ -174,7 +174,7 @@ void AA_WSItem::ApplyAsset(const FTableRowBase* InRowPointer)
 
 	UpdateCollisionFromDataTable(Data);
 
-	ItemMetadata = FItemSubsystemUtility::GetMetadata<USG_WSItemMetadata>(GetWorld(), this, Data->ItemName);
+	ItemMetadata = FItemSubsystemUtility::GetMetadata<USG_WSItemMetadata>(GetWorld(), this, Data->ItemType, Data->ItemName);
 }
 
 UClass* AA_WSItem::GetSubsystemType() const

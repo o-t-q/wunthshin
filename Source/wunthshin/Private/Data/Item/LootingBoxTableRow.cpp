@@ -2,3 +2,10 @@
 
 
 #include "Data/Item/LootingBoxTableRow.h"
+
+inline void FLootingBoxTableRow::OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName)
+{
+	ItemType = EItemType::LootingBox;
+
+	Super::OnDataTableChanged(InDataTable, InRowName);
+}

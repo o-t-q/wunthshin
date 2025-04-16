@@ -80,5 +80,4 @@ public:
 	virtual void AddItem(const USG_WSItemMetadata* InMetadata, int InCount = 1) override;	// 아이템 추가
 	virtual void RemoveItem(const USG_WSItemMetadata* InItem, int InCount = 1) override; // 아이템 빼기
 	virtual void UseItem(uint32 Index, AActor* InTarget, int InCount = 1) override;	// 아이템 사용
-	
 };

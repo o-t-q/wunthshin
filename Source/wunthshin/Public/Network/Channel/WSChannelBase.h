@@ -6,6 +6,8 @@
 
 #include "WSChannelBase.generated.h"
 
+class UWSServerSubsystem;
+
 #define DEFINE_CHANNEL_MESSAGE(ChannelName, _ChannelIndex, Name, Enum) \
 class UWSChannelBase; \
 class UNetConnection; \
@@ -45,4 +47,8 @@ public:
 
 protected:
 	virtual void SendBunchInternal(const EMessageType MessageType, MessageBase& Bunch) {}
+
+	// 서브 시스템을 채널에서 필요로 한 경우 사용. 
+	// 채널의 패키지가 다르기 때문에 GetWorld()를 통해 동일한 서브시스템을 가져올 수 없음.
+	UWSServerSubsystem* GetSubsystem();
 };

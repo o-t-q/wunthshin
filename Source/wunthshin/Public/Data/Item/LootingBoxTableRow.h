@@ -61,11 +61,7 @@ struct WUNTHSHIN_API FLootingBoxTableRow : public FItemTableRow
 	GENERATED_BODY()
 
 public:
-	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName)
-	{
-		Super::OnDataTableChanged(InDataTable, InRowName);
-		// MaxDiversity만큼 RandomItems 크기를 강제
-	}
+	virtual void OnDataTableChanged(const UDataTable* InDataTable, const FName InRowName);
 	
 public:
 	// 랜덤아이템 최대 종류 수(MinDiversity ~ Diversity 사이 랜덤)

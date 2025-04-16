@@ -2,10 +2,15 @@
 
 
 #include "Component/C_WSCharacterInventory.h"
+#include "Network/Subsystem/WSServerSubsystem.h"
+#include "Data/Item/SG_WSItemMetadata.h"
+#include "Network/Channel/WSItemChannel.h"
+#include "Enums.h"
 
 #include "Actor/Item/A_WSItem.h"
 #include "Subsystem/CharacterSubsystem.h"
 #include "Subsystem/ItemSubsystem.h"
+#include "Subsystem/WeaponSubsystem.h"
 
 // Sets default values for this component's properties
 UC_WSCharacterInventory::UC_WSCharacterInventory()
@@ -24,7 +29,8 @@ void UC_WSCharacterInventory::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	
+
+	FetchInventory();
 }
 
 const TArray<FInventoryPair>& UC_WSCharacterInventory::GetItems() const
@@ -71,35 +77,26 @@ void UC_WSCharacterInventory::AddItem(AA_WSItem* InItem, int InCount)
 
 void UC_WSCharacterInventory::AddItem(const USG_WSItemMetadata* InMetadata, int InCount)
 {
-	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
+	if (UWSServerSubsystem* Subsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSServerSubsystem>())
 	{
-		if (InMetadata)
-		{
-			ItemSubsystem->GetSharedInventory().AddItem(InMetadata, InCount);
-			OnCharacterInventoryUpdated.Broadcast();
-		}
+		Subsystem->TryAddItem(InMetadata->GetItemType(), InMetadata->GetID(), InCount);
 	}
 }
 
 void UC_WSCharacterInventory::RemoveItem(const USG_WSItemMetadata* InItem, int InCount)
 {
-	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
-	{
-		ItemSubsystem->GetSharedInventory().AddItem(InItem, InCount);
-		OnCharacterInventoryUpdated.Broadcast();
-	}
+	
 }
 
 void UC_WSCharacterInventory::UseItem(uint32 Index, AActor* InTarget, int InCount)
 {
-	//UE_LOG(LogInventory, Log, TEXT("UC_WSInventory::UseItem"));
-
-	
-	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
-	{
-		ItemSubsystem->GetSharedInventory().UseItem(Index, GetOwner(), InTarget, InCount);
-		OnCharacterInventoryUpdated.Broadcast();
-	}
 }
 
+void UC_WSCharacterInventory::FetchInventory()
+{
+	if (UWSServerSubsystem* Subsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSServerSubsystem>())
+	{
+		Subsystem->TryGetItems( 0 );
+	}
+}
 

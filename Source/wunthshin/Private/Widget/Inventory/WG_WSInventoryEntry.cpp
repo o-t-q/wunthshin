@@ -20,7 +20,7 @@ void UWG_WSInventoryEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 	Data = Cast<UInventoryEntryData>(ListItemObject);
 	if (!Data) return;
 
-	Backgrounds->SetActiveWidgetIndex(int32(Data->EntryData.Metadata->ItemRarity));
+	Backgrounds->SetActiveWidgetIndex(int32(Data->EntryData.Metadata->GetItemRarity()));
 	ItemCount->SetText(FText::FromString(FString::FromInt(Data->EntryData.Count)));
 	ItemIcon->SetBrushFromTexture(Data->EntryData.Metadata->GetItemIcon());
 

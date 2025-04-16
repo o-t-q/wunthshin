@@ -1,4 +1,7 @@
 #include "Subsystem/SharedInventory/SharedInventory.h"
+#include "Network/Channel/WSItemChannel.h"
+#include "Network/Subsystem/WSServerSubsystem.h"
+#include "Data/Item/SG_WSItemMetadata.h"
 
 #include "Data/Item/InventoryPair.h"
 #include "Subsystem/WorldStatusSubsystem.h"
@@ -16,19 +19,19 @@ void FSharedInventory::AddItem(const USG_WSItemMetadata* InItemMetadata, const u
 	{
 		return;
 	}
-	
+
+	UE_LOG(LogSharedInventory, Log, TEXT("UC_WSInventory::AddItemInternal"));
+
 	// 동일한 아이템이 이미 존재하는 경우
 	if (FInventoryPair* Iterator = FindItem(InItemMetadata); Iterator)
 	{
-		UE_LOG(LogSharedInventory, Log, TEXT("UC_WSInventory::AddItem"));
 		// todo: 오버플로우 방지
 		Iterator->Count += InCount;
 		return;
 	}
 
 	// 동일한 아이템이 없으므로 추가
-	UE_LOG(LogSharedInventory, Log, TEXT("UC_WSInventory::AddItem"));
-	ItemsOwned.Emplace(InItemMetadata);
+	ItemsOwned.Emplace( InItemMetadata, InCount );
 }
 
 void FSharedInventory::RemoveItem(const USG_WSItemMetadata* InItemMetadata, const uint32 InCount)
@@ -108,6 +111,16 @@ void FSharedInventory::UseItem(const uint32 InIndex, AActor* InUser, AActor* InT
 		}
 	}
 	
+}
+
+void FSharedInventory::Clear(const int32 Reserve)
+{
+	ItemsOwned.Empty();
+
+	if (Reserve != 0) 
+	{
+		ItemsOwned.Reserve(Reserve);
+	}
 }
 
 int32 FSharedInventory::FindItemIndex(const USG_WSItemMetadata* InMetadata) const

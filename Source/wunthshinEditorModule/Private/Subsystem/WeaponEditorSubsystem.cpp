@@ -7,11 +7,6 @@
 #include "Data/Item/ItemTableRow.h"
 #include "Subsystem/Utility.h"
 
-USG_WSItemMetadata* UWeaponEditorSubsystem::GetMetadata(const FName& InAssetName)
-{
-	return FItemSubsystemUtility::GetMetadataTemplate(Metadata, InAssetName);
-}
-
 bool UWeaponEditorSubsystem::IsEditorOnly() const
 {
 	return true;
@@ -27,6 +22,28 @@ void UWeaponEditorSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	
 	DataTable = CastChecked<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, TEXT("/Script/Engine.DataTable'/Game/DataTable/DT_WeaponTable.DT_WeaponTable'")));
 	
-	FItemSubsystemUtility::UpdateTable<FWeaponTableRow>(DataTable, Metadata);
+	FItemSubsystemUtility::UpdateTable<FWeaponTableRow>(DataTable, WeaponMetadata.MetadataByID, WeaponMetadata.Metadata);
 	DataTableMapping.Emplace(FWeaponTableRow::StaticStruct(), DataTable);
+}
+
+USG_WSItemMetadata* UWeaponEditorSubsystem::GetMetadata(const EItemType InItemType, const FName& InAssetName)
+{
+	if (InItemType == EItemType::Weapon) 
+	{
+		return FItemSubsystemUtility::GetMetadataTemplate(WeaponMetadata.Metadata, InAssetName);
+	}
+
+	check(false);
+	return nullptr;
+}
+
+USG_WSItemMetadata* UWeaponEditorSubsystem::GetMetadata(const EItemType InItemType, const int32 InID)
+{
+	if (InItemType == EItemType::Weapon)
+	{
+		return FItemSubsystemUtility::GetMetadataByIDTemplate(WeaponMetadata.MetadataByID, InID);
+	}
+
+	check(false);
+	return nullptr;
 }
