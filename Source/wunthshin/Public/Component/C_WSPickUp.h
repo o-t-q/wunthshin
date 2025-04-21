@@ -7,8 +7,8 @@
 #include "C_WSPickUp.generated.h"
 
 class I_WSTaker;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUp, TScriptInterface<I_WSTaker>, InTriggeringActor);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUpSuccess, TScriptInterface<I_WSTaker>, InTriggeringActor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUp, const TScriptInterface<I_WSTaker>&, InTriggeringActor);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPickUpSuccess, const TScriptInterface<I_WSTaker>&, InTriggeringActor);
 DECLARE_LOG_CATEGORY_EXTERN(LogPickUpComponent, Log, All);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -45,5 +45,5 @@ protected:
 	virtual void InitializeComponent() override;
 	
 	UFUNCTION()
-	void HandleOnPickUp(TScriptInterface<I_WSTaker> InTriggeredActor);
+	void HandleOnPickUp(const TScriptInterface<I_WSTaker>& InTriggeredActor);
 };

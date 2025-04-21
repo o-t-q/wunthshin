@@ -21,7 +21,7 @@ class WUNTHSHIN_API UC_WSWeapon : public UActorComponent
 	FWeaponContext WeaponContext;
 	
 	UFUNCTION()
-	void UpdateCache(TScriptInterface<I_WSTaker> InTaker);
+	void UpdateCache( const TScriptInterface<I_WSTaker>& InTaker);
 	
 	void SetupInputComponent();
 
@@ -30,7 +30,7 @@ class WUNTHSHIN_API UC_WSWeapon : public UActorComponent
 	UFUNCTION()
 	void PushAttackToWorldStatus() const;
 	UFUNCTION()
-	void PopAttackFromWorldStatus(UAnimMontage* InMontage, bool bInterrupted);
+	void PopAttackFromWorldStatus( UAnimMontage* InMontage, bool bInterrupted);
 	
 public:
 	// Sets default values for this component's properties
@@ -43,10 +43,18 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
+	UFUNCTION(Server, Reliable)
+	void Server_AttackDefault();
+
 	UFUNCTION()
 	virtual bool AttackDefault();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multi_StartAttackMontage();
+
 	UFUNCTION()
 	virtual bool AttackSecondary();
 
@@ -78,7 +86,9 @@ protected:
 	bool bRespawn = false;
 
 	//연속 공격 카운트
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)
 	int32 NextAttackIndex = 0;
+
 	FTimerHandle ResetCounterTimerHandle;
 	float ResetTime = 2.0f;
 	

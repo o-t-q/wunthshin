@@ -6,12 +6,21 @@
 #include "Engine/LevelScriptActor.h"
 #include "A_WSLevelScript.generated.h"
 
+class AwunthshinPlayerController;
+
 UCLASS()
 class WUNTHSHIN_API AA_WSLevelScript : public ALevelScriptActor
 {
 	GENERATED_BODY()
 
-	void TakeSnapshotProxy(ULevel* InLevel, UWorld* InWorld);
+	UFUNCTION(Server, Reliable)
+	void Server_RequestTakeSnapshot(ULevel*                     InLevel,
+	                                               UWorld*                     InWorld,
+	                                               AwunthshinPlayerController* InController);
+	UFUNCTION()
+	void OnLevelChanged(ULevel* InLevel, UWorld* InWorld);
+	
+	void TakeSnapshotProxy(const ULevel* InLevel, const UWorld* InWorld, const AwunthshinPlayerController* InController );
 	
 public:
 	// Sets default values for this actor's properties

@@ -30,12 +30,17 @@ UC_WSShield::UC_WSShield()
 
 void UC_WSShield::SetActive(bool bNewActive, bool bReset)
 {
+	if ( GetNetMode() == NM_Client )
+	{
+		return;
+	}
+
 	Super::SetActive(bNewActive, bReset);
 
 	if (bNewActive)
 	{
 		// 쉴드를 활성화하고 시간만큼 쉴드를 활성화 한 후 비활성화함
-		SetHiddenInGame(false);
+		SetHiddenInGame( false );
 		UE_LOG(LogShieldComponent, Log, TEXT("Shield activated!"));
 		FTimerDelegate OnShieldFinished;
 		OnShieldFinished.BindUObject(this, &UC_WSShield::SetActive, false, false);
@@ -52,7 +57,7 @@ void UC_WSShield::SetActive(bool bNewActive, bool bReset)
 	{
 		// 시야에서 숨기고 컴포넌트를 비활성화함
 		UE_LOG(LogShieldComponent, Log, TEXT("Shield deactivated!"));
-		SetHiddenInGame(true);
+		SetHiddenInGame( true );
 		if (ShieldTimerHandle.IsValid())
 		{
 			GetWorld()->GetTimerManager().ClearTimer(ShieldTimerHandle);

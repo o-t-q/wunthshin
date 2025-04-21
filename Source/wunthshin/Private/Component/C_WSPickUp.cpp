@@ -62,7 +62,7 @@ void UC_WSPickUp::InitializeComponent()
 	OnPickUp.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnPickUp);
 }
 
-void UC_WSPickUp::HandleOnPickUp(TScriptInterface<I_WSTaker> InTriggeredActor)
+void UC_WSPickUp::HandleOnPickUp(const TScriptInterface<I_WSTaker>& InTriggeredActor)
 {
 	// 이미 해당 물건의 소유자가 있으므로 무시
 	if (bTaken)

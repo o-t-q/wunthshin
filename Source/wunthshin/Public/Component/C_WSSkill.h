@@ -31,7 +31,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill", meta=(AllowPrivateAccess=true))
 	FSkillRowHandle CharacterSkill;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Skill", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "Skill", meta = (AllowPrivateAccess = "true"))
 	bool bActive;
 
 	FEnhancedInputActionEventBinding* SkillKeyBinding;
@@ -40,7 +40,11 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
+	UFUNCTION(Server, Reliable)
+	void Server_CastSkill();
+
 	UFUNCTION()
 	void CastSkill();
 

@@ -53,7 +53,7 @@ protected:
 	UProgressBar* CurrentHP;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TWeakObjectPtr<const AA_WSCharacter> WeakCharacterPtr;
+	TWeakObjectPtr<AA_WSCharacter> WeakCharacterPtr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	int32 CharacterIndex;
