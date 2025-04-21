@@ -4,15 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-
-#include "Actor/Pawn/AA_WSCharacter.h"
 #include "Interface/DataTableQuery.h"
 #include "CharacterSubsystem.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterAdded);
 
+class AwunthshinPlayerController;
+class AClientCharacterInfo;
 
-class AA_WSCharacter;
 /**
  * 
  */
@@ -27,67 +25,21 @@ class WUNTHSHIN_API UCharacterSubsystem : public UGameInstanceSubsystem, public 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
 	UDataTable* StatDataTable;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
-	int32 CurrentSpawnedIndex = 0;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Character", meta = (AllowPrivateAccess = "true"))
-	TArray<TObjectPtr<AA_WSCharacter>> OwnedCharacters;
-	
-	TArray<TArray<uint8>> CharacterSnapshots;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Table", meta=(AllowPrivateAccess = "true"))
+	TMap<int32, AClientCharacterInfo*> ClientCharacters;
 	
 public:
 	UCharacterSubsystem();
 
-	FOnCharacterAdded OnCharacterAdded;
+	virtual void Initialize( FSubsystemCollectionBase& Collection ) override;
 
-	// 모든 플레이어의 체력을 100으로 설정
-	UFUNCTION()
-	void ResetPlayer();
-	
-	UFUNCTION()
-	void TakeCharacterLevelSnapshot();
-	UFUNCTION()
-	void LoadCharacterLevelSnapshot();
-	
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	
-	int32 GetAvailableCharacter() const;
+	AClientCharacterInfo* InitializeClientInfo( APlayerController* Controller, const int32 InUserID );
 
-	const TArray<AA_WSCharacter*>& GetOwnedCharacters() const { return OwnedCharacters;}
+	AClientCharacterInfo* GetClientInfo( const int32 InUserID ) const;
 
-	AA_WSCharacter* GetCharacter(const int32 InIndex) const
-	{
-		if (OwnedCharacters.IsValidIndex(InIndex))
-		{
-			return OwnedCharacters[InIndex];
-		}
+	AClientCharacterInfo* GetClientInfo( const AwunthshinPlayerController* PlayerController ) const;
 
-		return nullptr;
-	}
+	AClientCharacterInfo* GetFirstPlayerControllerCharacterInfo() const;
 
-	int32 GetIndexOfCharacter(const AA_WSCharacter* InCharacter) const;
-
-	bool IsOwnedCharacter(const AA_WSCharacter* InCharacter) const
-	{
-		if (InCharacter == nullptr)
-		{
-			return false;
-		}
-		
-		return OwnedCharacters.Contains(InCharacter);
-	}
-
-	AA_WSCharacter* GetCurrentCharacter() const
-	{
-		if (OwnedCharacters.IsValidIndex(CurrentSpawnedIndex))
-		{
-			return OwnedCharacters[CurrentSpawnedIndex];
-		}
-
-		return nullptr;
-	}
-	
-	void AddCharacter(AA_WSCharacter* InCharacter);
-	void AddCharacter(AA_WSCharacter* Character, int32 InIndex);
-	void SpawnAsCharacter(const int32 InIndex);
+	void DestroyClientInfo( const APlayerController* Controller );
 };
