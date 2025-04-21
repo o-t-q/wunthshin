@@ -6,6 +6,9 @@
 #include "wunthshinGameMode.h"
 #include "wunthshinPlayerState.h"
 #include "Actor/Pawn/AA_WSCharacter.h"
+
+#include "Data/Character/ClientCharacterInfo.h"
+
 #include "Subsystem/CharacterSubsystem.h"
 
 AwunthshinPlayerController::AwunthshinPlayerController()
@@ -26,13 +29,34 @@ void AwunthshinPlayerController::UpdateByAlive(const bool bInbAlive)
 	}
 }
 
+void AwunthshinPlayerController::SpawnAsCharacter(uint32 InIndex)
+{
+	if ( HasAuthority() )
+	{
+		if ( const UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>() )
+		{
+			CharacterSubsystem->GetClientInfo( this )->SpawnAsCharacter( InIndex );
+		}
+	}
+	else
+	{
+		Server_SpawnAsCharacter( InIndex );
+	}
+}
+
+void AwunthshinPlayerController::Server_SpawnAsCharacter_Implementation(uint32 InIndex)
+{
+	SpawnAsCharacter( InIndex );
+}
+
 void AwunthshinPlayerController::RestartLevel()
 {
 	Super::RestartLevel();
 
 	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
 	{
-		CharacterSubsystem->ResetPlayer();
+		AClientCharacterInfo* Info = CharacterSubsystem->GetClientInfo( GetPlayerState<AwunthshinPlayerState>()->GetUserID() );
+		Info->ResetPlayer();
 	}
 	
 	GetPlayerState<AwunthshinPlayerState>()->SetAlive(true);

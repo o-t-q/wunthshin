@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -20,6 +20,11 @@ public:
 	UFUNCTION()
 	void UpdateByAlive(const bool bInbAlive);
 
+	void SpawnAsCharacter(uint32 InIndex);
+
+	UFUNCTION(Server, Reliable)
+	void Server_SpawnAsCharacter(uint32 InIndex);
+	
 	virtual void RestartLevel() override;
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
