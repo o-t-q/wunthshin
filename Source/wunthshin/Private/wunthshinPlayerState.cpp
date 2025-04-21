@@ -7,20 +7,31 @@
 #include "Component/StatsComponent.h"
 #include "Subsystem/CharacterSubsystem.h"
 #include "Subsystem/WorldStatusSubsystem.h"
+#include "Data/Character/ClientCharacterInfo.h"
+
+#include "Net/UnrealNetwork.h"
 
 void AwunthshinPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>();
-		WorldStatusSubsystem && Cast<AA_WSCharacter>(GetPawn()))
+	if ( !HasAuthority() )
 	{
-		OnPlayerAlivenessChanged.AddUniqueDynamic(WorldStatusSubsystem, &UWorldStatusSubsystem::PlayDeathLevelSequence); 
+		if ( UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>();
+			 WorldStatusSubsystem && Cast<AA_WSCharacter>(GetPawn()))
+		{
+			OnPlayerAlivenessChanged.AddUniqueDynamic(WorldStatusSubsystem, &UWorldStatusSubsystem::PlayDeathLevelSequence); 
+		}
 	}
 }
 
 void AwunthshinPlayerState::SetAlive(const bool InbAlive)
 {
+	if ( !HasAuthority() )
+	{
+		return;
+	}
+
 	const bool TempBool = bAlive;
 	bAlive = InbAlive;
 	
@@ -38,23 +49,55 @@ void AwunthshinPlayerState::SetAlive(const bool InbAlive)
 void AwunthshinPlayerState::CheckCharacterDeath(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
                                                 AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (const ICommonPawn* CommonPawn = Cast<ICommonPawn>(DamagedActor))
+	if ( !HasAuthority() )
 	{
-		if (CommonPawn->GetStatsComponent()->GetHP() == 0)
+		return;
+	}
+
+	if ( const TScriptInterface<ICommonPawn> CommonPawn = DamagedActor)
+	{
+		if ( CommonPawn->GetStatsComponent()->GetHP() == 0 )
 		{
-			if (Cast<AA_WSCharacter>(CommonPawn))
+			if ( Cast<AA_WSCharacter>( CommonPawn.GetInterface() ) )
 			{
 				UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>();
-				if (const int32 Index = CharacterSubsystem->GetAvailableCharacter();
-					Index != -1)
+
+				if (AClientCharacterInfo* CharacterInfo = CharacterSubsystem->GetClientInfo( UserID ))
 				{
-					CharacterSubsystem->SpawnAsCharacter(Index);
-					SetAlive(true);
-					return;
+					if (const int32 Index = CharacterInfo->GetAvailableCharacter();
+						Index != -1)
+					{
+						CharacterInfo->SpawnAsCharacter(Index);
+						SetAlive(true);
+						return;
+					}	
 				}
 			}
 			
 			SetAlive(false);
 		}
 	}
+}
+
+void AwunthshinPlayerState::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AwunthshinPlayerState, UserID);
+	DOREPLIFETIME(AwunthshinPlayerState, bAlive);
+	DOREPLIFETIME(AwunthshinPlayerState, CachedClientCharacter);
+}
+
+void AwunthshinPlayerState::SetUserID( const int32 InUserID )
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	UserID = InUserID;
+}
+
+void AwunthshinPlayerState::OnRep_Alive() const
+{
+	OnPlayerAlivenessChanged.Broadcast(bAlive);
 }
