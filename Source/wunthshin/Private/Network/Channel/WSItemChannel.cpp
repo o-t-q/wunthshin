@@ -38,22 +38,4 @@ void UWSItemChannel::ReceivedBunch(MessageBase& Bunch)
 
 void UWSItemChannel::SendBunchInternal(const EMessageType MessageType, MessageBase& Bunch)
 {
-	switch (MessageType)
-	{
-	case EMessageType::AddItem:
-	{
-		auto& AddItemMessage = CastTo<EMessageType::AddItem>(Bunch);
-		UWSServerSubsystem* Subsystem = GetSubsystem();
-		AddItemMessage.sessionId = Subsystem->GetSessionID().uuid;
-		break;
-	}
-	case EMessageType::GetItemsRequest:
-	{
-		auto& GetItemsMessage = CastTo<EMessageType::GetItemsRequest>( Bunch );
-		UWSServerSubsystem* Subsystem = GetSubsystem();
-		GetItemsMessage.sessionId = Subsystem->GetSessionID().uuid;
-		break;
-	}
-	default: check(false);
-	}
 }

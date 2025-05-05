@@ -15,11 +15,11 @@ class WUNTHSHIN_API UStatsComponent : public UActorComponent
 	GENERATED_BODY()
 	
 	// 스태미나 회복 속도
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"), Replicated)
 	float StaminaRecoveryRate;
 
 	// 스태미나 감소 속도
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats", meta = (AllowPrivateAccess = "true"), Replicated)
 	float StaminaDepletionRate;
 
 	// 이동 속성
@@ -32,8 +32,10 @@ public:
 
 protected:
 	// 캐릭터 스탯
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Stats", Replicated)
 	FCharacterStats CurrentStats;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
 	virtual void BeginPlay() override;
 

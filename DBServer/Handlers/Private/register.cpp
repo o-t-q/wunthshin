@@ -93,6 +93,6 @@ void RegisterHandler::Handle( const size_t index, MessageBase& message )
         }
     }
 
-    auto registerReply = make_vec_unique<RegisterStatusMessage>( success, failCode );
+    auto registerReply = make_vec_unique<RegisterStatusMessage>( success, failCode, registerMessage.messageIdentifier );
     GlobalScope::GetNetwork().send<RegisterStatusMessage>( index, std::move( registerReply ) );
 }

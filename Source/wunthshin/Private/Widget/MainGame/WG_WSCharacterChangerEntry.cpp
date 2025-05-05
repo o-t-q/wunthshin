@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Actor/Pawn/AA_WSCharacter.h"
 #include "Component/StatsComponent.h"
+#include "Controller/AwunthshinSpawnPlayerController.h"
 
 #include "Controller/wunthshinPlayerController.h"
 
@@ -98,7 +99,7 @@ FReply UWG_WSCharacterChangerEntry::NativeOnMouseButtonDown(const FGeometry& InG
 	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>();
 		CharacterSubsystem && WeakCharacterPtr.IsValid())
 	{
-		GetWorld()->GetFirstPlayerController<AwunthshinPlayerController>()->SpawnAsCharacter
+		GetWorld()->GetFirstPlayerController<AwunthshinSpawnPlayerController>()->SpawnAsCharacter
 		(
 			CharacterSubsystem->GetFirstPlayerControllerCharacterInfo()->GetIndexOfCharacter(WeakCharacterPtr.Get())
 		);

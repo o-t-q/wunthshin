@@ -22,21 +22,21 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
         {
             auto& loginMessage = CastTo<EMessageType::Login>( message );
 
-            const auto& replyFailed = []( const size_t to )
+            const auto& replyFailed = []( const size_t to, const uint32_t identifier )
             {
-                auto reply     = make_vec_unique<LoginStatusMessage>( false, UUID() );
+                auto reply = make_vec_unique<LoginStatusMessage>( false, 0, UUID(), identifier  );
                 GlobalScope::GetNetwork().send<LoginStatusMessage>( to, std::move( reply ) );
             };
 
-            if ( !check_null_trailing(loginMessage.name ) )
+            if ( !check_null_trailing( loginMessage.name ) )
             {
-                replyFailed( index );
+                replyFailed( index, loginMessage.messageIdentifier );
                 break;
             }
 
             if ( is_null_container_unseq( loginMessage.hashedPassword ) )
             {
-                replyFailed( index );
+                replyFailed( index, loginMessage.messageIdentifier );
                 break;
             }
 
@@ -74,13 +74,13 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
                     do_lock( m_mtx_, false );
                 }
 
-                auto reply     = make_vec_unique<LoginStatusMessage>( true, sessionId );
+                auto reply = make_vec_unique<LoginStatusMessage>( true, id, sessionId, loginMessage.messageIdentifier );
                 GlobalScope::GetNetwork().send<LoginStatusMessage>( index, std::move( reply ) );
                 break;
             }
             else
             {
-                replyFailed( index );
+                replyFailed( index, loginMessage.messageIdentifier );
                 break;
             }
 
@@ -97,13 +97,15 @@ void LoginHandler::Handle( const size_t index, MessageBase& message )
                  m_login_.contains( logoutMessage.sessionId ) )
             {
                 m_login_.erase( logoutMessage.sessionId );
-                GlobalScope::GetNetwork().send<LogoutOKMessage>( index, make_vec_unique<LogoutOKMessage>( true ) );
+                GlobalScope::GetNetwork().send<LogoutOKMessage>(
+                        index, make_vec_unique<LogoutOKMessage>( true, logoutMessage.sessionId ) );
                 do_lock( m_mtx_, false );
                 break;
             }
             else
             {
-                GlobalScope::GetNetwork().send<LogoutOKMessage>( index, make_vec_unique<LogoutOKMessage>( false ) );
+                GlobalScope::GetNetwork().send<LogoutOKMessage>(
+                        index, make_vec_unique<LogoutOKMessage>( false, logoutMessage.sessionId ) );
                 do_lock( m_mtx_, false );
                 break;
             }

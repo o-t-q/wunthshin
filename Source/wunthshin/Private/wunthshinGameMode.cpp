@@ -4,6 +4,7 @@
 
 #include "wunthshinPlayerState.h"
 #include "Actor/Pawn/AA_WSCharacter.h"
+#include "Controller/AwunthshinSpawnPlayerController.h"
 #include "Controller/wunthshinPlayerController.h"
 #include "Data/Character/ClientCharacterInfo.h"
 
@@ -16,7 +17,7 @@ AwunthshinGameMode::AwunthshinGameMode()
 {
 	DefaultPawnClass = AA_WSCharacter::StaticClass();
 	PlayerStateClass = AwunthshinPlayerState::StaticClass();
-	PlayerControllerClass = AwunthshinPlayerController::StaticClass();
+	PlayerControllerClass = AwunthshinSpawnPlayerController::StaticClass();
 }
 
 void AwunthshinGameMode::BeginPlay()
@@ -26,9 +27,9 @@ void AwunthshinGameMode::BeginPlay()
 
 void AwunthshinGameMode::Logout( AController* Exiting )
 {
-	if ( UWSServerSubsystem* ServerSubsystem = GetGameInstance()->GetSubsystem<UWSServerSubsystem>() )
+	if (AwunthshinPlayerController* ExitingController = Cast<AwunthshinPlayerController>(Exiting))
 	{
-		ServerSubsystem->TrySendLogoutRequest();
+		ExitingController->Server_SendLogoutRequest();
 	}
 
 	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
@@ -41,6 +42,11 @@ void AwunthshinGameMode::Logout( AController* Exiting )
 
 APawn* AwunthshinGameMode::SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform)
 {
+	if ( !Cast<AwunthshinSpawnPlayerController>(NewPlayer) )
+	{
+		return Super::SpawnDefaultPawnAtTransform_Implementation(NewPlayer, SpawnTransform);
+	}
+	
 	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
 	{
 		const int32 UserID = NewPlayer->GetPlayerState<AwunthshinPlayerState>()->GetUserID();

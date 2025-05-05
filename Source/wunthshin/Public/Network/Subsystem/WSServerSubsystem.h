@@ -1,11 +1,14 @@
 #pragma once
 #include "CoreMinimal.h"
-#include "../WSNetDriver.h"
+#include "Network/WSNetDriver.h"
+#include "Network/UUIDWrapper.h"
+#include "Network/Channel/WSRegisterChannel.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 
 #include "WSServerSubsystem.generated.h"
 
-struct FUUIDWrapper;
+enum class EItemType : uint8;
+class AwunthshinPlayerController;
 class UWSLoginChannel;
 class UWSRegisterChannel;
 class UWSItemChannel;
@@ -20,53 +23,53 @@ class WUNTHSHIN_API UWSServerSubsystem : public UGameInstanceSubsystem, public F
 	GENERATED_BODY()
 public:
 	UFUNCTION(BlueprintCallable)
-	UWSLoginChannel* GetLoginChannel() { return LoginChannel; }
+	UWSLoginChannel* GetLoginChannel() const { return LoginChannel.Get(); }
 
 	UFUNCTION(BlueprintCallable)
-	UWSItemChannel* GetItemChannel() { return ItemChannel; }
+	UWSItemChannel* GetItemChannel() const { return ItemChannel.Get(); }
 
 	UFUNCTION(BlueprintCallable)
-  UWSRegisterChannel* GetRegisterChannel() { return RegisterChannel; }
+	UWSRegisterChannel* GetRegisterChannel() const { return RegisterChannel.Get(); }
 
-	bool HashPassword(const FString& InPlainPassword, FSHA256Signature& OutSignature, const FString& InSalt = TEXT("")) const;
-
-	bool TrySendLoginRequest(const FString& InID, const FSHA256Signature& HashedPassword);
-
-	bool TrySendRegister(const FString& InID, const FString& InEmail, const FSHA256Signature& HashedPassword);
-
+	// Login Functions
+	static bool ValidateLoginRequest( const FString& InID, const TArray<uint8>& HashedPassword );
+	bool Client_TrySendLoginRequest(const FString& InID, const FSHA256Signature& HashedPassword) const;
 	UFUNCTION(BlueprintCallable)
-	bool TrySendLoginRequest(const FString& InID, const FString& InPlainPassword);
+	bool Client_TrySendLoginRequest(const FString& InID, const FString& InPlainPassword);
+	bool Server_SendLoginRequest( const AwunthshinPlayerController* PlayerController, const FString& InID, const FSHA256Signature& HashedPassword ) const;
 
+	// Logout Functions
+	static bool ValidateLogoutRequest( const AwunthshinPlayerController* PlayerController );
 	UFUNCTION(BlueprintCallable)
-	bool TrySendLogoutRequest();
+	bool Client_TrySendLogoutRequest();
+	bool Server_SendLogoutRequest( const AwunthshinPlayerController* PlayerController ) const;
 
+	// Register Functions
+	static bool ValidateRegisterRequest( const FString& InID, const FString& InEmail, const TArray<uint8>& HashedPassword );
 	UFUNCTION(BlueprintCallable)
-	bool TrySendRegister(const FString& InID, const FString& InEmail, const FString& InPlainPassword);
-
-	UFUNCTION(BlueprintCallable)
-	void ConnectToServer(const FString& InHost, int32 InPort);
+	bool Client_TrySendRegister(const AwunthshinPlayerController* PlayerController, const FString& InID, const FString& InEmail, const FString& InPlainPassword );
+	bool Server_SendRegister( const AwunthshinPlayerController* PlayerController, const FString& InID, const FString& InEmail, const FSHA256Signature& HashedPassword ) const;
 
 	UFUNCTION(BlueprintCallable)
 	bool TryAddItem(const EItemType ItemType, int32 ItemID, int32 Count);
 
 	UFUNCTION(BlueprintCallable)
 	bool TryGetItems(int32 Page);
-
-	FUUIDWrapper GetSessionID() const;
-
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-public:
 	UFUNCTION(BlueprintCallable, Category = "Hashing")
 	FString HashFStringToSHA256(const FString& PlainText);
 
 protected:
-	void Tick(float DeltaTime) override;
+	bool HashPassword(const FString& InPlainPassword, FSHA256Signature& OutSignature, const FString& InSalt = TEXT("")) const;
+	
+	virtual void Tick(float DeltaTime) override;
 
 	virtual bool IsTickable() const override;
 
-	TStatId GetStatId() const override;
-
+	virtual TStatId GetStatId() const override;
+	
 	UPROPERTY(Transient)
 	UWSNetDriver* NetDriver = nullptr;
 
@@ -77,9 +80,21 @@ protected:
 	int32 Port;
 
 private:
-	UWSLoginChannel* LoginChannel = nullptr;
+	UFUNCTION()
+	void OnLoginMessageReceived( bool bLogin, uint32 ID, const FUUIDWrapper& LoginUUID, uint32 InPCUniqueID );
+	
+	UFUNCTION()
+	void OnRegisterMessageReceived( const uint32 InPCUniqueID, bool bSuccess, ERegisterFailCodeUE FailCode );
 
-	UWSRegisterChannel* RegisterChannel = nullptr;
+	UFUNCTION(BlueprintCallable)
+	void ConnectToMiddleware(const FString& InHost, int32 InPort);
+	
+	UPROPERTY(VisibleAnywhere)
+	TMap<AwunthshinPlayerController*, FUUIDWrapper> SessionIDs;
+	
+	TWeakObjectPtr<UWSLoginChannel> LoginChannel = nullptr;
 
-	UWSItemChannel* ItemChannel = nullptr;
+	TWeakObjectPtr<UWSRegisterChannel> RegisterChannel = nullptr;
+
+	TWeakObjectPtr<UWSItemChannel> ItemChannel = nullptr;
 };

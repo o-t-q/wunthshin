@@ -8,82 +8,100 @@
 #include "Actor/Pawn/AA_WSCharacter.h"
 
 #include "Data/Character/ClientCharacterInfo.h"
+#include "Net/UnrealNetwork.h"
+#include "Network/Channel/WSLoginChannel.h"
+#include "Network/Subsystem/WSServerSubsystem.h"
 
 #include "Subsystem/CharacterSubsystem.h"
+
+constexpr static size_t IDSizeLimit = sizeof(decltype(std::declval<LoginMessage>().name._Elems));
 
 AwunthshinPlayerController::AwunthshinPlayerController()
 {
 }
 
-void AwunthshinPlayerController::UpdateByAlive(const bool bInbAlive)
+void AwunthshinPlayerController::Client_PropagateRegisterStatus_Implementation( bool bSuccess,
+	const ERegisterFailCodeUE FailCode )
 {
-	StopMovement();
-	
-	if (!bInbAlive)
+	if ( GetWorld()->GetFirstPlayerController() == this )
 	{
-		GetPawn()->DisableInput(this);
-	}
-	else
-	{
-		GetPawn()->EnableInput(this);
+		LastRegisterationStatus.Broadcast( bSuccess, FailCode );
 	}
 }
 
-void AwunthshinPlayerController::SpawnAsCharacter(uint32 InIndex)
+void AwunthshinPlayerController::GetLifetimeReplicatedProps( TArray<class FLifetimeProperty>& OutLifetimeProps ) const
 {
-	if ( HasAuthority() )
+	Super::GetLifetimeReplicatedProps( OutLifetimeProps );
+	DOREPLIFETIME_CONDITION( AwunthshinPlayerController, bLogin, COND_OwnerOnly )
+	DOREPLIFETIME_CONDITION( AwunthshinPlayerController, UserID, COND_OwnerOnly )
+	DOREPLIFETIME_CONDITION( AwunthshinPlayerController, SessionID, COND_OwnerOnly )
+}
+
+void AwunthshinPlayerController::OnRep_Login() const
+{
+	OnLoginStatusChanged.Broadcast();
+}
+
+void AwunthshinPlayerController::Server_SendRegister_Implementation( const FString& InID, const FString& InEmail,
+                                                                     const TArray<uint8>& HashedPassword ) const
+{
+	UWSServerSubsystem* ServerSubsystem = GetGameInstance()->GetSubsystem<UWSServerSubsystem>();
+	check(ServerSubsystem);
+
+	if ( ServerSubsystem )
 	{
-		if ( const UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>() )
+		FSHA256Signature HashedPasswordWrapper{};
+		for (size_t i = 0; i < HashedPassword.Num(); ++i)
 		{
-			CharacterSubsystem->GetClientInfo( this )->SpawnAsCharacter( InIndex );
+			HashedPasswordWrapper.Signature[i] = HashedPassword[i];
 		}
-	}
-	else
-	{
-		Server_SpawnAsCharacter( InIndex );
-	}
-}
-
-void AwunthshinPlayerController::Server_SpawnAsCharacter_Implementation(uint32 InIndex)
-{
-	SpawnAsCharacter( InIndex );
-}
-
-void AwunthshinPlayerController::RestartLevel()
-{
-	Super::RestartLevel();
-
-	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
-	{
-		AClientCharacterInfo* Info = CharacterSubsystem->GetClientInfo( GetPlayerState<AwunthshinPlayerState>()->GetUserID() );
-		Info->ResetPlayer();
+		check(ServerSubsystem->Server_SendRegister( this, InID, InEmail, HashedPasswordWrapper ));
 	}
 	
-	GetPlayerState<AwunthshinPlayerState>()->SetAlive(true);
 }
 
-void AwunthshinPlayerController::BeginPlay()
+bool AwunthshinPlayerController::Server_SendRegister_Validate( const FString& InID, const FString& InEmail,
+	const TArray<uint8>& HashedPassword )
 {
-	Super::BeginPlay();
-	GetPlayerState<AwunthshinPlayerState>()->OnPlayerAlivenessChanged.AddUniqueDynamic(this, &AwunthshinPlayerController::UpdateByAlive);
+	UWSServerSubsystem::ValidateRegisterRequest( InID, InEmail, HashedPassword );
+	return true;
 }
 
-void AwunthshinPlayerController::OnPossess(APawn* InPawn)
+void AwunthshinPlayerController::Server_SendLogoutRequest_Implementation( )
 {
-	Super::OnPossess(InPawn);
+	UWSServerSubsystem* ServerSubsystem = GetGameInstance()->GetSubsystem<UWSServerSubsystem>();
+	check(ServerSubsystem);
 
-	// 캐릭터의 체력이 다 소모됐을때 캐릭터를 자동으로 교환하기 위한 Delegate
-	if (AA_WSCharacter* CharacterCasting = Cast<AA_WSCharacter>(InPawn))
+	if ( ServerSubsystem )
 	{
-		CharacterCasting->OnTakeAnyDamage.AddUniqueDynamic(GetPlayerState<AwunthshinPlayerState>(), &AwunthshinPlayerState::CheckCharacterDeath);
+		check( ServerSubsystem->Server_SendLogoutRequest( this ) );
 	}
 }
 
-void AwunthshinPlayerController::OnUnPossess()
+bool AwunthshinPlayerController::Server_SendLogoutRequest_Validate( )
 {
-	Super::OnUnPossess();
-	if (AA_WSCharacter* CharacterCasting = GetPawn<AA_WSCharacter>())
+	return UWSServerSubsystem::ValidateLogoutRequest( this );
+}
+
+void AwunthshinPlayerController::Server_SendLoginRequest_Implementation( const FString& InID,
+                                                                         const TArray<uint8>& HashedPassword )
+{
+	UWSServerSubsystem* ServerSubsystem = GetGameInstance()->GetSubsystem<UWSServerSubsystem>();
+	check(ServerSubsystem);
+
+	if ( ServerSubsystem )
 	{
-		CharacterCasting->OnTakeAnyDamage.RemoveAll(GetPlayerState<AwunthshinPlayerState>());
+		FSHA256Signature HashedPasswordWrapper{};
+		for (size_t i = 0; i < HashedPassword.Num(); ++i)
+		{
+			HashedPasswordWrapper.Signature[i] = HashedPassword[i];
+		}
+		check( ServerSubsystem->Server_SendLoginRequest( this, InID, HashedPasswordWrapper ) );
 	}
+}
+
+bool AwunthshinPlayerController::Server_SendLoginRequest_Validate( const FString& InID,
+	const TArray<uint8>& HashedPassword )
+{
+	return UWSServerSubsystem::ValidateLoginRequest( InID, HashedPassword );
 }

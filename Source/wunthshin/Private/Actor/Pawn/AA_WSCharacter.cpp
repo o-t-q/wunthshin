@@ -33,6 +33,7 @@
 #include "Actor/Item/A_LootingBox.h"
 #include "Component/C_WSCharacterInventory.h"
 #include "Component/C_WSSkill.h"
+#include "Controller/AwunthshinSpawnPlayerController.h"
 
 #include "Controller/wunthshinPlayerController.h"
 
@@ -575,7 +576,7 @@ void AA_WSCharacter::SwapCharacterOne()
         return;
     }
 
-	Cast<AwunthshinPlayerController>(Controller)->SpawnAsCharacter( 0 );
+	Cast<AwunthshinSpawnPlayerController>(Controller)->SpawnAsCharacter( 0 );
 }
 
 void AA_WSCharacter::SwapCharacterTwo()
@@ -585,7 +586,7 @@ void AA_WSCharacter::SwapCharacterTwo()
         return;
     }
     
-	Cast<AwunthshinPlayerController>(Controller)->SpawnAsCharacter( 1 );
+	Cast<AwunthshinSpawnPlayerController>(Controller)->SpawnAsCharacter( 1 );
 }
 
 void AA_WSCharacter::OnCrouch()
