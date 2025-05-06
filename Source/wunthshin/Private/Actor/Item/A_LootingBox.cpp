@@ -4,7 +4,7 @@
 #include "Actor/Item/A_LootingBox.h"
 
 #include "Component/C_WSInventory.h"
-#include "Subsystem/ItemSubsystem.h"
+#include "Subsystem/WSItemSubsystem.h"
 #include "Data/Item/ItemTableRow.h"
 #include "Data/Item/InventoryPair.h"
 #include "Subsystem/Utility.h"
@@ -57,7 +57,7 @@ void AA_LootingBox::InitializeLootingBox()
 	{
 		auto RandomItems = Data.RandomItems;
 		auto EssentialItems = Data.EssentialItems;
-		auto Subsystem = GetGameInstance()->GetSubsystem<UItemSubsystem>();
+		auto Subsystem = GetGameInstance()->GetSubsystem<UWSItemSubsystem>();
 		auto ItemDataTable = Subsystem->GetDataTable();
 	
 		// 필수 아이템 초기화

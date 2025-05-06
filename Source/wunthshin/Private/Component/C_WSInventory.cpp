@@ -4,7 +4,9 @@
 #include "Component/C_WSInventory.h"
 
 #include "Actor/Item/A_WSItem.h"
-#include "Subsystem/ItemSubsystem.h"
+#include "Data/Item/WSSharedInventory.h"
+#include "Net/UnrealNetwork.h"
+#include "Subsystem/WSItemSubsystem.h"
 #include "Subsystem/WorldStatusSubsystem.h"
 
 class UWorldStatusSubsystem;
@@ -12,12 +14,12 @@ DEFINE_LOG_CATEGORY(LogInventory);
 
 int32 UC_WSInventory::FindItemIndex(const USG_WSItemMetadata* InMetadata) const
 {
-	return Items.FindItemIndex(InMetadata);
+	return Items->FindItemIndex(InMetadata);
 }
 
 FInventoryPair* UC_WSInventory::FindItem(const USG_WSItemMetadata* InMetadata)
 {
-	return Items.FindItem(InMetadata);
+	return Items->FindItem(InMetadata);
 }
 
 
@@ -35,7 +37,7 @@ UC_WSInventory::UC_WSInventory()
 
 const TArray<FInventoryPair>& UC_WSInventory::GetItems() const
 {
-	return Items.GetItems();
+	return Items->GetItems();
 }
 
 
@@ -49,6 +51,13 @@ void UC_WSInventory::BeginPlay()
 	
 }
 
+void UC_WSInventory::GetLifetimeReplicatedProps( TArray<class FLifetimeProperty>& OutLifetimeProps ) const
+{
+	Super::GetLifetimeReplicatedProps( OutLifetimeProps );
+	// todo: client knows which items they is holding
+	DOREPLIFETIME( UC_WSInventory, Items )
+}
+
 void UC_WSInventory::AddItem(AA_WSItem* InItem, int InCount)
 {
 	if (const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata())
@@ -59,15 +68,15 @@ void UC_WSInventory::AddItem(AA_WSItem* InItem, int InCount)
 
 void UC_WSInventory::AddItem(const USG_WSItemMetadata* InMetadata, int InCount)
 {
-	Items.AddItem(InMetadata, InCount);
+	Items->AddItem(InMetadata, InCount);
 }
 
 void UC_WSInventory::RemoveItem(const USG_WSItemMetadata* InItem, int InCount)
 {
-	Items.RemoveItem(InItem, InCount);
+	Items->RemoveItem(InItem, InCount);
 }
 
 void UC_WSInventory::UseItem(uint32 Index, AActor* InTarget, int Count)
 {
-	Items.UseItem(Index, GetOwner(),InTarget, Count);
+	Items->UseItem(Index, GetOwner(),InTarget, Count);
 }

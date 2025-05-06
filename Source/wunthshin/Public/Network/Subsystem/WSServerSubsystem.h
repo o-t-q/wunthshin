@@ -47,19 +47,25 @@ public:
 	// Register Functions
 	static bool ValidateRegisterRequest( const FString& InID, const FString& InEmail, const TArray<uint8>& HashedPassword );
 	UFUNCTION(BlueprintCallable)
-	bool Client_TrySendRegister(const AwunthshinPlayerController* PlayerController, const FString& InID, const FString& InEmail, const FString& InPlainPassword );
+	bool Client_TrySendRegister( const AwunthshinPlayerController* PlayerController, const FString& InID, const FString& InEmail, const FString& InPlainPassword );
 	bool Server_SendRegister( const AwunthshinPlayerController* PlayerController, const FString& InID, const FString& InEmail, const FSHA256Signature& HashedPassword ) const;
 
+	// Item request functions
+	UFUNCTION(BlueprintCallable)
+	bool Client_TryGetItems( const AwunthshinPlayerController* PlayerController, int32 Page ) const;
+	bool Server_GetItems( const AwunthshinPlayerController* PlayerController, int32 Page ) const;
+	
 	UFUNCTION(BlueprintCallable)
 	bool TryAddItem(const EItemType ItemType, int32 ItemID, int32 Count);
-
-	UFUNCTION(BlueprintCallable)
-	bool TryGetItems(int32 Page);
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Hashing")
 	FString HashFStringToSHA256(const FString& PlainText);
+
+	AwunthshinPlayerController* GetPlayerController(const FUUIDWrapper& UUID) const;
+	
+	const FUUIDWrapper* GetUUID( const AwunthshinPlayerController* Player ) const;
 
 protected:
 	bool HashPassword(const FString& InPlainPassword, FSHA256Signature& OutSignature, const FString& InSalt = TEXT("")) const;
@@ -91,6 +97,9 @@ private:
 	
 	UPROPERTY(VisibleAnywhere)
 	TMap<AwunthshinPlayerController*, FUUIDWrapper> SessionIDs;
+
+	UPROPERTY(VisibleAnywhere)
+	TMap<FUUIDWrapper, AwunthshinPlayerController*> PlayerControllers;
 	
 	TWeakObjectPtr<UWSLoginChannel> LoginChannel = nullptr;
 

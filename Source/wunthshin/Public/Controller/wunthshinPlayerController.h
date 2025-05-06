@@ -7,6 +7,7 @@
 #include "Network/Channel/WSLoginChannel.h"
 #include "wunthshinPlayerController.generated.h"
 
+class AWSSharedInventory;
 enum class ERegisterFailCodeUE : uint8;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE( FOnLoginStatusChanged );
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams( FLastRegisterationStatus, bool, bSuccess, ERegisterFailCodeUE, FailCode );
@@ -20,6 +21,7 @@ class WUNTHSHIN_API AwunthshinPlayerController : public APlayerController
 	GENERATED_BODY()
 	friend class UWSServerSubsystem; // Updates the UserID, SessionID
 	friend class AwunthshinGameMode; // Sending the Logout Request
+	friend class UWSItemSubsystem; // Item related message request
 	
 public:
 	AwunthshinPlayerController();
@@ -32,8 +34,10 @@ public:
 
 protected:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-	
+
 private:
+	void SetUserID( uint32 InUserID );
+	
 	UFUNCTION()
 	void OnRep_Login() const;
 	
@@ -45,6 +49,9 @@ private:
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendRegister( const FString& InID, const FString& InEmail, const TArray<uint8>& HashedPassword ) const;
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_UpdateInventory( const int32 Page ) const;
 	
 	UFUNCTION(Client, Reliable)
 	void Client_PropagateRegisterStatus(bool bSuccess, const ERegisterFailCodeUE FailCode);

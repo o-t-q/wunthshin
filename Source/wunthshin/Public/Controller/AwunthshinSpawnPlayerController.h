@@ -6,6 +6,7 @@
 #include "wunthshinPlayerController.h"
 #include "AwunthshinSpawnPlayerController.generated.h"
 
+class AWSSharedInventory;
 /**
  * 
  */
@@ -15,6 +16,8 @@ class WUNTHSHIN_API AwunthshinSpawnPlayerController : public AwunthshinPlayerCon
 	GENERATED_BODY()
 
 public:
+	AwunthshinSpawnPlayerController();
+	
 	UFUNCTION()
 	void UpdateByAlive(const bool bInbAlive);
 
@@ -27,5 +30,15 @@ public:
 	virtual void BeginPlay() override;
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
+
+	UFUNCTION()
+	AWSSharedInventory* GetSharedInventory() const { return SharedInventory; }
+	
+protected:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+private:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess=true), Replicated)
+	AWSSharedInventory* SharedInventory;
 	
 };

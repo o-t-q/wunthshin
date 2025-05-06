@@ -31,9 +31,8 @@ void InventoryHandler::HandleAllItem( const size_t index, MessageBase& message )
     auto&      allItemMessage = CastTo<EMessageType::GetItemsRequest>( message );
     const auto userId         = login->GetLoginUser( allItemMessage.sessionId );
 
-    const auto& replyFailed = [ &index ]()
-    {
-        SendMessage<GetItemsResponseMessage>( index, 0, false, true, 0, ItemArray{} );
+    const auto& replyFailed = [ &index, &allItemMessage ]()
+    { SendMessage<GetItemsResponseMessage>( index, allItemMessage.sessionId, 0, false, true, 0, ItemArray{} );
     };
 
     if ( userId == -1 )
@@ -51,7 +50,8 @@ void InventoryHandler::HandleAllItem( const size_t index, MessageBase& message )
     if ( inventoryTable->Execute<bool>( &Inventory::GetAllItems, userId, allItemMessage.page, isEnd, count, result ) )
     {
         CONSOLE_OUT( __FUNCTION__, "Get Items request received, reply back to {}, count : {}", userId, count )
-        SendMessage<GetItemsResponseMessage>( index, allItemMessage.page, true, isEnd, count, result );
+        SendMessage<GetItemsResponseMessage>(
+                index, allItemMessage.sessionId, allItemMessage.page, true, isEnd, count, result );
     }
     else
     {
@@ -66,7 +66,8 @@ void InventoryHandler::HandleAddItem( const size_t index, MessageBase& message )
     auto&      addItemMessage = CastTo<EMessageType::AddItem>( message );
     const auto userId         = login->GetLoginUser( addItemMessage.sessionId );
 
-    const auto& replyFailed = [ &index ]() { SendMessage<AddItemResponseMessage>( index, false, EDBItemType::Unknown, -1, 0 ); };
+    const auto& replyFailed = [ &index, &addItemMessage ]()
+    { SendMessage<AddItemResponseMessage>( index, addItemMessage.sessionId, false, EDBItemType::Unknown, -1, 0 ); };
 
     if ( userId == -1 )
     {
@@ -79,7 +80,12 @@ void InventoryHandler::HandleAddItem( const size_t index, MessageBase& message )
 
     if ( inventoryTable->Execute<bool>( &Inventory::NewItem, userId, addItemMessage.ItemType, addItemMessage.newItem, addItemMessage.count ) )
     {
-        SendMessage<AddItemResponseMessage>( index, true, addItemMessage.ItemType, addItemMessage.newItem, addItemMessage.count );
+        SendMessage<AddItemResponseMessage>( index,
+                                             addItemMessage.sessionId,
+                                             true,
+                                             addItemMessage.ItemType,
+                                             addItemMessage.newItem,
+                                             addItemMessage.count );
         return;
     }
     else

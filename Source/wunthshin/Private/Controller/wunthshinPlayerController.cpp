@@ -3,16 +3,12 @@
 
 #include "Controller/wunthshinPlayerController.h"
 
-#include "wunthshinGameMode.h"
 #include "wunthshinPlayerState.h"
-#include "Actor/Pawn/AA_WSCharacter.h"
 
 #include "Data/Character/ClientCharacterInfo.h"
 #include "Net/UnrealNetwork.h"
-#include "Network/Channel/WSLoginChannel.h"
 #include "Network/Subsystem/WSServerSubsystem.h"
-
-#include "Subsystem/CharacterSubsystem.h"
+#include "wunthshinPlayerState.h"
 
 constexpr static size_t IDSizeLimit = sizeof(decltype(std::declval<LoginMessage>().name._Elems));
 
@@ -37,9 +33,35 @@ void AwunthshinPlayerController::GetLifetimeReplicatedProps( TArray<class FLifet
 	DOREPLIFETIME_CONDITION( AwunthshinPlayerController, SessionID, COND_OwnerOnly )
 }
 
+void AwunthshinPlayerController::SetUserID( const uint32 InUserID )
+{
+	UserID = InUserID;
+	if (AwunthshinPlayerState* Casted = GetPlayerState<AwunthshinPlayerState>())
+	{
+		Casted->UserID = InUserID;
+	}
+}
+
 void AwunthshinPlayerController::OnRep_Login() const
 {
 	OnLoginStatusChanged.Broadcast();
+}
+
+void AwunthshinPlayerController::Server_UpdateInventory_Implementation( const int32 Page ) const
+{
+	UWSServerSubsystem* ServerSubsystem = GetGameInstance()->GetSubsystem<UWSServerSubsystem>();
+	check(ServerSubsystem);
+
+	if ( ServerSubsystem )
+	{
+		ServerSubsystem->Server_GetItems( this, Page );
+	}
+}
+
+bool AwunthshinPlayerController::Server_UpdateInventory_Validate( const int32 Page )
+{
+	// todo: rate limit
+	return true;
 }
 
 void AwunthshinPlayerController::Server_SendRegister_Implementation( const FString& InID, const FString& InEmail,

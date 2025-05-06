@@ -72,7 +72,6 @@ AClientCharacterInfo* UCharacterSubsystem::GetClientInfo( const int32 InUserID )
 		return ClientCharacters[InUserID];
 	}
 
-	check(false); // Unknown Client ID
 	return nullptr;
 }
 

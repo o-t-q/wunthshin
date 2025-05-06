@@ -8,7 +8,7 @@
 
 #include "Interface/DataTableQuery.h"
 #include "Interface/ItemMetadataGetter.h"
-#include "Subsystem/ItemSubsystem.h"
+#include "Subsystem/WSItemSubsystem.h"
 
 #include "ItemEditorSubsystem.generated.h"
 

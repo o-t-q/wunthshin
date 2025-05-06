@@ -19,8 +19,9 @@ class WUNTHSHIN_API AwunthshinPlayerState : public APlayerState
 {
 	GENERATED_BODY()
 
+	friend class AwunthshinPlayerController;
 	friend class UCharacterSubsystem;
-
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "Identity", meta = (AllowPrivateAccess = "true"))
 	int32 UserID;
 

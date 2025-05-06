@@ -57,6 +57,25 @@ APawn* AwunthshinGameMode::SpawnDefaultPawnAtTransform_Implementation(AControlle
 			ClientInfo = CharacterSubsystem->InitializeClientInfo( Cast<APlayerController>( NewPlayer ), UserID );
 		}
 
+		if (ClientInfo->GetCharacter( 0 ) == nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("%hs: SPWANING TEST YEONMU"), __FUNCTION__);
+			AA_WSCharacter* Yinlin = GetWorld()->SpawnActorDeferred<AA_WSCharacter>
+				(
+					AA_WSCharacter::StaticClass(),
+					FTransform::Identity,
+					this,
+					nullptr,
+					ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+				);
+			Yinlin->SetAssetName("YinLin");
+			Yinlin->SetActorEnableCollision(false);
+			Yinlin->SetActorHiddenInGame(true);
+			Yinlin->FinishSpawning(FTransform::Identity);
+
+			ClientInfo->AddCharacter(Yinlin, 0);
+		}
+		
 		if (ClientInfo->GetCharacter(1) == nullptr)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("%hs: SPWANING TEST YEONMU"), __FUNCTION__);
@@ -88,23 +107,22 @@ APawn* AwunthshinGameMode::SpawnDefaultPawnAtTransform_Implementation(AControlle
 			return Character;
 		}
 
-		// 아니라면 기본 캐릭터를 스폰
-		AA_WSCharacter* NewPawn = GetWorld()->SpawnActorDeferred<AA_WSCharacter>
-		(
-			AA_WSCharacter::StaticClass(),
-			FTransform::Identity,
-			NewPlayer,
-			nullptr,
-			ESpawnActorCollisionHandlingMethod::AlwaysSpawn
-		);
+		// 아니라면 가장 첫번째에 가까운 캐릭터를 스폰
+		const int32 AvailableCharacterIndex = ClientInfo->GetAvailableCharacter();
+		if (AA_WSCharacter* AvailableCharacter = ClientInfo->GetCharacter( AvailableCharacterIndex ))
+		{
+			AvailableCharacter->SetActorEnableCollision(true);
+			AvailableCharacter->SetActorHiddenInGame(false);
+			AvailableCharacter->SetActorTransform(SpawnTransform);
+			NewPlayer->Possess(AvailableCharacter);
+			return AvailableCharacter;
+		}
 
-		// todo: 플레이어가 선택한 캐릭터로 설정
-		// OnConstruction (에셋을 불러오는 시점) 전에 에셋을 지정
-		NewPawn->SetAssetName( "YinLin" );
-		NewPawn->FinishSpawning( SpawnTransform );
-		ClientInfo->AddCharacter( NewPawn );
-		
-		return NewPawn;
+		// todo: 캐릭터를 스폰할 수 없으면 사망 안내
+		if (AvailableCharacterIndex == INDEX_NONE)
+		{
+			check(false);
+		}
 	}
 
 	check( false );

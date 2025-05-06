@@ -2,8 +2,7 @@
 
 
 #include "Network/Channel/WSItemChannel.h"
-#include "Network/Channel/WSLoginChannel.h"
-#include "Network/Subsystem/WSServerSubsystem.h"
+#include "Network/UUIDWrapper.h"
 
 void UWSItemChannel::ReceivedBunch(MessageBase& Bunch)
 {
@@ -14,7 +13,7 @@ void UWSItemChannel::ReceivedBunch(MessageBase& Bunch)
 		auto& AddItemMessage = CastTo<EMessageType::AddItemResponse>( Bunch );
 		if (AddItemMessage.Success) 
 		{
-			OnItemAdded.Broadcast((EItemType)AddItemMessage.ItemType, AddItemMessage.itemID, AddItemMessage.Count);
+			OnItemAdded.Broadcast(AddItemMessage.sessionID, (EItemType)AddItemMessage.ItemType, AddItemMessage.itemID, AddItemMessage.Count);
 		}
 		break;
 	}
@@ -28,7 +27,7 @@ void UWSItemChannel::ReceivedBunch(MessageBase& Bunch)
 			{
 				Items.Emplace(GetItemMessage.items[i]);
 			}
-			RequestItemReceived.Broadcast(GetItemMessage.end, GetItemMessage.section, GetItemMessage.count, Items);
+			RequestItemReceived.Broadcast(GetItemMessage.sessionID, GetItemMessage.end, GetItemMessage.section, GetItemMessage.count, Items);
 		}
 		break;
 	}

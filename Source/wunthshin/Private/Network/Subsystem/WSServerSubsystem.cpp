@@ -70,9 +70,26 @@ bool UWSServerSubsystem::TryAddItem( const EItemType ItemType, int32 ItemID, int
 	return true;
 }
 
-bool UWSServerSubsystem::TryGetItems( int32 Page )
+bool UWSServerSubsystem::Client_TryGetItems( const AwunthshinPlayerController* PlayerController, int32 Page ) const
 {
-	GetItemsRequestMessage ItemRequest(Page, {});
+	if ( GetWorld()->GetNetMode() != NM_Client )
+	{
+		return false;
+	}
+
+	if (PlayerController != GetWorld()->GetFirstPlayerController())
+	{
+		return false;
+	}
+
+	PlayerController->Server_UpdateInventory( Page );
+	return true;
+}
+
+bool UWSServerSubsystem::Server_GetItems( const AwunthshinPlayerController* PlayerController, int32 Page ) const
+{
+	const UUID UUID = PlayerController->SessionID;
+	GetItemsRequestMessage ItemRequest( Page, UUID );
 	FNetItemChannelGetItemsMessage::Send( NetDriver->ServerConnection, ItemRequest );
 	return true;
 }
@@ -366,10 +383,11 @@ void UWSServerSubsystem::OnLoginMessageReceived( const bool bLogin, const uint32
 				 Casted && Casted->GetUniqueID() == InPCUniqueID )
 			{
 				Casted->bLogin = bLogin;
-				Casted->UserID = ID;
+				Casted->SetUserID( ID );
 				Casted->SessionID = LoginUUID;
 
 				SessionIDs.Emplace( Casted, LoginUUID );
+				PlayerControllers.Emplace( LoginUUID, Casted );
 				break;
 			}
 		}
@@ -384,10 +402,11 @@ void UWSServerSubsystem::OnLoginMessageReceived( const bool bLogin, const uint32
 		for (const TPair<AwunthshinPlayerController*, FUUIDWrapper>& Removal : ToRemove)
 		{
 			Removal.Key->bLogin= false;
-			Removal.Key->UserID = 0;
+			Removal.Key->SetUserID( 0 );
 			Removal.Key->SessionID = {};
 			
 			SessionIDs.Remove( Removal.Key );
+			PlayerControllers.Remove( Removal.Value );
 		}
 	}
 }
@@ -442,4 +461,24 @@ FString UWSServerSubsystem::HashFStringToSHA256(const FString& PlainText)
 	}
 
 	return HashString;
+}
+
+AwunthshinPlayerController* UWSServerSubsystem::GetPlayerController( const FUUIDWrapper& UUID ) const
+{
+	if (PlayerControllers.Contains( UUID ))
+	{
+		return PlayerControllers[UUID];	
+	}
+
+	return nullptr;
+}
+
+const FUUIDWrapper* UWSServerSubsystem::GetUUID( const AwunthshinPlayerController* Player ) const
+{
+	if (SessionIDs.Contains( Player ))
+	{
+		return &SessionIDs[Player];
+	}
+
+	return nullptr;
 }

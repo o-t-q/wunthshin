@@ -6,7 +6,17 @@
 #include "wunthshinPlayerState.h"
 #include "Actor/Pawn/AA_WSCharacter.h"
 #include "Data/Character/ClientCharacterInfo.h"
+#include "Data/Item/WSSharedInventory.h"
+#include "Net/UnrealNetwork.h"
 #include "Subsystem/CharacterSubsystem.h"
+
+AwunthshinSpawnPlayerController::AwunthshinSpawnPlayerController()
+{
+	SharedInventory = CreateDefaultSubobject<AWSSharedInventory>( "SharedInventory" );
+	SharedInventory->SetNetAddressable();
+	SharedInventory->SetReplicates( true );
+	SharedInventory->bOnlyRelevantToOwner = true;
+}
 
 void AwunthshinSpawnPlayerController::UpdateByAlive( const bool bInbAlive )
 {
@@ -80,4 +90,11 @@ void AwunthshinSpawnPlayerController::OnUnPossess()
 	{
 		CharacterCasting->OnTakeAnyDamage.RemoveAll(GetPlayerState<AwunthshinPlayerState>());
 	}
+}
+
+void AwunthshinSpawnPlayerController::GetLifetimeReplicatedProps(
+	TArray<FLifetimeProperty>& OutLifetimeProps ) const
+{
+	Super::GetLifetimeReplicatedProps( OutLifetimeProps );
+	DOREPLIFETIME_CONDITION( AwunthshinSpawnPlayerController, SharedInventory, COND_OwnerOnly )
 }

@@ -14,7 +14,7 @@
 #include "Data/Item/SG_WSItemMetadata.h"
 #include "Data/Item/ItemTableRow.h"
 #include "Subsystem/Utility.h"
-#include "Subsystem/ItemSubsystem.h"
+#include "Subsystem/WSItemSubsystem.h"
 #include "Widget/WG_WSItemNotify.h"
 
 #if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR
@@ -179,7 +179,7 @@ void AA_WSItem::ApplyAsset(const FTableRowBase* InRowPointer)
 
 UClass* AA_WSItem::GetSubsystemType() const
 {
-	return UItemSubsystem::StaticClass();
+	return UWSItemSubsystem::StaticClass();
 }
 
 #if WITH_EDITOR & !UE_BUILD_SHIPPING_WITH_EDITOR 

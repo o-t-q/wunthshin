@@ -12,14 +12,10 @@ void UWSLoginChannel::ReceivedBunch(MessageBase& Bunch)
 
 		if ( LoginMessage.success )
 		{
-			FUUIDWrapper SessionID{};
-			for (size_t i = 0; i < LoginMessage.sessionId.size(); i++)
-			{
-				SessionID.uuid.Add( static_cast<uint8>( LoginMessage.sessionId[ i ] ) );
-			}
-			check( SessionID.IsValid() );
-			SessionIDMap.Add( SessionID, LoginMessage.id );
-			OnLoginStatusChanged.Broadcast( true, LoginMessage.id, SessionID, LoginMessage.messageIdentifier );
+			const FUUIDWrapper Wrapper( LoginMessage.sessionId );
+			check( Wrapper.IsValid() );
+			SessionIDMap.Add( Wrapper, LoginMessage.id );
+			OnLoginStatusChanged.Broadcast( true, LoginMessage.id, Wrapper, LoginMessage.messageIdentifier );
 		}
 		break;
 	}
@@ -29,11 +25,8 @@ void UWSLoginChannel::ReceivedBunch(MessageBase& Bunch)
 
 		if (LogoutMessage.success)
 		{
-			FUUIDWrapper SessionID{};
-			for (size_t i = 0; i < LogoutMessage.sessionID.size(); i++)
-			{
-				SessionID.uuid.Add( static_cast<uint8>( LogoutMessage.sessionID[ i ] ) );
-			}
+			// todo: Handle the case where a player did not properly logout
+			const FUUIDWrapper SessionID( LogoutMessage.sessionID );
 			check( SessionID.IsValid() );
 			const uint32 ID = SessionIDMap[ SessionID ];
 			SessionIDMap.Remove( SessionID );

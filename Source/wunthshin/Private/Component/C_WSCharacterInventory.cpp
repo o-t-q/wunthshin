@@ -4,13 +4,10 @@
 #include "Component/C_WSCharacterInventory.h"
 #include "Network/Subsystem/WSServerSubsystem.h"
 #include "Data/Item/SG_WSItemMetadata.h"
-#include "Network/Channel/WSItemChannel.h"
-#include "Enums.h"
 
 #include "Actor/Item/A_WSItem.h"
-#include "Subsystem/CharacterSubsystem.h"
-#include "Subsystem/ItemSubsystem.h"
-#include "Subsystem/WeaponSubsystem.h"
+#include "Controller/AwunthshinSpawnPlayerController.h"
+#include "Data/Item/WSSharedInventory.h"
 
 // Sets default values for this component's properties
 UC_WSCharacterInventory::UC_WSCharacterInventory()
@@ -29,17 +26,20 @@ void UC_WSCharacterInventory::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-
-	FetchInventory();
+	if ( GetNetMode() == NM_Client )
+	{
+		// todo: listen server case
+		Server_FetchInventory();
+	}
 }
 
 const TArray<FInventoryPair>& UC_WSCharacterInventory::GetItems() const
 {
 	static const TArray<FInventoryPair> EmptyFallbackReturn = {};
 	
-	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
+	if (AwunthshinSpawnPlayerController* PlayerController = Cast<AwunthshinSpawnPlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
-		return ItemSubsystem->GetSharedInventory().GetItems();
+		return PlayerController->GetSharedInventory()->GetItems();
 	}
 
 	// 게임 인스턴스에 접근 실패
@@ -49,9 +49,9 @@ const TArray<FInventoryPair>& UC_WSCharacterInventory::GetItems() const
 
 int32 UC_WSCharacterInventory::FindItemIndex(const USG_WSItemMetadata* InMetadata) const
 {
-	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
+	if (AwunthshinSpawnPlayerController* PlayerController = Cast<AwunthshinSpawnPlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
-		return ItemSubsystem->GetSharedInventory().FindItemIndex(InMetadata);
+		return PlayerController->GetSharedInventory()->FindItemIndex(InMetadata);
 	}
 
 	return INDEX_NONE;
@@ -59,9 +59,9 @@ int32 UC_WSCharacterInventory::FindItemIndex(const USG_WSItemMetadata* InMetadat
 
 FInventoryPair* UC_WSCharacterInventory::FindItem(const USG_WSItemMetadata* InMetadata)
 {
-	if (UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>())
+	if ( const AwunthshinSpawnPlayerController* PlayerController = Cast<AwunthshinSpawnPlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
-		return ItemSubsystem->GetSharedInventory().FindItem(InMetadata);
+		return PlayerController->GetSharedInventory()->FindItem(InMetadata);
 	}
 
 	return nullptr;
@@ -69,7 +69,7 @@ FInventoryPair* UC_WSCharacterInventory::FindItem(const USG_WSItemMetadata* InMe
 
 void UC_WSCharacterInventory::AddItem(AA_WSItem* InItem, int InCount)
 {
-	if (const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata())
+	if ( const USG_WSItemMetadata* ItemMetadata = InItem->GetItemMetadata() )
 	{
 		AddItem(ItemMetadata, InCount);
 	}
@@ -92,11 +92,21 @@ void UC_WSCharacterInventory::UseItem(uint32 Index, AActor* InTarget, int InCoun
 {
 }
 
-void UC_WSCharacterInventory::FetchInventory()
+void UC_WSCharacterInventory::Server_FetchInventory_Implementation()
 {
-	if (UWSServerSubsystem* Subsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSServerSubsystem>())
+	const UWSServerSubsystem* ServerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSServerSubsystem>();
+	check( ServerSubsystem );
+	
+	if ( const AwunthshinSpawnPlayerController* PlayerController = Cast<AwunthshinSpawnPlayerController>(GetWorld()->GetFirstPlayerController()))
 	{
-		Subsystem->TryGetItems( 0 );
+		const bool Result = ServerSubsystem->Server_GetItems( PlayerController, 0 );
+		check( Result );
 	}
+}
+
+bool UC_WSCharacterInventory::Server_FetchInventory_Validate()
+{
+	// todo: Rate limit
+	return true;
 }
 
