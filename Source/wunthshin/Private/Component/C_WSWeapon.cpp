@@ -63,7 +63,7 @@ void UC_WSWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	if ( OwningPawn ) 
 	{
 		if ( APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-			 PC->GetCharacter() == OwningPawn )
+			 PC && PC->GetCharacter() == OwningPawn )
 		{
 			const AA_WSCharacter* CharacterCasting = Cast<AA_WSCharacter>( OwningPawn );
 			if ( AActor* Weapon = Cast<AActor>(GetOwner()); 
@@ -173,7 +173,7 @@ void UC_WSWeapon::UpdateCache( const TScriptInterface<I_WSTaker>& InTaker )
 void UC_WSWeapon::SetupInputComponent()
 {
 	if ( APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-		 PC->GetCharacter() == OwningPawn )
+		 PC && PC->GetCharacter() == OwningPawn )
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
 			!Subsystem->HasMappingContext(IMC_Weapon))

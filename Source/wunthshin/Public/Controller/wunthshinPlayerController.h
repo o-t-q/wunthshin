@@ -55,6 +55,12 @@ private:
 	
 	UFUNCTION(Client, Reliable)
 	void Client_PropagateRegisterStatus(bool bSuccess, const ERegisterFailCodeUE FailCode);
+
+	UFUNCTION(Client, Reliable)
+	void Client_OpenStartLevel() const;
+	
+	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
+	void Server_MoveToStart() const;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_Login, meta=(AllowPrivateAccess=true))
 	bool bLogin;

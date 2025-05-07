@@ -5,11 +5,11 @@
 #include "Misc/sha256.h"
 #include "message.h"
 #include "Controller/wunthshinPlayerController.h"
+#include "Engine/DemoNetConnection.h"
 #include "Misc/Paths.h"
-#include "Misc/outputdeviceNull.h"
+#include "wunthshin/wunthshin.h"
 
 FOnServerSubsystemInitialized GOnServerSubsystemInitialized;
-constexpr static size_t IDSizeLimit = sizeof(decltype(std::declval<LoginMessage>().name._Elems));
 
 bool UWSServerSubsystem::HashPassword(const FString& InPlainPassword, FSHA256Signature& OutSignature, const FString& InSalt) const
 {
@@ -37,7 +37,7 @@ bool UWSServerSubsystem::HashPassword(const FString& InPlainPassword, FSHA256Sig
 
 void UWSServerSubsystem::ConnectToMiddleware(const FString& InHost, int32 InPort)
 {
-	if (GetWorld()->GetNetMode() != NM_Client)
+	if ( GetWorld()->GetNetMode() == NM_ListenServer || GetWorld()->GetNetMode() == NM_DedicatedServer )
 	{
 		NetDriver = NewObject<UWSNetDriver>( this, TEXT( "WS NetDriver" ) );
 		FURL URL{};
@@ -59,7 +59,7 @@ void UWSServerSubsystem::ConnectToMiddleware(const FString& InHost, int32 InPort
 
 		LoginChannel = Cast<UWSLoginChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Login]);
 		RegisterChannel = Cast<UWSRegisterChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Register]);
-		ItemChannel = Cast<UWSItemChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Item]);	
+		ItemChannel = Cast<UWSItemChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Item]);
 	}
 }
 
@@ -96,14 +96,20 @@ bool UWSServerSubsystem::Server_GetItems( const AwunthshinPlayerController* Play
 
 void UWSServerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	if ( GetWorld()->GetNetMode() != NM_Client )
+	if ( GetWorld()->GetNetMode() == NM_ListenServer || GetWorld()->GetNetMode() == NM_DedicatedServer )
 	{
 		ConnectToMiddleware( Host, Port );
 		GOnServerSubsystemInitialized.Broadcast();
 
 		// Replicates the session id, user id, and login status to the designated client.
-		LoginChannel->OnLoginStatusChanged.AddUniqueDynamic( this, &UWSServerSubsystem::OnLoginMessageReceived );
-		RegisterChannel->LastRegistrationStatus.AddUniqueDynamic( this, &UWSServerSubsystem::OnRegisterMessageReceived );
+		if ( LoginChannel.IsValid() )
+		{
+			LoginChannel->OnLoginStatusChanged.AddUniqueDynamic( this, &UWSServerSubsystem::OnLoginMessageReceived );
+		}
+		if ( RegisterChannel.IsValid() )
+		{
+			RegisterChannel->LastRegistrationStatus.AddUniqueDynamic( this, &UWSServerSubsystem::OnRegisterMessageReceived );	
+		}
 	}
 }
 
@@ -147,7 +153,8 @@ bool UWSServerSubsystem::Client_TrySendLoginRequest( const FString& InID, const 
 		return false;
 	}
 
-	AwunthshinPlayerController* PC = Cast<AwunthshinPlayerController>( GetWorld()->GetFirstPlayerController() );
+	UWorld* World = GetWorld();
+	AwunthshinPlayerController* PC = Cast<AwunthshinPlayerController>( World->GetFirstPlayerController() );
 	check(PC);
 	
 	if (PC)

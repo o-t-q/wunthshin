@@ -4,16 +4,15 @@
 #include "Controller/wunthshinPlayerController.h"
 
 #include "wunthshinPlayerState.h"
+#include "Kismet/GameplayStatics.h"
 
-#include "Data/Character/ClientCharacterInfo.h"
 #include "Net/UnrealNetwork.h"
 #include "Network/Subsystem/WSServerSubsystem.h"
-#include "wunthshinPlayerState.h"
-
-constexpr static size_t IDSizeLimit = sizeof(decltype(std::declval<LoginMessage>().name._Elems));
 
 AwunthshinPlayerController::AwunthshinPlayerController()
 {
+	bEnableStreamingSource = true;
+	bStreamingSourceShouldActivate = true;
 }
 
 void AwunthshinPlayerController::Client_PropagateRegisterStatus_Implementation( bool bSuccess,
@@ -45,6 +44,21 @@ void AwunthshinPlayerController::SetUserID( const uint32 InUserID )
 void AwunthshinPlayerController::OnRep_Login() const
 {
 	OnLoginStatusChanged.Broadcast();
+}
+
+void AwunthshinPlayerController::Client_OpenStartLevel_Implementation() const
+{
+	UGameplayStatics::OpenLevel(GetWorld(), TEXT("/Game/Level/Start_Map"));
+}
+
+void AwunthshinPlayerController::Server_MoveToStart_Implementation() const
+{
+	Client_OpenStartLevel();
+}
+
+bool AwunthshinPlayerController::Server_MoveToStart_Validate()
+{
+	return !bLogin;
 }
 
 void AwunthshinPlayerController::Server_UpdateInventory_Implementation( const int32 Page ) const
@@ -118,7 +132,8 @@ void AwunthshinPlayerController::Server_SendLoginRequest_Implementation( const F
 		{
 			HashedPasswordWrapper.Signature[i] = HashedPassword[i];
 		}
-		check( ServerSubsystem->Server_SendLoginRequest( this, InID, HashedPasswordWrapper ) );
+		const bool Result = ServerSubsystem->Server_SendLoginRequest( this, InID, HashedPasswordWrapper );
+		check( Result );
 	}
 }
 

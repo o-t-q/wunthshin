@@ -31,8 +31,9 @@ UC_WSInventory::UC_WSInventory()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	// ...
-
-
+	Items = CreateDefaultSubobject<AWSSharedInventory>( "SharedInventory" );
+	Items->SetReplicates( true );
+	Items->SetNetAddressable();
 }
 
 const TArray<FInventoryPair>& UC_WSInventory::GetItems() const

@@ -78,7 +78,7 @@ protected:
 	
 	UPROPERTY(Transient)
 	UWSNetDriver* NetDriver = nullptr;
-
+	
 	UPROPERTY(Config)
 	FString Host;
 
