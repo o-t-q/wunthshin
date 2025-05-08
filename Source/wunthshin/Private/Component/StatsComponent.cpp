@@ -4,16 +4,25 @@
 #include "Logging/LogMacros.h"
 
 #include "Actor/Pawn/AA_WSCharacter.h"
+#include "Net/UnrealNetwork.h"
 
-DEFINE_LOG_CATEGORY(LogStatsComponent);
+DEFINE_LOG_CATEGORY( LogStatsComponent );
 
 UStatsComponent::UStatsComponent()
 {
     PrimaryComponentTick.bCanEverTick = true;
-
+    
     // 스태미나 회복 및 감소 속도 초기화
     StaminaRecoveryRate = 5.0f; // 초당 회복량
     StaminaDepletionRate = 10.0f; // 빠르게 달릴 때 감소량
+}
+
+void UStatsComponent::GetLifetimeReplicatedProps( TArray<FLifetimeProperty>& OutLifetimeProps ) const
+{
+    Super::GetLifetimeReplicatedProps( OutLifetimeProps );
+    DOREPLIFETIME( UStatsComponent, CurrentStats )
+    DOREPLIFETIME( UStatsComponent, StaminaDepletionRate )
+    DOREPLIFETIME( UStatsComponent, StaminaRecoveryRate )
 }
 
 void UStatsComponent::BeginPlay()

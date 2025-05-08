@@ -6,12 +6,20 @@
 #include "InputAction.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "wunthshinPlayerState.h"
 
 #include "Kismet/GameplayStatics.h"
 
 #include "Component/C_WSPickUp.h"
 #include "Actor/Item/A_WSWeapon.h"
+#include "Actor/Pawn/AA_WSCharacter.h"
+
+#include "Data/Character/ClientCharacterInfo.h"
+
 #include "Interface/Taker.h"
+
+#include "Net/UnrealNetwork.h"
+
 #include "Subsystem/CharacterSubsystem.h"
 #include "Subsystem/WorldStatusSubsystem.h"
 
@@ -26,9 +34,6 @@ UC_WSWeapon::UC_WSWeapon()
 	{ TEXT("/Script/EnhancedInput.InputMappingContext'/Game/ThirdPerson/Input/IMC_SwordAtteck.IMC_SwordAtteck'") };
 	check(Asset.Object);
 	IMC_Weapon = Asset.Object;
-	
-
-	// ...
 }
 
 
@@ -39,62 +44,74 @@ void UC_WSWeapon::BeginPlay()
 
 	if (UC_WSPickUp* PickUpComponent = GetOwner()->GetComponentByClass<UC_WSPickUp>()) 
 	{
-		PickUpComponent->OnPickUpSuccess.AddUniqueDynamic(this, &UC_WSWeapon::UpdateCache);
+		PickUpComponent->OnPickUpSuccess.AddUniqueDynamic( this, &UC_WSWeapon::UpdateCache );
 	}
 
-	if (AA_WSWeapon* WeaponCasting = Cast<AA_WSWeapon>(GetOwner())) 
+	if ( const AA_WSWeapon* WeaponCasting = Cast<AA_WSWeapon>( GetOwner() ) ) 
 	{
 		AttackMontages = WeaponCasting->GetAttackMontages();
 	}
 
-	if (AActor* Taken = GetOwner()->GetAttachParentActor())
+	if ( AActor* Taken = GetOwner()->GetAttachParentActor() )
 	{
 		UpdateCache(Taken);
 	}
-
-	// ...
-	
 }
 
 void UC_WSWeapon::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
-	
-	if (OwningPawn) 
+	if ( OwningPawn ) 
 	{
-		if (const UCharacterSubsystem* CharacterSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCharacterSubsystem>();
-			CharacterSubsystem && CharacterSubsystem->IsOwnedCharacter(Cast<AA_WSCharacter>(OwningPawn)))
+		if ( APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+			 PC && PC->GetCharacter() == OwningPawn )
 		{
-			if (AActor* Weapon = Cast<AActor>(GetOwner());
-				Weapon && Weapon->InputComponent)
+			const AA_WSCharacter* CharacterCasting = Cast<AA_WSCharacter>( OwningPawn );
+			if ( AActor* Weapon = Cast<AActor>(GetOwner()); 
+				 Weapon && Weapon->InputComponent )
 			{
 				UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(Weapon->InputComponent);
 				ensure(EnhancedInputComponent);
 
 				EnhancedInputComponent->ClearBindingsForObject(this);
-				Weapon->DisableInput(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+				Weapon->DisableInput( PC );
 			}
 		}
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
+void UC_WSWeapon::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UC_WSWeapon, NextAttackIndex);
+}
+
+void UC_WSWeapon::Server_AttackDefault_Implementation()
+{
+	if ( !BasicAnimInstance->Montage_IsPlaying( nullptr ) )
+	{
+		AttackDefault();
 	}
 }
 
 bool UC_WSWeapon::AttackDefault()
 {
-	if (AttackMontages[NextAttackIndex]) 
+	if ( AttackMontages[NextAttackIndex] ) 
 	{
-		if (!BasicAnimInstance->Montage_IsPlaying(nullptr)) 
+		if ( !BasicAnimInstance->Montage_IsPlaying(nullptr) ) 
 		{
-			if (const UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+			if ( const UWorldStatusSubsystem* WorldStatusSubsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>() )
 			{
-				if (const FGuid& AttackID = WorldStatusSubsystem->GetCurrentAttackID(this);
-					AttackID.IsValid())
+				if ( const FGuid& AttackID = WorldStatusSubsystem->GetCurrentAttackID( this );
+					 AttackID.IsValid() )
 				{
 					PopAttackFromWorldStatus(nullptr, false);
 				}
 			}
 			
 			PushAttackToWorldStatus();
-			BasicAnimInstance->Montage_Play(AttackMontages[NextAttackIndex], WeaponContext.GetAttackSpeed());
+			Multi_StartAttackMontage();
 			NextAttackIndex = (NextAttackIndex + 1) % AttackMontages.Num();
 		}
 		else
@@ -113,42 +130,51 @@ bool UC_WSWeapon::AttackDefault()
 	return true;
 }
 
-void UC_WSWeapon::UpdateCache(TScriptInterface<I_WSTaker> InTaker)
+void UC_WSWeapon::Multi_StartAttackMontage_Implementation()
 {
-	OwningPawn = Cast<APawn>(GetOwner()->GetAttachParentActor());
-	check(OwningPawn);
-	check(InTaker == OwningPawn);
+	if ( AttackMontages[NextAttackIndex] && BasicAnimInstance ) 
+	{
+		BasicAnimInstance->Montage_Play(AttackMontages[NextAttackIndex], WeaponContext.GetAttackSpeed());
+	}
+}
 
-	USkeletalMeshComponent* MeshComponent = OwningPawn->FindComponentByClass<USkeletalMeshComponent>();
+void UC_WSWeapon::UpdateCache( const TScriptInterface<I_WSTaker>& InTaker )
+{
+	OwningPawn = Cast<APawn>( GetOwner()->GetAttachParentActor() );
+	check( OwningPawn );
+	check( InTaker == OwningPawn );
+
+	const USkeletalMeshComponent* MeshComponent = OwningPawn->FindComponentByClass<USkeletalMeshComponent>();
 	if (!MeshComponent)
 	{
 		check(false);
 		return;
 	}
 
-	if (BasicAnimInstance)
+	if ( BasicAnimInstance )
 	{
-		BasicAnimInstance->OnMontageEnded.RemoveAll(this);
+		BasicAnimInstance->OnMontageEnded.RemoveAll( this );
 	}
 
-	BasicAnimInstance = Cast<UBaseAnimInstance>(MeshComponent->GetAnimInstance());
+	BasicAnimInstance = Cast<UBaseAnimInstance>( MeshComponent->GetAnimInstance() );
 	check(BasicAnimInstance);
 
 	if (BasicAnimInstance)
 	{
 		BasicAnimInstance->OnMontageEnded.AddUniqueDynamic(this, &UC_WSWeapon::PopAttackFromWorldStatus);
 	}
-	
-	SetupInputComponent();
+
+	if (GetNetMode() == NM_Client || GetNetMode() == NM_DedicatedServer)
+	{
+		SetupInputComponent();
+	}
 }
 
 void UC_WSWeapon::SetupInputComponent()
 {
-	if (const UCharacterSubsystem* CharacterSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UCharacterSubsystem>();
-		CharacterSubsystem && CharacterSubsystem->IsOwnedCharacter(Cast<AA_WSCharacter>(OwningPawn)))
+	if ( APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		 PC && PC->GetCharacter() == OwningPawn )
 	{
-		APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
 			!Subsystem->HasMappingContext(IMC_Weapon))
 		{
@@ -171,7 +197,7 @@ void UC_WSWeapon::SetupInputComponent()
 				if (It.Action->GetFName() == TEXT("IA_Attack"))
 				{
 					InputAction = It.Action.Get();
-					EnhancedInputComponent->BindAction(InputAction, ETriggerEvent::Started, this, "AttackDefault");
+					EnhancedInputComponent->BindAction(InputAction, ETriggerEvent::Started, this, "Server_AttackDefault");
 					break;
 				}
 			}
@@ -181,13 +207,13 @@ void UC_WSWeapon::SetupInputComponent()
 
 void UC_WSWeapon::PushAttackToWorldStatus() const
 {
-	if (UWorldStatusSubsystem* Subsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+	if ( UWorldStatusSubsystem* Subsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>() )
 	{
 		Subsystem->PushAttack(this);
 	}
 }
 
-void UC_WSWeapon::PopAttackFromWorldStatus(UAnimMontage* InMontage, bool /*bInterrupted*/)
+void UC_WSWeapon::PopAttackFromWorldStatus( UAnimMontage* InMontage, bool /*bInterrupted*/ )
 {
 	int32 PreviousIndex = (NextAttackIndex - 1) % AttackMontages.Num();
 	if (PreviousIndex < 0)
@@ -197,7 +223,7 @@ void UC_WSWeapon::PopAttackFromWorldStatus(UAnimMontage* InMontage, bool /*bInte
 	
 	if (!InMontage || InMontage == AttackMontages[PreviousIndex])
 	{
-		if (UWorldStatusSubsystem* Subsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>())
+		if ( UWorldStatusSubsystem* Subsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>() )
 		{
 			Subsystem->PopAttack(this);
 		}
@@ -208,7 +234,6 @@ void UC_WSWeapon::ResetCounter()
 {
 	NextAttackIndex = 0;
 	UE_LOG(LogTemp, Warning, TEXT("Attack Counter Reset"));
-
 }
 
 bool UC_WSWeapon::IsAttackInProgress() const

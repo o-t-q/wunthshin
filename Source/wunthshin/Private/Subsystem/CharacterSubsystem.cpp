@@ -3,54 +3,22 @@
 
 #include "Subsystem/CharacterSubsystem.h"
 
+#include "wunthshinPlayerState.h"
+
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Actor/Pawn/AA_WSCharacter.h"
 #include "Component/StatsComponent.h"
+
+#include "Controller/wunthshinPlayerController.h"
+
 #include "Data/Character/SG_WSCharacterSnapshot.h"
 #include "Data/Character/CharacterStats.h"
 #include "Data/Character/CharacterTableRow.h"
-
-void UCharacterSubsystem::ResetPlayer()
-{
-	for (const AA_WSCharacter* Character : OwnedCharacters)
-	{
-		Character->GetStatsComponent()->SetHP(100);
-	}
-}
+#include "Data/Character/ClientCharacterInfo.h"
 
 UCharacterSubsystem::UCharacterSubsystem()
 	: AssetDataTable(nullptr), StatDataTable(nullptr) {}
-
-void UCharacterSubsystem::TakeCharacterLevelSnapshot()
-{
-	CharacterSnapshots.SetNumZeroed(OwnedCharacters.Num());
-	
-	for (auto It = OwnedCharacters.CreateIterator(); It; ++It)
-	{
-		USG_WSCharacterSnapshot* Snapshot = Cast<USG_WSCharacterSnapshot>(UGameplayStatics::CreateSaveGameObject(USG_WSCharacterSnapshot::StaticClass()));
-		Snapshot->SetCharacter(FCharacterContext(*It));
-		UGameplayStatics::SaveGameToMemory(Snapshot,CharacterSnapshots[It.GetIndex()]); 
-	}
-}
-
-void UCharacterSubsystem::LoadCharacterLevelSnapshot()
-{
-	for (auto It = CharacterSnapshots.CreateIterator(); It; ++It)
-	{
-		const int32 Index = It.GetIndex();
-		
-		if (const USG_WSCharacterSnapshot* Snapshot = Cast<USG_WSCharacterSnapshot>(UGameplayStatics::LoadGameFromMemory(CharacterSnapshots[Index])))
-		{
-			if (OwnedCharacters[Index] == nullptr)
-			{
-				OwnedCharacters[Index] = Snapshot->SpawnCharacter(GetWorld(), FTransform::Identity, nullptr);
-				OwnedCharacters[Index]->SetActorEnableCollision(false);
-				OwnedCharacters[Index]->SetActorHiddenInGame(true);
-			}
-		}
-	}
-}
 
 void UCharacterSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -65,110 +33,76 @@ void UCharacterSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	DataTableMapping.Emplace(FCharacterStats::StaticStruct(), StatDataTable);
 }
 
-int32 UCharacterSubsystem::GetAvailableCharacter() const
+AClientCharacterInfo* UCharacterSubsystem::InitializeClientInfo( APlayerController* Controller, const int32 InUserID )
 {
-	for (auto It = OwnedCharacters.CreateConstIterator(); It; ++It)
+	if ( GetWorld()->GetNetMode() == NM_Client )
 	{
-		if ((*It)->GetStatsComponent()->GetHP() > 0)
-		{
-			return It.GetIndex();
-		}
+		check(false); // Client does not have valid data
+		return nullptr;
 	}
 
-	return INDEX_NONE;
+	FActorSpawnParameters ActorSpawnParameters;
+	ActorSpawnParameters.Owner = Controller;
+	ActorSpawnParameters.ObjectFlags = RF_Transient;
+	ActorSpawnParameters.bNoFail = true;
+	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	AClientCharacterInfo* Info = GetWorld()->SpawnActor<AClientCharacterInfo>( FVector::ZeroVector, FRotator::ZeroRotator, ActorSpawnParameters );
+
+	check( Info ); // Info spawn failed
+	ClientCharacters.Emplace( InUserID, Info );
+
+	// todo: Sync character with database
+
+	// Set the user client character context to player state, so that the client can reference.
+	Controller->GetPlayerState<AwunthshinPlayerState>()->CachedClientCharacter = Info;
+	return Info;
 }
 
-int32 UCharacterSubsystem::GetIndexOfCharacter(const AA_WSCharacter* InCharacter) const
+AClientCharacterInfo* UCharacterSubsystem::GetClientInfo( const int32 InUserID ) const
 {
-	return OwnedCharacters.IndexOfByPredicate([&InCharacter](const AA_WSCharacter* InItem)
+	if ( GetWorld()->GetNetMode() == NM_Client )
 	{
-		return InItem == InCharacter;
-	});
+		check(false); // Client does not have valid data
+		return nullptr;
+	}
+
+	if ( ClientCharacters.Contains( InUserID ) )
+	{
+		return ClientCharacters[InUserID];
+	}
+
+	return nullptr;
 }
 
-void UCharacterSubsystem::AddCharacter(AA_WSCharacter* InCharacter)
+AClientCharacterInfo* UCharacterSubsystem::GetClientInfo(const AwunthshinPlayerController* PlayerController) const
 {
-	uint32 Index = 0;
-
-	// 최대 5개에
-	while (Index != 5)
+	if ( GetWorld()->GetNetMode() == NM_Client )
 	{
-		// 같은 캐릭터가 없고
-		if (OwnedCharacters.IsValidIndex(Index) &&
-			OwnedCharacters[Index] == InCharacter)
-		{
-			break;
-		}
-
-		// 이미 점유된 공간이 아니면
-		if (OwnedCharacters.IsValidIndex(Index) &&
-			OwnedCharacters[Index] != nullptr)
-		{
-			++Index;
-			continue;
-		}
-
-		// 새로운 공간을 할당 후 추가
-		AddCharacter(InCharacter, Index);
+		check(false); // Client does not have valid data
+		return nullptr;
 	}
+
+	const int32 UserID = PlayerController->GetPlayerState<AwunthshinPlayerState>()->GetUserID();
+
+	if ( UserID == -1 )
+	{
+		return nullptr;
+	}
+
+	return GetClientInfo( UserID );
 }
 
-void UCharacterSubsystem::AddCharacter(AA_WSCharacter* Character, const int32 InIndex)
+AClientCharacterInfo* UCharacterSubsystem::GetFirstPlayerControllerCharacterInfo() const
 {
-	if (OwnedCharacters.IsValidIndex(InIndex))
-	{
-		OwnedCharacters[InIndex] = Character;
-		OnCharacterAdded.Broadcast();
-	}
-	else
-	{
-		OwnedCharacters.SetNum(InIndex + 1, EAllowShrinking::No);
-		CharacterSnapshots.SetNum(InIndex + 1, EAllowShrinking::No);
-		OwnedCharacters[InIndex] = Character;
+	return GetClientInfo( GetWorld()->GetFirstPlayerController<AwunthshinPlayerController>() );
+}
 
-		OnCharacterAdded.Broadcast();
+void UCharacterSubsystem::DestroyClientInfo( const APlayerController* Controller )
+{
+	if ( const AwunthshinPlayerState* PlayerState = Controller->GetPlayerState<AwunthshinPlayerState>() )
+	{
+		ClientCharacters.Remove( PlayerState->GetUserID() );
 	}
 }
 
-void UCharacterSubsystem::SpawnAsCharacter(const int32 InIndex)
-{
-	// 이미 스폰한 캐릭터가 아니면서
-	if (CurrentSpawnedIndex == InIndex)
-	{
-		return;
-	}
-
-	// 배열 범위 내에 있어야 하고
-	if (!OwnedCharacters.IsValidIndex(InIndex))
-	{
-		return;
-	}
-
-	// 체력이 남아있다면 전환
-	if (OwnedCharacters[InIndex]->GetStatsComponent()->GetHP() <= 0)
-	{
-		return;
-	}
-	
-	if (APlayerController* PlayerController = GetWorld()->GetFirstPlayerController())
-	{
-		AA_WSCharacter* CurrentCharacter = Cast<AA_WSCharacter>(PlayerController->GetPawn());
-		const FTransform PreviousTransform = CurrentCharacter->GetActorTransform();
-			
-		if (OwnedCharacters[CurrentSpawnedIndex] == nullptr)
-		{
-			OwnedCharacters[CurrentSpawnedIndex] = CurrentCharacter;
-		}
-
-		CurrentCharacter->GetCharacterMovement()->StopMovementImmediately();
-		CurrentCharacter->SetActorEnableCollision(false);
-		CurrentCharacter->SetActorHiddenInGame(true);
-		CurrentCharacter->SetActorTransform(FTransform::Identity);
-		
-		CurrentSpawnedIndex = InIndex;
-		PlayerController->Possess(OwnedCharacters[InIndex]);
-		OwnedCharacters[InIndex]->SetActorEnableCollision(true);
-		OwnedCharacters[InIndex]->SetActorHiddenInGame(false);
-		OwnedCharacters[InIndex]->SetActorTransform(PreviousTransform);
-	}
-}

@@ -1,45 +1,38 @@
 #include "Network/Channel/WSLoginChannel.h"
 
+#include "Kismet/GameplayStatics.h"
+
 void UWSLoginChannel::ReceivedBunch(MessageBase& Bunch)
 {
 	switch (Bunch.GetType())
 	{
 	case EMessageType::LoginStatus:
 	{
-		LoginStatusMessage& loginMessage = reinterpret_cast<LoginStatusMessage&>(Bunch);
-		LastLoginStatusDelegate.Broadcast(loginMessage.success);
+		LoginStatusMessage& LoginMessage = reinterpret_cast<LoginStatusMessage&>(Bunch);
 
-		if ( loginMessage.success )
+		if ( LoginMessage.success )
 		{
-			std::ranges::copy( loginMessage.sessionId, SessionId.uuid.begin() );
-			check( SessionId.IsValid() );
-			bLogin = true;
-			OnLoginStatusChanged.Broadcast(bLogin);
-		}
-
-		if ( !loginMessage.success && !bLogin )
-		{
-			LoginId = "";
+			const FUUIDWrapper Wrapper( LoginMessage.sessionId );
+			check( Wrapper.IsValid() );
+			SessionIDMap.Add( Wrapper, LoginMessage.id );
+			OnLoginStatusChanged.Broadcast( true, LoginMessage.id, Wrapper, LoginMessage.messageIdentifier );
 		}
 		break;
 	}
 	case EMessageType::LogoutOK:
 	{
-		if (!bLogin)
-		{
-			break;
-		}
+		LogoutOKMessage& LogoutMessage = reinterpret_cast<LogoutOKMessage&>(Bunch);
 
-		LogoutOKMessage& logoutMessage = reinterpret_cast<LogoutOKMessage&>(Bunch);
-		LastLogoutStatusDelegate.Broadcast(logoutMessage.success);
-
-		if (logoutMessage.success)
+		if (LogoutMessage.success)
 		{
-			std::ranges::fill( SessionId.uuid, (std::byte)0 );
-			LoginId = "";
-			bLogin = false;
-			OnLoginStatusChanged.Broadcast(bLogin);
+			// todo: Handle the case where a player did not properly logout
+			const FUUIDWrapper SessionID( LogoutMessage.sessionID );
+			check( SessionID.IsValid() );
+			const uint32 ID = SessionIDMap[ SessionID ];
+			SessionIDMap.Remove( SessionID );
+			OnLoginStatusChanged.Broadcast( false, ID, SessionID, 0 );
 		}
+			
 		break;
 	}
 	default: check(false);
@@ -48,15 +41,4 @@ void UWSLoginChannel::ReceivedBunch(MessageBase& Bunch)
 
 void UWSLoginChannel::SendBunchInternal(const EMessageType MessageType, MessageBase& Bunch)
 {
-	if ( MessageType == EMessageType::Login && !bLogin )
-	{
-		LoginMessage& loginMessage = reinterpret_cast<LoginMessage&>(Bunch);
-		LoginId = FString( loginMessage.name.data() );
-	}
-
-	if ( MessageType == EMessageType::Logout && bLogin )
-	{
-		LogoutMessage& logoutMessage = reinterpret_cast<LogoutMessage&>(Bunch);
-		std::ranges::copy( SessionId.uuid, logoutMessage.sessionId.begin());
-	}
 }

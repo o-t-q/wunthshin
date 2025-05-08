@@ -24,7 +24,7 @@ void FWSDamageEvent::SetFirstHit(const ICommonPawn* InPawn) const
 	{
 		if (UWorldStatusSubsystem* WorldStatusSubsystem = World->GetSubsystem<UWorldStatusSubsystem>())
 		{
-			WorldStatusSubsystem->SetDamageTaken(InPawn, AttackID);
+			WorldStatusSubsystem->SetDamageTaken(Object, AttackID);
 		}
 	}
 }

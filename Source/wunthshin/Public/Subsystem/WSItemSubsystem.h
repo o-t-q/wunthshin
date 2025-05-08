@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "GenericPlatform/GenericPlatformMisc.h"
-#include "SharedInventory/SharedInventory.h"
 
 #include "Interface/DataTableQuery.h"
 #include "Interface/ItemMetadataGetter.h"
-#include "ItemSubsystem.generated.h"
+#include "WSItemSubsystem.generated.h"
 
+struct FUUIDWrapper;
 enum class EItemType : uint8_t;
 class USG_WSItemMetadata;
 struct FItemAndCountUE;
@@ -22,7 +22,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterInventoryFetched);
  * 
  */
 UCLASS()
-class WUNTHSHIN_API UItemSubsystem : public UGameInstanceSubsystem, public IItemMetadataGetter, public IDataTableQuery
+class WUNTHSHIN_API UWSItemSubsystem : public UGameInstanceSubsystem, public IItemMetadataGetter, public IDataTableQuery
 {
 	GENERATED_BODY()
 
@@ -40,9 +40,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item", meta = (AllowPrivateAccess = "true"))
 	FWSMetadataPair LootingBoxMetadata;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
-	FSharedInventory SharedInventory;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Table", meta=(AllowPrivateAccess = "true"))
 	UDataTable* DataTable;
 
@@ -50,20 +47,19 @@ private:
 	UDataTable* LootingBoxTable;
 
 public:
-	UItemSubsystem();
+	UWSItemSubsystem();
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual USG_WSItemMetadata* GetMetadata(const EItemType InItemType, const FName& InAssetName) override;
 	virtual USG_WSItemMetadata* GetMetadata(const EItemType InItemType, const int32 InID) override;
-	FSharedInventory& GetSharedInventory();
 	UDataTable* GetDataTable() const { return DataTable; }
 
 private:
 	UFUNCTION()
-	void AddItemFromMessage(const EItemType ItemType, const int32 InID, const int32 InCount);
+	void AddItemFromMessage(const FUUIDWrapper& InSessionID, const EItemType ItemType, const int32 InID, const int32 InCount);
 	
 	UFUNCTION()
-	void UpdateInventory(const bool IsEnd, const int32 Page, const int32 Count, const TArray<FItemAndCountUE>& InItems);
+	void UpdateInventory(const FUUIDWrapper& InSessionID, const bool IsEnd, const int32 Page, const int32 Count, const TArray<FItemAndCountUE>& InItems);
 
 	UFUNCTION()
 	void SubscribeServerSubsystemLazy();

@@ -18,6 +18,8 @@
 #include "Actor/Pawn/AA_WSCharacter.h"
 #include "Component/StatsComponent.h"
 
+#include "Data/Character/ClientCharacterInfo.h"
+
 UImage* UWG_WSInGameBundle::FadeImageStatic = nullptr;
 
 void UWG_WSInGameBundle::BindStamina(APawn* OldPawn, APawn* NewPawn)
@@ -54,7 +56,7 @@ void UWG_WSInGameBundle::NativeConstruct()
 
 	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
 	{
-		CharacterSubsystem->OnCharacterAdded.AddUniqueDynamic(this, &UWG_WSInGameBundle::InitCharacterSlots);
+		CharacterSubsystem->GetFirstPlayerControllerCharacterInfo()->OnCharacterAdded.AddUniqueDynamic(this, &UWG_WSInGameBundle::InitCharacterSlots);
 		
 		// 우측 캐릭터 변경 슬롯 초기화
 		InitCharacterSlots();
@@ -164,7 +166,7 @@ void UWG_WSInGameBundle::InitCharacterSlots()
 	// 2. HUD도 레벨 변경에 맞춰 동시에 파괴되기 때문에 캐릭터가 파괴되기 전까지는 동일한 포인터를 유지하고 있게됨
 	if (const UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
 	{
-		CharacterRoot->SetListItems(CharacterSubsystem->GetOwnedCharacters());
+		CharacterRoot->SetListItems(CharacterSubsystem->GetFirstPlayerControllerCharacterInfo()->GetOwnedCharacters());
 	}
 }
 

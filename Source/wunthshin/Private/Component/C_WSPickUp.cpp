@@ -4,8 +4,9 @@
 #include "Component/C_WSPickUp.h"
 
 #include "Interface/Taker.h"
+#include "Net/UnrealNetwork.h"
 
-DEFINE_LOG_CATEGORY(LogPickUpComponent);
+DEFINE_LOG_CATEGORY( LogPickUpComponent );
 
 // Sets default values for this component's properties
 UC_WSPickUp::UC_WSPickUp()
@@ -58,11 +59,20 @@ void UC_WSPickUp::InitializeComponent()
 {
 	Super::InitializeComponent();
 
-	bTaken = false;
-	OnPickUp.AddUniqueDynamic(this, &UC_WSPickUp::HandleOnPickUp);
+	if ( GetNetMode() != NM_Client && GetNetMode() != NM_ListenServer )
+	{
+		bTaken = false;
+		OnPickUp.AddUniqueDynamic( this, &UC_WSPickUp::HandleOnPickUp );	
+	}
 }
 
-void UC_WSPickUp::HandleOnPickUp(TScriptInterface<I_WSTaker> InTriggeredActor)
+void UC_WSPickUp::GetLifetimeReplicatedProps( TArray<class FLifetimeProperty>& OutLifetimeProps ) const
+{
+	Super::GetLifetimeReplicatedProps( OutLifetimeProps );
+	DOREPLIFETIME( UC_WSPickUp, bTaken );
+}
+
+void UC_WSPickUp::HandleOnPickUp(const TScriptInterface<I_WSTaker>& InTriggeredActor)
 {
 	// 이미 해당 물건의 소유자가 있으므로 무시
 	if (bTaken)

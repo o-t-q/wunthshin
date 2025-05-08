@@ -12,6 +12,8 @@
 #include "Component/StatsComponent.h"
 #include "Data/Skill/SkillTableRow.h"
 
+#include "Net/UnrealNetwork.h"
+
 DEFINE_LOG_CATEGORY(LogSkillComponent);
 
 // Sets default values for this component's properties
@@ -33,6 +35,7 @@ UC_WSSkill::UC_WSSkill()
 		); IMC_Skill.Succeeded()) { SkillMappingContext = IMC_Skill.Object; }
 
 	// ...
+	SetIsReplicatedByDefault(true);
 }
 
 
@@ -40,23 +43,42 @@ UC_WSSkill::UC_WSSkill()
 void UC_WSSkill::BeginPlay()
 {
 	Super::BeginPlay();
-	InitializeInputComponent();
-	
-	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+
+	if (GetNetMode() == NM_Client || GetNetMode() == NM_DedicatedServer || GetNetMode() == NM_Standalone)
 	{
-		PlayerController->OnPossessedPawnChanged.AddUniqueDynamic(this, &UC_WSSkill::ReconfigureInputComponent);
+		InitializeInputComponent();
+
+		if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+		{
+			PlayerController->OnPossessedPawnChanged.AddUniqueDynamic(this, &UC_WSSkill::ReconfigureInputComponent);
+		}
 	}
-	
-	// ...
-	
 }
 
 void UC_WSSkill::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	Super::EndPlay(EndPlayReason);
-	if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+	if (GetNetMode() == NM_Client || GetNetMode() == NM_DedicatedServer || GetNetMode() == NM_Standalone)
 	{
-		PlayerController->OnPossessedPawnChanged.RemoveAll(this);
+		if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
+		{
+			PlayerController->OnPossessedPawnChanged.RemoveAll(this);
+		}
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
+
+void UC_WSSkill::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UC_WSSkill, bActive);
+}
+
+void UC_WSSkill::Server_CastSkill_Implementation()
+{
+	if ( !GetSkillActive() )
+	{
+		CastSkill();
 	}
 }
 
@@ -119,7 +141,7 @@ void UC_WSSkill::CastSkill()
 			{
 				UE_LOG(LogSkillComponent, Log, TEXT("CastSkill: Targeting %s"), *HitResult.GetActor()->GetName());
 				ISkillCast* SkillCast = Cast<ISkillCast>(CommonPawn);
-				bool bSkill = SkillCast->CastSkill(CharacterSkill, HitResult.Location, HitResult.GetActor());
+				const bool  bSkill    = SkillCast->CastSkill(CharacterSkill, HitResult.Location, HitResult.GetActor());
 
 				if (bSkill)
 				{
@@ -134,12 +156,13 @@ void UC_WSSkill::CastSkill()
 			// e.g., 캐릭터의 주변에 버프, 캐릭터가 바라보는 방향에 스킬 등...
 			UE_LOG(LogSkillComponent, Log, TEXT("CastSkill: Non-Targeting %s"), *Actor->GetActorLocation().ToString());
 			ISkillCast* SkillCast = Cast<ISkillCast>(CommonPawn);
-			bool bSkill = SkillCast->CastSkill(CharacterSkill, Actor->GetActorLocation(), nullptr);
+			const bool  bSkill    = SkillCast->CastSkill(CharacterSkill, Actor->GetActorLocation(), nullptr);
 
 			if (bSkill)
 			{
 				StatsComponent->DecreaseStamina(SkillDescription->Parameter.StaminaCost);
 			}
+
 			SetSkillActive(bSkill);
 		}
 	}
@@ -167,7 +190,7 @@ void UC_WSSkill::InitializeInputComponent()
 		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(GetOwner()->InputComponent))
 		{
 			UE_LOG(LogSkillComponent, Log, TEXT("Binding the skill input"));
-			EnhancedInputComponent->BindAction(SkillAction, ETriggerEvent::Started, this, &UC_WSSkill::CastSkill);
+			EnhancedInputComponent->BindAction(SkillAction, ETriggerEvent::Started, this, &UC_WSSkill::Server_CastSkill);
 		}
 	}
 }

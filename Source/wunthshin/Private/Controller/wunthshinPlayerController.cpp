@@ -3,63 +3,87 @@
 
 #include "Controller/wunthshinPlayerController.h"
 
-#include "wunthshinGameMode.h"
 #include "wunthshinPlayerState.h"
-#include "Actor/Pawn/AA_WSCharacter.h"
-#include "Subsystem/CharacterSubsystem.h"
 
-AwunthshinPlayerController::AwunthshinPlayerController()
+#include "Net/UnrealNetwork.h"
+#include "Network/Subsystem/WSServerSubsystem.h"
+
+AwunthshinPlayerController::AwunthshinPlayerController(): bLogin(false), UserID(0)
 {
+	bEnableStreamingSource = true;
+	bStreamingSourceShouldActivate = true;
 }
 
-void AwunthshinPlayerController::UpdateByAlive(const bool bInbAlive)
+void AwunthshinPlayerController::GetLifetimeReplicatedProps( TArray<class FLifetimeProperty>& OutLifetimeProps ) const
 {
-	StopMovement();
+	Super::GetLifetimeReplicatedProps( OutLifetimeProps );
+	DOREPLIFETIME_CONDITION( AwunthshinPlayerController, bLogin, COND_OwnerOnly )
+	DOREPLIFETIME_CONDITION( AwunthshinPlayerController, UserID, COND_OwnerOnly )
+	DOREPLIFETIME_CONDITION( AwunthshinPlayerController, SessionID, COND_OwnerOnly )
+}
+
+void AwunthshinPlayerController::SetUserID( const uint32 InUserID )
+{
+	UserID = InUserID;
+	if (AwunthshinPlayerState* Casted = GetPlayerState<AwunthshinPlayerState>())
+	{
+		Casted->UserID = InUserID;
+	}
+}
+
+void AwunthshinPlayerController::OnRep_Login() const
+{
+	OnLoginStatusChanged.Broadcast();
+}
+
+void AwunthshinPlayerController::Client_AuthenticateAndMainMap_Implementation()
+{
+	ClientTravel(TEXT("/Game/Level/AllLevel"), TRAVEL_Absolute);
+}
+
+bool AwunthshinPlayerController::Server_Authenticate_Validate(const int32 InUserID, const FUUIDWrapper& InSessionID)
+{
+	return true;
+}
+
+void AwunthshinPlayerController::Server_UpdateInventory_Implementation( const int32 Page ) const
+{
+	UWSServerSubsystem* ServerSubsystem = GetGameInstance()->GetSubsystem<UWSServerSubsystem>();
+	check(ServerSubsystem);
+
+	if ( ServerSubsystem )
+	{
+		ServerSubsystem->Server_GetItems( this, Page );
+	}
+}
+
+bool AwunthshinPlayerController::Server_UpdateInventory_Validate( const int32 Page )
+{
+	// todo: rate limit
+	return true;
+}
+
+void AwunthshinPlayerController::Server_Authenticate_Implementation(const int32 InUserID, const FUUIDWrapper& InSessionID)
+{
+	UserID = InUserID;
+	SessionID = InSessionID;
+	bLogin = true;
 	
-	if (!bInbAlive)
+	Client_AuthenticateAndMainMap();
+}
+
+void AwunthshinPlayerController::Server_SendLogoutRequest_Implementation( )
+{
+	UWSServerSubsystem* ServerSubsystem = GetGameInstance()->GetSubsystem<UWSServerSubsystem>();
+	check(ServerSubsystem);
+
+	if ( ServerSubsystem )
 	{
-		GetPawn()->DisableInput(this);
-	}
-	else
-	{
-		GetPawn()->EnableInput(this);
+		check( ServerSubsystem->Server_SendLogoutRequest( this ) );
 	}
 }
 
-void AwunthshinPlayerController::RestartLevel()
+bool AwunthshinPlayerController::Server_SendLogoutRequest_Validate( )
 {
-	Super::RestartLevel();
-
-	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
-	{
-		CharacterSubsystem->ResetPlayer();
-	}
-	
-	GetPlayerState<AwunthshinPlayerState>()->SetAlive(true);
-}
-
-void AwunthshinPlayerController::BeginPlay()
-{
-	Super::BeginPlay();
-	GetPlayerState<AwunthshinPlayerState>()->OnPlayerAlivenessChanged.AddUniqueDynamic(this, &AwunthshinPlayerController::UpdateByAlive);
-}
-
-void AwunthshinPlayerController::OnPossess(APawn* InPawn)
-{
-	Super::OnPossess(InPawn);
-
-	// 캐릭터의 체력이 다 소모됐을때 캐릭터를 자동으로 교환하기 위한 Delegate
-	if (AA_WSCharacter* CharacterCasting = Cast<AA_WSCharacter>(InPawn))
-	{
-		CharacterCasting->OnTakeAnyDamage.AddUniqueDynamic(GetPlayerState<AwunthshinPlayerState>(), &AwunthshinPlayerState::CheckCharacterDeath);
-	}
-}
-
-void AwunthshinPlayerController::OnUnPossess()
-{
-	Super::OnUnPossess();
-	if (AA_WSCharacter* CharacterCasting = GetPawn<AA_WSCharacter>())
-	{
-		CharacterCasting->OnTakeAnyDamage.RemoveAll(GetPlayerState<AwunthshinPlayerState>());
-	}
+	return UWSServerSubsystem::ValidateLogoutRequest( this );
 }

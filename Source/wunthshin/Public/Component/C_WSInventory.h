@@ -6,10 +6,10 @@
 #include "Components/ActorComponent.h"
 #include "Data/Item/InventoryPair.h"
 #include "Interface/InventoryComponent.h"
-#include "Subsystem/SharedInventory/SharedInventory.h"
 
 #include "C_WSInventory.generated.h"
 
+class AWSSharedInventory;
 class UListView;
 class UInventoryEntryData;
 class USG_WSItemMetadata;
@@ -59,8 +59,8 @@ class WUNTHSHIN_API UC_WSInventory : public UActorComponent, public IInventoryCo
 {
 	GENERATED_BODY()
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	FSharedInventory Items;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Replicated)
+	AWSSharedInventory* Items;
 
 public:
 	// Sets default values for this component's properties
@@ -69,6 +69,8 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
 	virtual const TArray<FInventoryPair>& GetItems() const override;

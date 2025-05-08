@@ -16,6 +16,8 @@ public:
 
 	virtual void BeginPlay() override;
 	
+	virtual void Logout(AController* Exiting) override;
+	
 	virtual APawn* SpawnDefaultPawnAtTransform_Implementation(AController* NewPlayer, const FTransform& SpawnTransform) override;
 };
 

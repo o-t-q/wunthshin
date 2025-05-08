@@ -3,3 +3,5 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "message.h"
+constexpr static size_t IDSizeLimit = sizeof(decltype(std::declval<LoginMessage>().name._Elems));

@@ -241,10 +241,6 @@ protected:
 	void CancelClimb();
 	
 
-	
-
-	
-
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

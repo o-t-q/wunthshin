@@ -12,13 +12,19 @@
 #include "Kismet/GameplayStatics.h"
 #include "Actor/Pawn/AA_WSCharacter.h"
 #include "Component/StatsComponent.h"
+#include "Controller/AwunthshinSpawnPlayerController.h"
+
+#include "Controller/wunthshinPlayerController.h"
+
+#include "Data/Character/ClientCharacterInfo.h"
+
 #include "Subsystem/CharacterSubsystem.h"
 
 void UWG_WSCharacterChangerEntry::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
 	IUserObjectListEntry::NativeOnListItemObjectSet(ListItemObject);
 
-	if (const AA_WSCharacter* Character = Cast<AA_WSCharacter>(ListItemObject))
+	if ( AA_WSCharacter* Character = Cast<AA_WSCharacter>(ListItemObject) )
 	{
 		// 약한 참조
 		WeakCharacterPtr = Character;
@@ -33,7 +39,7 @@ void UWG_WSCharacterChangerEntry::NativeOnListItemObjectSet(UObject* ListItemObj
 
 		if (const UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
 		{
-			CharacterIndex = CharacterSubsystem->GetIndexOfCharacter(Character);
+			CharacterIndex = CharacterSubsystem->GetFirstPlayerControllerCharacterInfo()->GetIndexOfCharacter(Character);
 		}
 
 		if (APlayerController* PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0))
@@ -55,7 +61,7 @@ void UWG_WSCharacterChangerEntry::DisplayBindKey() const
 	// 현재 캐릭터라면 키 바인드 안내 표시를 숨김
 	if (const UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
 	{
-		if (CharacterSubsystem->GetCurrentCharacter() == WeakCharacterPtr)
+		if (CharacterSubsystem->GetFirstPlayerControllerCharacterInfo()->GetCurrentCharacter() == WeakCharacterPtr)
 		{
 			KeyOverlay->SetVisibility(ESlateVisibility::Hidden);
 			return;
@@ -93,7 +99,10 @@ FReply UWG_WSCharacterChangerEntry::NativeOnMouseButtonDown(const FGeometry& InG
 	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>();
 		CharacterSubsystem && WeakCharacterPtr.IsValid())
 	{
-		CharacterSubsystem->SpawnAsCharacter(CharacterSubsystem->GetIndexOfCharacter(WeakCharacterPtr.Get()));
+		GetWorld()->GetFirstPlayerController<AwunthshinSpawnPlayerController>()->SpawnAsCharacter
+		(
+			CharacterSubsystem->GetFirstPlayerControllerCharacterInfo()->GetIndexOfCharacter(WeakCharacterPtr.Get())
+		);
 	}
 	
 	return ReturnValue;

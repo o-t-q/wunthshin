@@ -6,6 +6,7 @@
 #include "Network/Channel/WSChannelBase.h"
 #include "WSItemChannel.generated.h"
 
+struct FUUIDWrapper;
 enum class EItemType : uint8;
 
 USTRUCT()
@@ -29,8 +30,8 @@ struct FItemAndCountUE
 
 DEFINE_CHANNEL_MESSAGE(ItemChannel, EMessageChannelType::Item, AddItem, EMessageType::AddItem);
 DEFINE_CHANNEL_MESSAGE(ItemChannel, EMessageChannelType::Item, GetItems, EMessageType::GetItemsRequest);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnItemAdded, EItemType, ItemType, int32, ItemID, int32, Count);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FRequestItemReceived, bool, IsEnd, int32, Page, int32, Count, const TArray<FItemAndCountUE>&, Items);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnItemAdded, const FUUIDWrapper&, uuid, EItemType, ItemType, int32, ItemID, int32, Count);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FiveParams(FRequestItemReceived, const FUUIDWrapper&, uuid, bool, IsEnd, int32, Page, int32, Count, const TArray<FItemAndCountUE>&, Items);
 
 /**
  * 

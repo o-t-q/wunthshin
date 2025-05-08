@@ -1,23 +1,29 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Subsystem/ItemSubsystem.h"
+#include "Subsystem/WSItemSubsystem.h"
 
+#include "Actor/Pawn/AA_WSCharacter.h"
+#include "Component/C_WSCharacterInventory.h"
+#include "Controller/AwunthshinSpawnPlayerController.h"
+#include "Controller/wunthshinPlayerController.h"
 #include "Data/Item/SG_WSItemMetadata.h"
 #include "Data/Effect/EffectRowHandle.h"
 #include "Data/Item/ItemTableRow.h"
 #include "Data/Item/LootingBoxTableRow.h"
+#include "Data/Item/WSSharedInventory.h"
+#include "Interface/InventoryComponent.h"
 #include "Subsystem/Utility.h"
 #include "Subsystem/WeaponSubsystem.h"
 #include "Network/Subsystem/WSServerSubsystem.h"
 #include "Network/Channel/WSItemChannel.h"
 
-UItemSubsystem::UItemSubsystem()
+UWSItemSubsystem::UWSItemSubsystem()
 	: DataTable(nullptr), LootingBoxTable(nullptr)
 {
 }
 
-void UItemSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+void UWSItemSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
@@ -32,10 +38,10 @@ void UItemSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	DataTableMapping.Emplace(FItemTableRow::StaticStruct(), DataTable);
 	DataTableMapping.Emplace(FLootingBoxTableRow::StaticStruct(), LootingBoxTable);
 
-	GOnServerSubsystemInitialized.AddUniqueDynamic(this, &UItemSubsystem::SubscribeServerSubsystemLazy);
+	GOnServerSubsystemInitialized.AddUniqueDynamic(this, &UWSItemSubsystem::SubscribeServerSubsystemLazy);
 }
 
-USG_WSItemMetadata* UItemSubsystem::GetMetadata(const EItemType InItemType, const FName& InAssetName)
+USG_WSItemMetadata* UWSItemSubsystem::GetMetadata(const EItemType InItemType, const FName& InAssetName)
 {
 	switch (InItemType) 
 	{
@@ -49,7 +55,7 @@ USG_WSItemMetadata* UItemSubsystem::GetMetadata(const EItemType InItemType, cons
 	return nullptr;
 }
 
-USG_WSItemMetadata* UItemSubsystem::GetMetadata(const EItemType InItemType, const int32 InID)
+USG_WSItemMetadata* UWSItemSubsystem::GetMetadata(const EItemType InItemType, const int32 InID)
 {
 	switch (InItemType)
 	{
@@ -63,18 +69,13 @@ USG_WSItemMetadata* UItemSubsystem::GetMetadata(const EItemType InItemType, cons
 	return nullptr;
 }
 
-FSharedInventory& UItemSubsystem::GetSharedInventory() 
-{ 
-	return SharedInventory; 
-}
-
-void UItemSubsystem::AddItemFromMessage(const EItemType ItemType, const int32 InID, const int32 InCount)
+void UWSItemSubsystem::AddItemFromMessage(const FUUIDWrapper& InSessionID, const EItemType ItemType, const int32 InID, const int32 InCount)
 {
 	TScriptInterface<IItemMetadataGetter> Interface;
 	switch (ItemType)
 	{
 	case EItemType::Consumable:
-		Interface = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>();
+		Interface = GetWorld()->GetGameInstance()->GetSubsystem<UWSItemSubsystem>();
 		break;
 	case EItemType::Weapon:
 		Interface = GetWorld()->GetGameInstance()->GetSubsystem<UWeaponSubsystem>();
@@ -85,28 +86,56 @@ void UItemSubsystem::AddItemFromMessage(const EItemType ItemType, const int32 In
 	check(Interface);
 	if (Interface)
 	{
-		SharedInventory.AddItem(Interface->GetMetadata(ItemType, InID), InCount);
+		UWSServerSubsystem* ServerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSServerSubsystem>();
+		check(ServerSubsystem);
+		if (!ServerSubsystem)
+		{
+			return;
+		}
+		
+		const AwunthshinSpawnPlayerController* PlayerController = Cast<AwunthshinSpawnPlayerController>( ServerSubsystem->GetPlayerController( InSessionID ) );
+		check(PlayerController);
+		if (!PlayerController)
+		{
+			return;
+		}
+		
+		PlayerController->GetSharedInventory()->AddItem(Interface->GetMetadata(ItemType, InID), InCount);
 		OnCharacterInventoryUpdated.Broadcast();
 	}
 }
 
-void UItemSubsystem::UpdateInventory(const bool IsEnd, const int32 Page, const int32 Count, const TArray<FItemAndCountUE>& InItems)
+void UWSItemSubsystem::UpdateInventory(const FUUIDWrapper& InSessionID, const bool IsEnd, const int32 Page, const int32 Count, const TArray<FItemAndCountUE>& InItems)
 {
 	if (Count == 0)
 	{
 		return;
 	}
 
-	UItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>();
+	UWSItemSubsystem* ItemSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSItemSubsystem>();
 	check(ItemSubsystem);
 	if (!ItemSubsystem)
 	{
 		return;
 	}
 
+	UWSServerSubsystem* ServerSubsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSServerSubsystem>();
+	check(ServerSubsystem);
+	if (!ServerSubsystem)
+	{
+		return;
+	}
+
+	const AwunthshinSpawnPlayerController* PlayerController = Cast<AwunthshinSpawnPlayerController>( ServerSubsystem->GetPlayerController( InSessionID ) );
+	check(PlayerController);
+	if (!PlayerController)
+	{
+		return;
+	}
+
 	if (Page == 0)
 	{
-		ItemSubsystem->GetSharedInventory().Clear(Count);
+		PlayerController->GetSharedInventory()->Clear( 1024 );
 	}
 
 	for (int i = 0; i < Count; ++i)
@@ -115,7 +144,7 @@ void UItemSubsystem::UpdateInventory(const bool IsEnd, const int32 Page, const i
 		switch (InItems[i].ItemType)
 		{
 		case EItemType::Consumable:
-			Interface = GetWorld()->GetGameInstance()->GetSubsystem<UItemSubsystem>();
+			Interface = GetWorld()->GetGameInstance()->GetSubsystem<UWSItemSubsystem>();
 			break;
 		case EItemType::Weapon:
 			Interface = GetWorld()->GetGameInstance()->GetSubsystem<UWeaponSubsystem>();
@@ -123,14 +152,15 @@ void UItemSubsystem::UpdateInventory(const bool IsEnd, const int32 Page, const i
 		default: check(false);
 		}
 
-		ItemSubsystem->GetSharedInventory().AddItem(Interface->GetMetadata(InItems[i].ItemType, InItems[i].ItemID), InItems[i].Count);
+		PlayerController->GetSharedInventory()->AddItem(Interface->GetMetadata(InItems[i].ItemType, InItems[i].ItemID), InItems[i].Count);
 	}
 
 	if (!IsEnd)
 	{
 		if (UWSServerSubsystem* Subsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSServerSubsystem>())
 		{
-			Subsystem->TryGetItems(Page + 1);
+			const bool Result = Subsystem->Server_GetItems( PlayerController, Page + 1 );
+			check(Result);
 		}
 	}
 	else
@@ -139,14 +169,14 @@ void UItemSubsystem::UpdateInventory(const bool IsEnd, const int32 Page, const i
 	}
 }
 
-void UItemSubsystem::SubscribeServerSubsystemLazy()
+void UWSItemSubsystem::SubscribeServerSubsystemLazy()
 {
 	if (UWSServerSubsystem* Subsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSServerSubsystem>())
 	{
 		if (UWSItemChannel* ItemChannel = Subsystem->GetItemChannel())
 		{
-			ItemChannel->OnItemAdded.AddUniqueDynamic(this, &UItemSubsystem::AddItemFromMessage);
-			ItemChannel->RequestItemReceived.AddUniqueDynamic(this, &UItemSubsystem::UpdateInventory);
+			ItemChannel->OnItemAdded.AddUniqueDynamic(this, &UWSItemSubsystem::AddItemFromMessage);
+			ItemChannel->RequestItemReceived.AddUniqueDynamic(this, &UWSItemSubsystem::UpdateInventory);
 		}
 	}
 }

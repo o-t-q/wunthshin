@@ -119,7 +119,7 @@ BOOST_FIXTURE_TEST_CASE( LoginAndOut, ServerClientFixture )
         boost::asio::const_buffer logoutBuffer( &logoutMessage, sizeof( logoutMessage ) );
         BOOST_CHECK( socket.send( logoutBuffer ) != 0 );
         CONSOLE_OUT( __FUNCTION__, "Logout request sent" );
-        LogoutOKMessage             logoutReply( false );
+        LogoutOKMessage             logoutReply( false, UUID() );
         boost::asio::mutable_buffer loginReceived( &logoutReply, sizeof( logoutReply ) );
         socket.receive( loginReceived );
         BOOST_CHECK( logoutReply.success );

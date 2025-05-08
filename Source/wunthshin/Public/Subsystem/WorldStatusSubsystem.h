@@ -27,7 +27,7 @@ struct WUNTHSHIN_API FDamageTakenArray
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	TArray<const ICommonPawn*> Victims;
+	TArray<TScriptInterface<const ICommonPawn>> Victims;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAttackEnded, FGuid, InAttackID);
@@ -148,16 +148,18 @@ public:
 	}
 
 	// 공격 입은 대상을 해당 공격에 매핑
-	void SetDamageTaken(const ICommonPawn* InPawn, const FGuid& InDamageTakenBy)
+	template <typename T> requires std::is_base_of_v<UObject, T>
+	void SetDamageTaken(const T* InPawn, const FGuid& InDamageTakenBy)
 	{
 		DamageTaken.Add(InDamageTakenBy);
 		DamageTaken[InDamageTakenBy].Victims.Add(InPawn);
 	}
+	
 	void SetDamageTaken(const ICommonPawn* InPawn, const UC_WSWeapon* InWeapon)
 	{
 		if (AttacksInProgress.Contains(InWeapon))
 		{
-			SetDamageTaken(InPawn, AttacksInProgress[InWeapon]);
+			SetDamageTaken(Cast<const UObject>(InPawn), AttacksInProgress[InWeapon]);
 		}
 	}
 

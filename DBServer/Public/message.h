@@ -150,16 +150,22 @@ using UUID = std::array<std::byte, 16>;
 DEFINE_MSG( UnspecifiedMessage, EMessageType::Unspecified, EMessageChannelType::Unspecified )
 DEFINE_MSG( PingPongMessage, EMessageType::PingPong, EMessageChannelType::Comm )
 DEFINE_MSG_WITH_BODY( LoginMessage, EMessageType::Login, EMessageChannelType::Login, Varchar name{};
-                      HashArray hashedPassword{}; )
+                      HashArray hashedPassword{};
+                      uint32_t  messageIdentifier{}; )
 DEFINE_MSG_WITH_BODY(
-        LoginStatusMessage,
-        EMessageType::LoginStatus,
-        EMessageChannelType::Login,
-        LoginStatusMessage( const bool InSuccess, const UUID& InSessionId ) {
-            success   = InSuccess;
-            sessionId = InSessionId;
-        } bool success = false;
-        UUID   sessionId{}; )
+        LoginStatusMessage, EMessageType::LoginStatus, EMessageChannelType::Login, bool success = false;
+        UUID     sessionId{};
+        uint32_t id{};
+        uint32_t messageIdentifier{};
+        LoginStatusMessage( const bool     InSuccess,
+                            const uint32_t InID,
+                            const UUID&    InSessionId,
+                            const uint32_t InMessageIdentifier ) {
+            success           = InSuccess;
+            sessionId         = InSessionId;
+            id                = InID;
+            messageIdentifier = InMessageIdentifier;
+        } )
 
 DEFINE_MSG_WITH_BODY(
         LogoutMessage, EMessageType::Logout, EMessageChannelType::Login, LogoutMessage( const UUID& InSessionId ) {
@@ -167,29 +173,32 @@ DEFINE_MSG_WITH_BODY(
         } UUID sessionId{}; )
 
 DEFINE_MSG_WITH_BODY(
-        LogoutOKMessage, EMessageType::LogoutOK, EMessageChannelType::Login, LogoutOKMessage( const bool InSuccess ) {
-            success = InSuccess;
-        } bool success = false; )
+        LogoutOKMessage, EMessageType::LogoutOK, EMessageChannelType::Login, bool success = false; UUID sessionID{};
+        LogoutOKMessage( const bool InSuccess, const UUID& InSessionID ) {
+            success   = InSuccess;
+            sessionID = InSessionID;
+        } )
 
 DEFINE_MSG_WITH_BODY( RegisterMessage, EMessageType::Register, EMessageChannelType::Register, Varchar name{};
                       Varchar   email{};
-                      HashArray hashedPassword{}; )
+                      HashArray hashedPassword{};
+                      uint32_t  messageIdentifier{}; )
 
 DEFINE_MSG_WITH_BODY(
-        RegisterStatusMessage,
-        EMessageType::RegisterStatus,
-        EMessageChannelType::Register,
+        RegisterStatusMessage, EMessageType::RegisterStatus, EMessageChannelType::Register, bool success = false;
+        ERegistrationFailCode code = ERegistrationFailCode::None;
+        uint32_t              messageIdentifier{};
 
-        RegisterStatusMessage( bool InSucess, ERegistrationFailCode InCode ) {
-            success = InSucess;
-            code    = InCode;
-        } bool                success = false;
-        ERegistrationFailCode code    = ERegistrationFailCode::None; )
+        RegisterStatusMessage( bool InSucess, ERegistrationFailCode InCode, const uint32_t InMessageIdentifier ) {
+            success           = InSucess;
+            code              = InCode;
+            messageIdentifier = InMessageIdentifier;
+        } )
 
 DEFINE_MSG_WITH_BODY(
         AddItemRequestMessage, EMessageType::AddItem, EMessageChannelType::Login, UUID sessionId{};
-        uint32_t  newItem  = -1;
-        uint32_t  count    = 0;
+        uint32_t    newItem  = -1;
+        uint32_t    count    = 0;
         EDBItemType ItemType = EDBItemType::Unknown;
         AddItemRequestMessage(
                 const UUID& InSessionId, const EDBItemType InItemType, uint32_t InID, uint32_t InCount ) {
@@ -200,11 +209,14 @@ DEFINE_MSG_WITH_BODY(
         } )
 
 DEFINE_MSG_WITH_BODY(
-        AddItemResponseMessage, EMessageType::AddItemResponse, EMessageChannelType::Item, bool Success = false;
+        AddItemResponseMessage, EMessageType::AddItemResponse, EMessageChannelType::Item, 
+        UUID sessionID{};
+        bool Success = false;
         uint32_t    itemID   = -1;
         uint32_t    Count    = 0;
         EDBItemType ItemType = EDBItemType::Unknown;
-        AddItemResponseMessage( bool InSuccess, const EDBItemType InItemType, uint32_t InItemID, uint32_t InCount ) {
+        AddItemResponseMessage( const UUID& InSessionID, bool InSuccess, const EDBItemType InItemType, uint32_t InItemID, uint32_t InCount ) {
+            sessionID = InSessionID;
             Success  = InSuccess;
             itemID   = InItemID;
             Count    = InCount;
@@ -229,16 +241,20 @@ struct ItemAndCount
 using ItemArray = std::array<ItemAndCount, 100>;
 
 DEFINE_MSG_WITH_BODY(
-        GetItemsResponseMessage, EMessageType::GetItemsResponse, EMessageChannelType::Item, ItemArray items{};
+        GetItemsResponseMessage, EMessageType::GetItemsResponse, EMessageChannelType::Item, 
+        UUID sessionID{};
+        ItemArray items{};
         uint32_t section = 0;
         size_t   count   = 0;
         bool success = false;
         bool end     = true;
-        GetItemsResponseMessage( uint32_t         InSection,
+        GetItemsResponseMessage( const UUID& InSessionID,
+            uint32_t         InSection,
                                  const bool       InSuccess,
                                  const bool       IsEnd,
                                  const size_t     InItemCount,
                                  const ItemArray& InItems ) {
+            sessionID = InSessionID;
             section = InSection;
             items   = InItems;
             count   = InItemCount;

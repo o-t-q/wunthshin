@@ -8,12 +8,14 @@
 
 /**
  * 게임 인스턴스에 연동된 플레이어 귀속 인벤토리 컴포넌트
+ * 플레이어 별로 생성되는 공유 인벤토리 프록시
  */
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class WUNTHSHIN_API UC_WSCharacterInventory : public UActorComponent, public IInventoryComponent
 {
 	GENERATED_BODY()
-
+	friend class UWSItemSubsystem;
+	
 public:
 	// Sets default values for this component's properties
 	UC_WSCharacterInventory();
@@ -33,5 +35,7 @@ public:
 	virtual void RemoveItem(const USG_WSItemMetadata* InItem, int InCount = 1) override;
 	virtual void UseItem(uint32 Index, AActor* InTarget, int InCount = 1) override;
 
-	void FetchInventory();
+private:
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_FetchInventory();
 };

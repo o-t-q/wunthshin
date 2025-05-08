@@ -16,7 +16,7 @@ enum class ERegisterFailCodeUE : uint8
 	Email = (uint8)ERegistrationFailCode::Email
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FLastRegisterationStatus, bool, bSuccess, ERegisterFailCodeUE, FailCode);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FLastRegisterationStatusServer, const uint32, InPCUniqueID, bool, bSuccess, ERegisterFailCodeUE, FailCode);
 
 /**
  * 
@@ -27,7 +27,7 @@ class WUNTHSHIN_API UWSRegisterChannel : public UWSChannelBase
 	GENERATED_BODY()
 public:
 	UPROPERTY(BlueprintAssignable)
-	FLastRegisterationStatus LastRegistrationStatus;
+	FLastRegisterationStatusServer LastRegistrationStatus;
 
 	virtual void ReceivedBunch(MessageBase& Bunch) override;
 

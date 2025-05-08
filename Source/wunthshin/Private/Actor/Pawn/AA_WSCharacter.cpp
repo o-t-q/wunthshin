@@ -33,6 +33,12 @@
 #include "Actor/Item/A_LootingBox.h"
 #include "Component/C_WSCharacterInventory.h"
 #include "Component/C_WSSkill.h"
+#include "Controller/AwunthshinSpawnPlayerController.h"
+
+#include "Controller/wunthshinPlayerController.h"
+
+#include "Data/Character/ClientCharacterInfo.h"
+
 #include "Subsystem/CharacterSubsystem.h"
 #include "Subsystem/WorldStatusSubsystem.h"
 #include "Widget/WG_WSDamageCounter.h"
@@ -569,11 +575,8 @@ void AA_WSCharacter::SwapCharacterOne()
     {
         return;
     }
-    
-    if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
-    {
-        CharacterSubsystem->SpawnAsCharacter(0);
-    }
+
+	Cast<AwunthshinSpawnPlayerController>(Controller)->SpawnAsCharacter( 0 );
 }
 
 void AA_WSCharacter::SwapCharacterTwo()
@@ -583,10 +586,7 @@ void AA_WSCharacter::SwapCharacterTwo()
         return;
     }
     
-    if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
-    {
-        CharacterSubsystem->SpawnAsCharacter(1);
-    }
+	Cast<AwunthshinSpawnPlayerController>(Controller)->SpawnAsCharacter( 1 );
 }
 
 void AA_WSCharacter::OnCrouch()
@@ -847,7 +847,6 @@ void AA_WSCharacter::CancelClimb()
 {
     CilmMovementComponent->CancelClimbing();
 }
-
 
 
 

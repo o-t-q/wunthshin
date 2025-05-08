@@ -1,19 +1,21 @@
-#include "Subsystem/SharedInventory/SharedInventory.h"
-#include "Network/Channel/WSItemChannel.h"
-#include "Network/Subsystem/WSServerSubsystem.h"
-#include "Data/Item/SG_WSItemMetadata.h"
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Data/Item/InventoryPair.h"
+
+#include "Data/Item/WSSharedInventory.h"
+
+#include "Controller/wunthshinPlayerController.h"
+#include "Net/UnrealNetwork.h"
+#include "Network/Subsystem/WSServerSubsystem.h"
 #include "Subsystem/WorldStatusSubsystem.h"
 
-DEFINE_LOG_CATEGORY(LogSharedInventory);
+DEFINE_LOG_CATEGORY( LogSharedInventory );
 
-const TArray<FInventoryPair>& FSharedInventory::GetItems() const 
-{ 
+const TArray<FInventoryPair>& AWSSharedInventory::GetItems() const
+{
 	return ItemsOwned; 
 }
 
-void FSharedInventory::AddItem(const USG_WSItemMetadata* InItemMetadata, const uint32 InCount)
+void AWSSharedInventory::AddItem( const USG_WSItemMetadata* InMetadata, const uint32 InCount )
 {
 	if (InCount <= 0)
 	{
@@ -23,7 +25,7 @@ void FSharedInventory::AddItem(const USG_WSItemMetadata* InItemMetadata, const u
 	UE_LOG(LogSharedInventory, Log, TEXT("UC_WSInventory::AddItemInternal"));
 
 	// 동일한 아이템이 이미 존재하는 경우
-	if (FInventoryPair* Iterator = FindItem(InItemMetadata); Iterator)
+	if (FInventoryPair* Iterator = FindItem(InMetadata); Iterator)
 	{
 		// todo: 오버플로우 방지
 		Iterator->Count += InCount;
@@ -31,10 +33,10 @@ void FSharedInventory::AddItem(const USG_WSItemMetadata* InItemMetadata, const u
 	}
 
 	// 동일한 아이템이 없으므로 추가
-	ItemsOwned.Emplace( InItemMetadata, InCount );
+	ItemsOwned.Emplace( InMetadata, InCount );
 }
 
-void FSharedInventory::RemoveItem(const USG_WSItemMetadata* InItemMetadata, const uint32 InCount)
+void AWSSharedInventory::RemoveItem( const USG_WSItemMetadata* InItemMetadata, const uint32 InCount )
 {
 	if (InCount <= 0)
 	{
@@ -77,7 +79,7 @@ void FSharedInventory::RemoveItem(const USG_WSItemMetadata* InItemMetadata, cons
 	}
 }
 
-void FSharedInventory::UseItem(const uint32 InIndex, AActor* InUser, AActor* InTargetActor, const uint32 InCount)
+void AWSSharedInventory::UseItem( uint32 InIndex, AActor* InUser, AActor* InTargetActor, uint32 InCount )
 {
 	if (InCount <= 0)
 	{
@@ -110,10 +112,9 @@ void FSharedInventory::UseItem(const uint32 InIndex, AActor* InUser, AActor* InT
 			ItemsOwned.RemoveAt(InIndex);
 		}
 	}
-	
 }
 
-void FSharedInventory::Clear(const int32 Reserve)
+void AWSSharedInventory::Clear( const int32 Reserve )
 {
 	ItemsOwned.Empty();
 
@@ -123,7 +124,7 @@ void FSharedInventory::Clear(const int32 Reserve)
 	}
 }
 
-int32 FSharedInventory::FindItemIndex(const USG_WSItemMetadata* InMetadata) const
+int32 AWSSharedInventory::FindItemIndex( const USG_WSItemMetadata* InMetadata ) const
 {
 	return ItemsOwned.IndexOfByPredicate(
 		[&InMetadata](const FInventoryPair& InPair)
@@ -132,10 +133,31 @@ int32 FSharedInventory::FindItemIndex(const USG_WSItemMetadata* InMetadata) cons
 		});
 }
 
-FInventoryPair* FSharedInventory::FindItem(const USG_WSItemMetadata* InMetadata)
+FInventoryPair* AWSSharedInventory::FindItem( const USG_WSItemMetadata* InMetadata )
 {
 	return ItemsOwned.FindByPredicate([&InMetadata](const FInventoryPair& InEntry)
 		{
 			return InEntry.Metadata == InMetadata;
 		});
+}
+
+void AWSSharedInventory::Server_FetchInventory_Implementation()
+{
+	if (UWSServerSubsystem* ServerSubsystem = GetGameInstance()->GetSubsystem<UWSServerSubsystem>())
+	{
+		const bool Result = ServerSubsystem->Client_TryGetItems( Cast<AwunthshinPlayerController>(GetWorld()->GetFirstPlayerController()), 0 );
+		check( Result );
+	}
+}
+
+bool AWSSharedInventory::Server_FetchInventory_Validate()
+{
+	// todo: rate limit
+	return true;
+}
+
+void AWSSharedInventory::GetLifetimeReplicatedProps( TArray<FLifetimeProperty>& OutLifetimeProps ) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME_CONDITION( AWSSharedInventory, ItemsOwned, COND_OwnerOnly )
 }
