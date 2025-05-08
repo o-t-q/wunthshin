@@ -13,6 +13,7 @@ class UWSLoginChannel;
 class UWSRegisterChannel;
 class UWSItemChannel;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnAccountInfoChanged, const bool, bLogin, const int32, UserID, const FUUIDWrapper&, SessionID);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnServerSubsystemInitialized);
 extern FOnServerSubsystemInitialized GOnServerSubsystemInitialized;
 
@@ -22,6 +23,9 @@ class WUNTHSHIN_API UWSServerSubsystem : public UGameInstanceSubsystem, public F
 {
 	GENERATED_BODY()
 public:
+	UPROPERTY(BlueprintAssignable)
+	FOnAccountInfoChanged OnAccountInfoChanged;
+	
 	UFUNCTION(BlueprintCallable)
 	UWSLoginChannel* GetLoginChannel() const { return LoginChannel.Get(); }
 
@@ -33,10 +37,9 @@ public:
 
 	// Login Functions
 	static bool ValidateLoginRequest( const FString& InID, const TArray<uint8>& HashedPassword );
-	bool Client_TrySendLoginRequest(const FString& InID, const FSHA256Signature& HashedPassword) const;
+	bool TrySendLoginRequest(const FString& InID, const FSHA256Signature& HashedPassword) const;
 	UFUNCTION(BlueprintCallable)
-	bool Client_TrySendLoginRequest(const FString& InID, const FString& InPlainPassword);
-	bool Server_SendLoginRequest( const AwunthshinPlayerController* PlayerController, const FString& InID, const FSHA256Signature& HashedPassword ) const;
+	bool TrySendLoginRequest(const FString& InID, const FString& InPlainPassword);
 
 	// Logout Functions
 	static bool ValidateLogoutRequest( const AwunthshinPlayerController* PlayerController );
@@ -47,9 +50,8 @@ public:
 	// Register Functions
 	static bool ValidateRegisterRequest( const FString& InID, const FString& InEmail, const TArray<uint8>& HashedPassword );
 	UFUNCTION(BlueprintCallable)
-	bool Client_TrySendRegister( const AwunthshinPlayerController* PlayerController, const FString& InID, const FString& InEmail, const FString& InPlainPassword );
-	bool Server_SendRegister( const AwunthshinPlayerController* PlayerController, const FString& InID, const FString& InEmail, const FSHA256Signature& HashedPassword ) const;
-
+	bool TrySendRegister( const AwunthshinPlayerController* PlayerController, const FString& InID, const FString& InEmail, const FString& InPlainPassword );
+	
 	// Item request functions
 	UFUNCTION(BlueprintCallable)
 	bool Client_TryGetItems( const AwunthshinPlayerController* PlayerController, int32 Page ) const;
@@ -88,16 +90,24 @@ protected:
 private:
 	UFUNCTION()
 	void OnLoginMessageReceived( bool bLogin, uint32 ID, const FUUIDWrapper& LoginUUID, uint32 InPCUniqueID );
-	
-	UFUNCTION()
-	void OnRegisterMessageReceived( const uint32 InPCUniqueID, bool bSuccess, ERegisterFailCodeUE FailCode );
 
 	UFUNCTION(BlueprintCallable)
 	void ConnectToMiddleware(const FString& InHost, int32 InPort);
-	
+
+	UFUNCTION(BlueprintCallable)
+	void ConnectToServer(const FString& InHost, int32 InPort = 17777) const;
+
+	// 클라이언트의 세션 아이디
+	UPROPERTY(VisibleAnywhere)
+	FUUIDWrapper ClientSessionID;
+
+	// 클라이언트의 유저 아이디
+	UPROPERTY(VisibleAnywhere)
+	int32 ClientUserID;
+
+	// 서버가 기록한 세션 아이디와 플레이어 컨트롤러 페어
 	UPROPERTY(VisibleAnywhere)
 	TMap<AwunthshinPlayerController*, FUUIDWrapper> SessionIDs;
-
 	UPROPERTY(VisibleAnywhere)
 	TMap<FUUIDWrapper, AwunthshinPlayerController*> PlayerControllers;
 	

@@ -3,47 +3,51 @@
 
 #include "Actor/LevelScript/A_WSLevelScript.h"
 
+#include "Controller/AwunthshinSpawnPlayerController.h"
 #include "Data/Character/ClientCharacterInfo.h"
+#include "Streaming/LevelStreamingDelegates.h"
 
 #include "Subsystem/CharacterSubsystem.h"
-#include "Subsystem/WorldStatusSubsystem.h"
+#include "WorldPartition/WorldPartition.h"
 
-
-void AA_WSLevelScript::Server_RequestTakeSnapshot_Implementation( ULevel* InLevel, UWorld* InWorld, AwunthshinPlayerController* InController )
+void AA_WSLevelScript::OnLevelChanged(UWorld* InWorld, const ULevelStreaming* InStreamingLevel,  ULevel* InLevel,
+                                      ELevelStreamingState InPreviousState, ELevelStreamingState InNewState)
 {
-	// 클라이언트 -> 서버: 플레이어 컨트롤러를 키로 전달해서 현재 캐릭터들의 정보를 저장하도록 요청
-	TakeSnapshotProxy(InLevel, InWorld, InController);
-}
-
-void AA_WSLevelScript::OnLevelChanged(ULevel* InLevel, UWorld* InWorld)
-{
-	if (GetNetMode() == NM_Client)
+	if (InPreviousState == ELevelStreamingState::Unloaded && InNewState == ELevelStreamingState::LoadedVisible)
 	{
-		// 클라이언트일 경우 RPC를 사용
-		Server_RequestTakeSnapshot(InLevel, InWorld, GetWorld()->GetFirstPlayerController<AwunthshinPlayerController>());
-	}
-	else if (GetNetMode() == NM_ListenServer)
-	{
-		// 리스너일 경우 직접 호출
-		TakeSnapshotProxy(InLevel, InWorld, GetWorld()->GetFirstPlayerController<AwunthshinPlayerController>());
-	}
-	else
-	{
-		// 서버일 경우 아무것도 하지 않음
-		return;
-	}
-}
-
-void AA_WSLevelScript::TakeSnapshotProxy(const ULevel* InLevel, const UWorld* InWorld, const AwunthshinPlayerController* InController)
-{
-	// LoadMap일 경우 InLevel이 nullptr, PreLevelRemovedFromWorld Delegate 참조.
-	if ( !InLevel )
-	{
-		if (UCharacterSubsystem* CharacterSubsystem = InWorld->GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
+		if (GetNetMode() == NM_Client)
 		{
-			CharacterSubsystem->GetClientInfo(InController)->TakeCharacterLevelSnapshot();
+			// 클라이언트일 경우 RPC를 사용
+			Server_RequestTakeSnapshot(InWorld, InStreamingLevel, InLevel, (ELevelStreamingStateBP)InPreviousState, (ELevelStreamingStateBP)InNewState, GetWorld()->GetFirstPlayerController<AwunthshinPlayerController>());
 		}
-	}	
+		else if (GetNetMode() == NM_ListenServer)
+		{
+			// 리스너일 경우 직접 호출
+			TakeSnapshotProxy(InWorld, InStreamingLevel, InLevel, InPreviousState, InNewState, GetWorld()->GetFirstPlayerController<AwunthshinPlayerController>());
+		}
+		else
+		{
+			// 서버일 경우 아무것도 하지 않음
+			return;
+		}
+	}
+}
+
+void AA_WSLevelScript::TakeSnapshotProxy(const UWorld* InWorld, const ULevelStreaming* InStreamingLevel, ULevel* InLevel,
+                                         ELevelStreamingState InPreviousState, ELevelStreamingState InNewState,
+                                         const AwunthshinPlayerController* InPlayerController)
+{
+	// 언로드 상태에서 로드 상태로 변경된 경우 (플레이어가 위치를 변경했을 경우로 가정)
+	if (InPreviousState == ELevelStreamingState::Unloaded && InNewState == ELevelStreamingState::LoadedVisible)
+	{
+		if (const UCharacterSubsystem* CharacterSubsystem = InWorld->GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
+		{
+			if (InPlayerController)
+			{
+				CharacterSubsystem->GetClientInfo( InPlayerController )->TakeCharacterLevelSnapshot();	
+			}
+		}
+	}
 }
 
 // Sets default values
@@ -53,46 +57,64 @@ AA_WSLevelScript::AA_WSLevelScript()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
+void AA_WSLevelScript::FlushStreamingStateHandlers()
+{
+	FStreamingStateTuple Tuple;
+	while ( StateChangeCache.Dequeue( Tuple ) )
+	{
+		StreamingStateHandler.Broadcast(Tuple.Get<0>(), Tuple.Get<1>(), Tuple.Get<2>(), (ELevelStreamingStateBP)Tuple.Get<3>(), (ELevelStreamingStateBP)Tuple.Get<4>());
+	}
+
+	StreamingStateHandler.Clear();
+}
+
 // Called when the game starts or when spawned
 void AA_WSLevelScript::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (GetNetMode() == NM_Client)
+	
+	if (GetNetMode() == NM_Client || GetNetMode() == NM_ListenServer)
 	{
-		// EndPlay에서 TakeCharacterLevelSnapshot을 호출하면 무기를 얻어올 수 없음.
-		// LoadMap이 호출되는 과정에서 PlayerController의 Pawn에 대해 Destroy가 호출되고
-		// 이에 따라 ChildActorComponent의 ChildActor가 Destroy됨
-		FWorldDelegates::PreLevelRemovedFromWorld.AddUObject( this, &AA_WSLevelScript::OnLevelChanged );
+		// 클라이언트와 리슨 서버에서 스트리밍 상태가 변경이 될 경우 플레이어의 위치가 이동된다고 가정하고
+		// 플레이어의 캐릭터들에 대한 정보를 서버에서 업데이트
+		FLevelStreamingDelegates::OnLevelStreamingStateChanged.AddUObject( this, &AA_WSLevelScript::OnLevelChanged );
 	}
-
-	if ( HasAuthority() )
-	{
-		// Streaming Level은 한번에 하나씩만 로딩한다는 전제 하에 사용중
-		if ( UWorldStatusSubsystem* WorldStatusSubsystem = this->GetWorld()->GetSubsystem<UWorldStatusSubsystem>() )
-		{
-			const FString NativeName = GetName();
-			const int32 NameLength = NativeName.Find(TEXT("_C"), ESearchCase::CaseSensitive, ESearchDir::FromEnd);
-			const FString BlueprintName = NativeName.LeftChop(NativeName.Len() - NameLength);
-
-			WorldStatusSubsystem->SetCurrentStreamingLevel(*BlueprintName);
-		}
-	}
+	
+	FLevelStreamingDelegates::OnLevelStreamingStateChanged.AddUObject( this, &AA_WSLevelScript::OnStreamingStateChanged );
 }
 
 void AA_WSLevelScript::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	FlushStreamingStateHandlers();
 	Super::EndPlay(EndPlayReason);
+	FLevelStreamingDelegates::OnLevelStreamingStateChanged.RemoveAll( this );	
+}
 
-	if (GetNetMode() == NM_Client)
-	{	
-		FWorldDelegates::PreLevelRemovedFromWorld.RemoveAll(this);	
-	}
+void AA_WSLevelScript::OnStreamingStateChanged(UWorld* World, const ULevelStreaming* LevelStreaming, ULevel* Level,
+	ELevelStreamingState LevelStreamingState, ELevelStreamingState LevelStreamingState1)
+{
+	StateChangeCache.Enqueue({World, LevelStreaming, Level, LevelStreamingState, LevelStreamingState1});
+}
+
+bool AA_WSLevelScript::Server_RequestTakeSnapshot_Validate(UWorld* InWorld, const ULevelStreaming* InStreamingLevel,
+	ULevel* InLevel, ELevelStreamingStateBP InPreviousState, ELevelStreamingStateBP InNewState,
+	AwunthshinPlayerController* InController)
+{
+	return InController->GetLevel()->GetOutermost() == InStreamingLevel->GetPackage();
+}
+
+void AA_WSLevelScript::Server_RequestTakeSnapshot_Implementation(UWorld* InWorld,
+                                                                 const ULevelStreaming* InStreamingLevel, ULevel* InLevel, ELevelStreamingStateBP InPreviousState,
+                                                                 ELevelStreamingStateBP InNewState, AwunthshinPlayerController* InController)
+{
+	// 클라이언트 -> 서버: 플레이어 컨트롤러를 키로 전달해서 현재 캐릭터들의 정보를 저장하도록 요청
+	TakeSnapshotProxy(InWorld, InStreamingLevel, InLevel, (ELevelStreamingState)InPreviousState, (ELevelStreamingState)InNewState, InController);
 }
 
 // Called every frame
 void AA_WSLevelScript::Tick(float DeltaTime)
 {
+	FlushStreamingStateHandlers();
 	Super::Tick(DeltaTime);
 }
 

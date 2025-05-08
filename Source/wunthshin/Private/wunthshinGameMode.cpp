@@ -9,6 +9,7 @@
 #include "Data/Character/ClientCharacterInfo.h"
 
 #include "Network/Subsystem/WSServerSubsystem.h"
+#include "Streaming/LevelStreamingDelegates.h"
 
 #include "Subsystem/CharacterSubsystem.h"
 #include "UObject/ConstructorHelpers.h"

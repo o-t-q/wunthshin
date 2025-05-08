@@ -6,6 +6,7 @@
 #include "message.h"
 #include "Controller/wunthshinPlayerController.h"
 #include "Engine/DemoNetConnection.h"
+#include "Kismet/GameplayStatics.h"
 #include "Misc/Paths.h"
 #include "wunthshin/wunthshin.h"
 
@@ -37,29 +38,48 @@ bool UWSServerSubsystem::HashPassword(const FString& InPlainPassword, FSHA256Sig
 
 void UWSServerSubsystem::ConnectToMiddleware(const FString& InHost, int32 InPort)
 {
-	if ( GetWorld()->GetNetMode() == NM_ListenServer || GetWorld()->GetNetMode() == NM_DedicatedServer )
+	NetDriver = NewObject<UWSNetDriver>( this, TEXT( "WS NetDriver" ) );
+	FURL URL{};
+	URL.Host = InHost.IsEmpty() ? Host : InHost;
+	URL.Port = InPort == 0 ? Port : InPort;
+	URL.Protocol = "tcp";
+	URL.Map = "";
+
+	check( !URL.Host.IsEmpty() );
+	check( URL.Port != -1 );
+
+	FString OutError;
+	if ( !NetDriver->InitConnect( this, URL, OutError ) )
 	{
-		NetDriver = NewObject<UWSNetDriver>( this, TEXT( "WS NetDriver" ) );
-		FURL URL{};
-		URL.Host = InHost.IsEmpty() ? Host : InHost;
-		URL.Port = InPort == -1 ? Port : InPort;
-		URL.Protocol = "tcp";
-		URL.Map = "";
+		check(false);
+		UE_LOG(LogTemp, Error, TEXT("Connect Failed"));
+		return;
+	}
+	
+	LoginChannel = Cast<UWSLoginChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Login]);
+	RegisterChannel = Cast<UWSRegisterChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Register]);
 
-		check( !URL.Host.IsEmpty() );
-		check( URL.Port != -1 );
+	// 게임에 접속하지 않고도 메세지를 보냄으로써 아이템 생성 및 조회가 가능할 수 있음
+	// 예를 들어, 로그인 API를 통해서 세션 아이디를 부여받고 그 세션 아이디를 이용해서
+	// 아이템 채널에 아이템을 추가하라는 메세지를 보낼 수 있고, 이때 데이터베이스 서버는
+	// 이 아이템이 게임에 실제로 존재하는지를 알 수가 없음
+	// todo: 데이터베이스 서버에서 화이트리스트 IP를 구성해서 메세지를 필터링
+	if (GetWorld()->GetNetMode() != NM_Client)
+	{
+		ItemChannel = Cast<UWSItemChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Item]);	
+	}	
+}
 
-		FString OutError;
-		if ( !NetDriver->InitConnect( this, URL, OutError ) )
-		{
-			check(false);
-			UE_LOG(LogTemp, Error, TEXT("Connect Failed"));
-			return;
-		}
-
-		LoginChannel = Cast<UWSLoginChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Login]);
-		RegisterChannel = Cast<UWSRegisterChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Register]);
-		ItemChannel = Cast<UWSItemChannel>(NetDriver->ServerConnection->Channels[(uint8)EMessageChannelType::Item]);
+void UWSServerSubsystem::ConnectToServer(const FString& InHost, const int32 InPort) const
+{
+	const FString URL = FString::Printf( TEXT("%s:%d"), *(InHost.IsEmpty() ? Host : InHost), InPort == 0 ? Port : InPort );
+	
+	AwunthshinPlayerController* PlayerController = Cast<AwunthshinPlayerController>( GetWorld()->GetFirstPlayerController() );
+	check( PlayerController );
+	if ( PlayerController )
+	{
+		PlayerController->ClientTravel(*URL, TRAVEL_Absolute);
+		PlayerController->Server_Authenticate(ClientUserID, ClientSessionID);
 	}
 }
 
@@ -96,20 +116,12 @@ bool UWSServerSubsystem::Server_GetItems( const AwunthshinPlayerController* Play
 
 void UWSServerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-	if ( GetWorld()->GetNetMode() == NM_ListenServer || GetWorld()->GetNetMode() == NM_DedicatedServer )
-	{
-		ConnectToMiddleware( Host, Port );
-		GOnServerSubsystemInitialized.Broadcast();
+	ConnectToMiddleware( Host, Port );
+	GOnServerSubsystemInitialized.Broadcast();
 
-		// Replicates the session id, user id, and login status to the designated client.
-		if ( LoginChannel.IsValid() )
-		{
-			LoginChannel->OnLoginStatusChanged.AddUniqueDynamic( this, &UWSServerSubsystem::OnLoginMessageReceived );
-		}
-		if ( RegisterChannel.IsValid() )
-		{
-			RegisterChannel->LastRegistrationStatus.AddUniqueDynamic( this, &UWSServerSubsystem::OnRegisterMessageReceived );	
-		}
+	if ( LoginChannel.IsValid() )
+	{
+		LoginChannel->OnLoginStatusChanged.AddUniqueDynamic( this, &UWSServerSubsystem::OnLoginMessageReceived );
 	}
 }
 
@@ -140,7 +152,7 @@ bool UWSServerSubsystem::ValidateLoginRequest( const FString& InID, const TArray
 	return true;
 }
 
-bool UWSServerSubsystem::Client_TrySendLoginRequest( const FString& InID, const FSHA256Signature& HashedPassword ) const
+bool UWSServerSubsystem::TrySendLoginRequest( const FString& InID, const FSHA256Signature& HashedPassword ) const
 {
 	TArray<uint8> HashedPasswordArray;
 	for (size_t i = 0; i < std::size(HashedPassword.Signature); i++)
@@ -153,49 +165,9 @@ bool UWSServerSubsystem::Client_TrySendLoginRequest( const FString& InID, const 
 		return false;
 	}
 
-	UWorld* World = GetWorld();
-	AwunthshinPlayerController* PC = Cast<AwunthshinPlayerController>( World->GetFirstPlayerController() );
-	check(PC);
-	
-	if (PC)
-	{
-		PC->Server_SendLoginRequest( InID, HashedPasswordArray );
-		return true;
-	}
-	return false;
-}
-
-bool UWSServerSubsystem::Client_TrySendLoginRequest( const FString& InID, const FString& InPlainPassword )
-{
-	if ( FSHA256Signature Hashed{}; HashPassword( InPlainPassword, Hashed ) )
-	{
-		return Client_TrySendLoginRequest( InID, Hashed );
-	}
-	return false;
-}
-
-bool UWSServerSubsystem::Server_SendLoginRequest( const AwunthshinPlayerController* PlayerController,  const FString& InID, const FSHA256Signature& HashedPassword ) const
-{
-	if (GetWorld()->GetNetMode() == NM_Client)
-	{
-		check(false); // Client should use the client function
-		return false;
-	}
-	
 	if ( !LoginChannel.IsValid() )
 	{
 		check(false);
-		return false;
-	}
-
-	TArray<uint8> HashedPasswordArray;
-	for (size_t i = 0; i < std::size(HashedPassword.Signature); i++)
-	{
-		HashedPasswordArray.Add( HashedPassword.Signature[i] );
-	}
-
-	if (!ValidateLoginRequest( InID, HashedPasswordArray ))
-	{
 		return false;
 	}
 	
@@ -203,45 +175,18 @@ bool UWSServerSubsystem::Server_SendLoginRequest( const AwunthshinPlayerControll
 	const TStringConversion CharArray = StringCast<ANSICHAR>(*InID);
 	std::memcpy( LoginMessage.name.data(), CharArray.Get(), CharArray.Length() );
 	std::memcpy( LoginMessage.hashedPassword.data(), HashedPassword.Signature, sizeof(LoginMessage.hashedPassword) );
-	LoginMessage.messageIdentifier = PlayerController->GetUniqueID();
+	LoginMessage.messageIdentifier = GetWorld()->GetFirstPlayerController()->GetUniqueID();
 	FNetLoginChannelLoginRequestMessage::Send( NetDriver->ServerConnection, LoginMessage );
 	return true;
 }
 
-bool UWSServerSubsystem::Server_SendRegister(const AwunthshinPlayerController* PlayerController, const FString& InID, const FString& InEmail, const FSHA256Signature& HashedPassword) const
+bool UWSServerSubsystem::TrySendLoginRequest( const FString& InID, const FString& InPlainPassword )
 {
-	if (GetWorld()->GetNetMode() == NM_Client)
+	if ( FSHA256Signature Hashed{}; HashPassword( InPlainPassword, Hashed ) )
 	{
-		check(false); // Client should use the player controller
-		return false;
+		return TrySendLoginRequest( InID, Hashed );
 	}
-
-	if (!RegisterChannel.IsValid())
-	{
-		check(false);
-		return false;
-	}
-
-	TArray<uint8> HashedPasswordArray;
-	for (size_t i = 0; i < std::size(HashedPassword.Signature); i++)
-	{
-		HashedPasswordArray.Add( HashedPassword.Signature[i] );
-	}
-	
-	if (!ValidateRegisterRequest( InID, InEmail, HashedPasswordArray ))
-	{
-		return false;
-	}
-
-	RegisterMessage registerMessage{};
-	TStringConversion nameArray = StringCast<ANSICHAR>(*InID);
-	TStringConversion emailArray = StringCast<ANSICHAR>(*InEmail);
-	std::memcpy(registerMessage.name.data(), nameArray.Get(), nameArray.Length());
-	std::memcpy(registerMessage.email.data(), emailArray.Get(), emailArray.Length());
-	std::memcpy(registerMessage.hashedPassword.data(), HashedPassword.Signature, sizeof(registerMessage.hashedPassword));
-	registerMessage.messageIdentifier = PlayerController->GetUniqueID();
-	FNetRegisterChannelRegisterRequestMessage::Send(NetDriver->ServerConnection, registerMessage);
-	return true;
+	return false;
 }
 
 bool UWSServerSubsystem::ValidateLogoutRequest( const AwunthshinPlayerController* PlayerController )
@@ -296,7 +241,7 @@ bool UWSServerSubsystem::Server_SendLogoutRequest( const AwunthshinPlayerControl
 	}
 
 	UUID NativeUUID{};
-	for ( size_t i = 0; i < 32; ++i )
+	for ( size_t i = 0; i < 16; ++i )
 	{
 		NativeUUID[ i ] = static_cast<std::byte>( PlayerController->SessionID.uuid[ i ] );
 	}
@@ -344,7 +289,7 @@ bool UWSServerSubsystem::ValidateRegisterRequest( const FString& InID, const FSt
 	return true;
 }
 
-bool UWSServerSubsystem::Client_TrySendRegister( const AwunthshinPlayerController* PlayerController,
+bool UWSServerSubsystem::TrySendRegister( const AwunthshinPlayerController* PlayerController,
 	const FString& InID, const FString& InEmail, const FString& InPlainPassword )
 {
 	if (FSHA256Signature Hashed{}; HashPassword(InPlainPassword, Hashed))
@@ -355,7 +300,25 @@ bool UWSServerSubsystem::Client_TrySendRegister( const AwunthshinPlayerControlle
 			HashedPasswordArray.Add( Hashed.Signature[ i ] );
 		}
 		
-		PlayerController->Server_SendRegister(InID, InEmail, HashedPasswordArray);
+		if (!RegisterChannel.IsValid())
+		{
+			check(false);
+			return false;
+		}
+		
+		if (!ValidateRegisterRequest( InID, InEmail, HashedPasswordArray ))
+		{
+			return false;
+		}
+
+		RegisterMessage registerMessage{};
+		TStringConversion nameArray = StringCast<ANSICHAR>(*InID);
+		TStringConversion emailArray = StringCast<ANSICHAR>(*InEmail);
+		std::memcpy(registerMessage.name.data(), nameArray.Get(), nameArray.Length());
+		std::memcpy(registerMessage.email.data(), emailArray.Get(), emailArray.Length());
+		std::memcpy(registerMessage.hashedPassword.data(), HashedPasswordArray.GetData(), sizeof(registerMessage.hashedPassword));
+		registerMessage.messageIdentifier = PlayerController->GetUniqueID();
+		FNetRegisterChannelRegisterRequestMessage::Send(NetDriver->ServerConnection, registerMessage);
 		return true;
 	}
 
@@ -380,58 +343,27 @@ TStatId UWSServerSubsystem::GetStatId() const
 	RETURN_QUICK_DECLARE_CYCLE_STAT(UWSServerSubsystem, STATGROUP_Tickables);
 }
 
-void UWSServerSubsystem::OnLoginMessageReceived( const bool bLogin, const uint32 ID, const FUUIDWrapper& LoginUUID, const uint32 InPCUniqueID )
+void UWSServerSubsystem::OnLoginMessageReceived( const bool bLogin, const uint32 ID, const FUUIDWrapper& InLoginUUID, const uint32 InPCUniqueID )
 {
+	AwunthshinPlayerController* PlayerController = Cast<AwunthshinPlayerController>(GetWorld()->GetFirstPlayerController());
+	if ( PlayerController->GetUniqueID() != InPCUniqueID )
+	{
+		RequestEngineExit("Invalid Player Controller ID has been respond from server");
+	}
+	
 	if ( bLogin ) // Login
 	{
-		for ( auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator )
-		{
-			if ( AwunthshinPlayerController* Casted = Cast<AwunthshinPlayerController>(*Iterator);
-				 Casted && Casted->GetUniqueID() == InPCUniqueID )
-			{
-				Casted->bLogin = bLogin;
-				Casted->SetUserID( ID );
-				Casted->SessionID = LoginUUID;
-
-				SessionIDs.Emplace( Casted, LoginUUID );
-				PlayerControllers.Emplace( LoginUUID, Casted );
-				break;
-			}
-		}
+		ClientUserID = ID;
+		ClientSessionID = InLoginUUID;
 	}
 	else // Logout
 	{
-		const auto& ToRemove = SessionIDs.FilterByPredicate( [ &LoginUUID ]( const TPair<AwunthshinPlayerController*, FUUIDWrapper>& Pair )
-		{
-			return Pair.Value == LoginUUID;
-		} );
-
-		for (const TPair<AwunthshinPlayerController*, FUUIDWrapper>& Removal : ToRemove)
-		{
-			Removal.Key->bLogin= false;
-			Removal.Key->SetUserID( 0 );
-			Removal.Key->SessionID = {};
-			
-			SessionIDs.Remove( Removal.Key );
-			PlayerControllers.Remove( Removal.Value );
-		}
+		ClientUserID = -1;
+		ClientSessionID = {};
 	}
-}
 
-void UWSServerSubsystem::OnRegisterMessageReceived( const uint32 InPCUniqueID, bool bSuccess,
-	const ERegisterFailCodeUE FailCode )
-{
-	for ( auto Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator )
-	{
-		if ( AwunthshinPlayerController* Casted = Cast<AwunthshinPlayerController>(*Iterator);
-			 Casted && Casted->GetUniqueID() == InPCUniqueID )
-		{
-			Casted->Client_PropagateRegisterStatus( bSuccess, FailCode );
-			break;
-		}
-	}
+	OnAccountInfoChanged.Broadcast(bLogin, ClientUserID, ClientSessionID);
 }
-
 
 // FString을 std::string으로 변환하는 함수
 std::string FStringToStdString(const FString& FStringInput)

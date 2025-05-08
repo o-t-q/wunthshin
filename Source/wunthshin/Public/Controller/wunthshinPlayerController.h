@@ -40,27 +40,18 @@ private:
 	
 	UFUNCTION()
 	void OnRep_Login() const;
-	
+
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_SendLoginRequest( const FString& InID, const TArray<uint8>& HashedPassword );
+	void Server_Authenticate(const int32 InUserID, const FUUIDWrapper& InSessionID);
+
+	UFUNCTION(Client, Reliable)
+	void Client_AuthenticateAndMainMap();
 
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_SendLogoutRequest();
 
 	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_SendRegister( const FString& InID, const FString& InEmail, const TArray<uint8>& HashedPassword ) const;
-
-	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_UpdateInventory( const int32 Page ) const;
-	
-	UFUNCTION(Client, Reliable)
-	void Client_PropagateRegisterStatus(bool bSuccess, const ERegisterFailCodeUE FailCode);
-
-	UFUNCTION(Client, Reliable)
-	void Client_OpenStartLevel() const;
-	
-	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable)
-	void Server_MoveToStart() const;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_Login, meta=(AllowPrivateAccess=true))
 	bool bLogin;
