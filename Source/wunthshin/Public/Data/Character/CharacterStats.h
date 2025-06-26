@@ -86,4 +86,12 @@ struct WUNTHSHIN_API FCharacterStats : public FTableRowBase
 	FCharacterMovementStats Movement;
     
     // 추가적인 스탯을 여기서 정의할 수 있습니다.
+	UPROPERTY()
+	int32 CharacterLevel = 1;
+
+	UPROPERTY()
+	int32 CurrentExp = 0;
+
+	UPROPERTY()
+	int32 RequiredLevelUpExp = 10;
 };

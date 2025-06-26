@@ -47,7 +47,7 @@ void AwunthshinPlayerController::BeginPlay()
 void AwunthshinPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-
+	
 	// 캐릭터의 체력이 다 소모됐을때 캐릭터를 자동으로 교환하기 위한 Delegate
 	if (AA_WSCharacter* CharacterCasting = Cast<AA_WSCharacter>(InPawn))
 	{

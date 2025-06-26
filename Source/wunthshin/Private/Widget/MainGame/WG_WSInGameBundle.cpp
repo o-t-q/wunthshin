@@ -17,48 +17,65 @@
 #include "Subsystem/CharacterSubsystem.h"
 #include "Actor/Pawn/AA_WSCharacter.h"
 #include "Component/StatsComponent.h"
+#include "Network/Subsystem/WSServerSubsystem.h"
+#include "Subsystem/WorldStatusSubsystem.h"
 
 UImage* UWG_WSInGameBundle::FadeImageStatic = nullptr;
 
-void UWG_WSInGameBundle::BindStamina(APawn* OldPawn, APawn* NewPawn)
+void UWG_WSInGameBundle::BindGauges(APawn* OldPawn, APawn* NewPawn)
 {
 	if (Cast<AA_WSCharacter>(OldPawn))
 	{
 		StaminaBar->PercentDelegate.Unbind();
+		HpBar->PercentDelegate.Unbind();
+		ExpBar->PercentDelegate.Unbind();
 	}
 
 	if (const AA_WSCharacter* NewCharacter = Cast<AA_WSCharacter>(NewPawn))
 	{
 		CurrentCharacterStat = NewCharacter->GetStatsComponent();
 		StaminaBar->PercentDelegate.BindDynamic(CurrentCharacterStat, &UStatsComponent::GetStaminaRatioNonConst);
+		HpBar->PercentDelegate.BindDynamic(CurrentCharacterStat, &UStatsComponent::GetHPRatioNonConst);
+		ExpBar->PercentDelegate.BindDynamic(CurrentCharacterStat, &UStatsComponent::GetExpRatioNonConst);
 	}
 
+	UpdateGauges();
+}
+
+void UWG_WSInGameBundle::UpdateGauges()
+{
 	StaminaBar->SynchronizeProperties();
+	HpBar->SynchronizeProperties();
+	ExpBar->SynchronizeProperties();
 }
 
 void UWG_WSInGameBundle::NativeConstruct()
 {
 	Super::NativeConstruct();
 	InitializeWidget();
-	
+
 	FadeImageStatic = FadeImage;
 
 	// 시작할 때 메뉴가 열려있으면 다 닫음
-	for(auto& Widget : ChildWidgets)
+	for (auto& Widget : ChildWidgets)
 	{
 		Widget.Value->OnHideWidget();
 	}
-	
+
 	// 메뉴버튼 이벤트 바인딩
-	Button_OpenInventory->OnClicked.AddDynamic(this,&ThisClass::OpenWindowInventory);
+	Button_OpenInventory->OnClicked.AddDynamic(this, &ThisClass::OpenWindowInventory);
 
 	if (UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
 	{
 		CharacterSubsystem->OnCharacterAdded.AddUniqueDynamic(this, &UWG_WSInGameBundle::InitCharacterSlots);
-		
+
 		// 우측 캐릭터 변경 슬롯 초기화
 		InitCharacterSlots();
 	}
+
+	// 이벤트 바인딩
+	auto subsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>();
+	subsystem->OnCharacterStatusChanged.AddDynamic(this, &UWG_WSInGameBundle::UpdateGauges);
 }
 
 void UWG_WSInGameBundle::NativeOnInitialized()
@@ -67,41 +84,45 @@ void UWG_WSInGameBundle::NativeOnInitialized()
 
 	if (const APlayerController* PlayerController = GetPlayerContext().GetPlayerController())
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<
+				UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
 			!Subsystem->HasMappingContext(InputMappingContext))
 		{
 			Subsystem->AddMappingContext(InputMappingContext, 1);
 		}
 
-		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(GetPlayerContext().GetPlayerController()->InputComponent))
+		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(
+			GetPlayerContext().GetPlayerController()->InputComponent))
 		{
-			EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this, &UWG_WSInGameBundle::OpenWindowInventory);
+			EnhancedInputComponent->BindAction(InventoryAction, ETriggerEvent::Started, this,
+			                                   &UWG_WSInGameBundle::OpenWindowInventory);
 		}
 	}
 
-	if (const AA_WSCharacter* Character = Cast<AA_WSCharacter>(GetPlayerContext().GetPawn()))
+	if (AA_WSCharacter* Character = Cast<AA_WSCharacter>(GetPlayerContext().GetPawn()))
 	{
 		UStatsComponent* StatsComponent = Character->GetStatsComponent();
-		StaminaBar->PercentDelegate.BindDynamic(StatsComponent, &UStatsComponent::GetStaminaRatioNonConst);
-		StaminaBar->SynchronizeProperties();
+		BindGauges(nullptr,Cast<APawn>(Character));
 	}
-	
-	GetPlayerContext().GetPlayerController()->OnPossessedPawnChanged.AddUniqueDynamic(this, &ThisClass::BindStamina);
+
+	GetPlayerContext().GetPlayerController()->OnPossessedPawnChanged.AddUniqueDynamic(this, &ThisClass::BindGauges);
 }
 
 void UWG_WSInGameBundle::NativeDestruct()
 {
 	Super::NativeDestruct();
-	
+
 	if (const APlayerController* PlayerController = GetPlayerContext().GetPlayerController())
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<
+				UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
 			Subsystem->HasMappingContext(InputMappingContext))
 		{
 			Subsystem->RemoveMappingContext(InputMappingContext);
 		}
 
-		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(GetPlayerContext().GetPlayerController()->InputComponent))
+		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(
+			GetPlayerContext().GetPlayerController()->InputComponent))
 		{
 			EnhancedInputComponent->ClearBindingsForObject(this);
 		}
@@ -119,13 +140,15 @@ UWG_WSInGameBundle::UWG_WSInGameBundle(const FObjectInitializer& ObjectInitializ
 	  Button_OpenInventory(nullptr),
 	  CharacterRoot(nullptr)
 {
-	if (static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC_HUD(TEXT("/Script/EnhancedInput.InputMappingContext'/Game/ThirdPerson/Input/IMC_HUD.IMC_HUD'"));
+	if (static ConstructorHelpers::FObjectFinder<UInputMappingContext> IMC_HUD(
+			TEXT("/Script/EnhancedInput.InputMappingContext'/Game/ThirdPerson/Input/IMC_HUD.IMC_HUD'"));
 		IMC_HUD.Succeeded())
 	{
 		InputMappingContext = IMC_HUD.Object;
 	}
 
-	if (static ConstructorHelpers::FObjectFinder<UInputAction> IA_Inventory(TEXT("/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Inventory.IA_Inventory'"));
+	if (static ConstructorHelpers::FObjectFinder<UInputAction> IA_Inventory(
+			TEXT("/Script/EnhancedInput.InputAction'/Game/ThirdPerson/Input/Actions/IA_Inventory.IA_Inventory'"));
 		IA_Inventory.Succeeded())
 	{
 		InventoryAction = IA_Inventory.Object;
@@ -136,17 +159,18 @@ FCTweenInstance* UWG_WSInGameBundle::FadeInOut(bool bIsIn, float InDuration)
 {
 	float Start = bIsIn ? 1.0f : 0.0f;
 	float End = 1.f - Start;
-	
+
 	return FCTween::Play(Start, End, [&](float t) { FadeImageStatic->SetOpacity(t); }, InDuration);
 }
 
 void UWG_WSInGameBundle::OpenWindow(FName InWindowName)
 {
-	if (ChildWidgets[InWindowName]->GetVisibility() == ESlateVisibility::Hidden && !ChildWidgets[InWindowName]->IsInAnimation())
+	if (ChildWidgets[InWindowName]->GetVisibility() == ESlateVisibility::Hidden && !ChildWidgets[InWindowName]->
+		IsInAnimation())
 	{
 		ChildWidgets[InWindowName]->SetInAnimation(true);
-		
-		FadeInOut(false)->SetOnComplete([this, InWindowName] ()
+
+		FadeInOut(false)->SetOnComplete([this, InWindowName]()
 		{
 			ChildWidgets[InWindowName]->OnVisibleWidget();
 			ChildWidgets[InWindowName]->SetInAnimation(false);
@@ -159,7 +183,7 @@ void UWG_WSInGameBundle::OpenWindow(FName InWindowName)
 void UWG_WSInGameBundle::InitCharacterSlots()
 {
 	CharacterRoot->ClearListItems();
-	
+
 	// 1. 현재 레벨 상 캐릭터가 파괴되지 않고 유지되는 상태이므로 캐릭터 자체를 데이터로 사용함
 	// 2. HUD도 레벨 변경에 맞춰 동시에 파괴되기 때문에 캐릭터가 파괴되기 전까지는 동일한 포인터를 유지하고 있게됨
 	if (const UCharacterSubsystem* CharacterSubsystem = GetGameInstance()->GetSubsystem<UCharacterSubsystem>())
@@ -167,9 +191,3 @@ void UWG_WSInGameBundle::InitCharacterSlots()
 		CharacterRoot->SetListItems(CharacterSubsystem->GetOwnedCharacters());
 	}
 }
-
-
-
-
-
-

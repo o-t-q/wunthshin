@@ -53,6 +53,9 @@ void AwunthshinPlayerState::CheckCharacterDeath(AActor* DamagedActor, float Dama
 					return;
 				}
 			}
+
+			auto subsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>();
+			subsystem->OnCharacterStatusChanged.Broadcast();
 			
 			SetAlive(false);
 		}

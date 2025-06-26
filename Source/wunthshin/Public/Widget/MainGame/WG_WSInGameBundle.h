@@ -6,6 +6,7 @@
 #include "InputMappingContext.h"
 
 #include "Blueprint/UserWidget.h"
+#include "Components/TextBlock.h"
 #include "Widget/WG_WSUserWidgetBase.h"
 #include "WG_WSInGameBundle.generated.h"
 
@@ -44,7 +45,9 @@ class WUNTHSHIN_API UWG_WSInGameBundle : public UWG_WSUserWidgetBase
 	
 protected:
 	UFUNCTION()
-	void BindStamina(APawn* OldPawn, APawn* NewPawn);
+	void BindGauges(APawn* OldPawn, APawn* NewPawn);
+	UFUNCTION()
+	void UpdateGauges();
 	
 	virtual void NativeConstruct() override;
 	virtual void NativeOnInitialized() override;
@@ -77,7 +80,17 @@ public:
 	UListView* CharacterRoot;
 
 	UPROPERTY(meta = (BindWidget))
+	UProgressBar* HpBar;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* HpText;
+	
+	UPROPERTY(meta = (BindWidget))
 	UProgressBar* StaminaBar;
+
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* ExpBar;
+
 };
 
 

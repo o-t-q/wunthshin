@@ -1,104 +1,34 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="소스 파일">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="헤더 파일">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="리소스 파일">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="헤더 파일\Handlers">
-      <UniqueIdentifier>{24c04947-a003-454b-bfc6-1ea142d52e04}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="헤더 파일\Data">
-      <UniqueIdentifier>{71beb564-657b-4803-be0b-ce3e9839f135}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\Data">
-      <UniqueIdentifier>{e44f2255-da94-47aa-9583-b274a40bbbce}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\Handlers">
-      <UniqueIdentifier>{ce5cd7bb-3e98-485c-9f59-8792f919d3b4}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="Handlers\Private\inventory.cpp" />
+    <ClCompile Include="Handlers\Private\login.cpp" />
+    <ClCompile Include="Handlers\Private\pingpong.cpp" />
+    <ClCompile Include="Handlers\Private\register.cpp" />
+    <ClCompile Include="Private\dbconn.cpp" />
+    <ClCompile Include="Private\DBServer.cpp" />
+    <ClCompile Include="Private\message-handler.cpp" />
+    <ClCompile Include="Private\test_client.cpp" />
+    <ClCompile Include="Private\utility.cpp" />
+    <ClCompile Include="Handlers\Private\character.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Handlers\Private\login.cpp">
-      <Filter>소스 파일\Handlers</Filter>
-    </ClCompile>
-    <ClCompile Include="Handlers\Private\pingpong.cpp">
-      <Filter>소스 파일\Handlers</Filter>
-    </ClCompile>
-    <ClCompile Include="Handlers\Private\register.cpp">
-      <Filter>소스 파일\Handlers</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\DBServer.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\message-handler.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\test_client.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Private\dbconn.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="Handlers\Private\inventory.cpp">
-      <Filter>소스 파일\Handlers</Filter>
-    <ClCompile Include="Private\utility.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Handlers\Public\pingpong.h">
-      <Filter>헤더 파일\Handlers</Filter>
-    </ClInclude>
-    <ClInclude Include="Data\Public\user.hpp">
-      <Filter>헤더 파일\Data</Filter>
-    </ClInclude>
-    <ClInclude Include="Handlers\Public\login.h">
-      <Filter>헤더 파일\Handlers</Filter>
-    </ClInclude>
-    <ClInclude Include="Data\Public\inventory.hpp">
-      <Filter>헤더 파일\Data</Filter>
-    </ClInclude>
-    <ClInclude Include="Data\Public\item.hpp">
-      <Filter>헤더 파일\Data</Filter>
-    </ClInclude>
-    <ClInclude Include="Handlers\Public\register.h">
-      <Filter>헤더 파일\Handlers</Filter>
-    </ClInclude>
-    <ClInclude Include="Public\boost-socket.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Public\dbcon.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Public\DBServer.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Public\message.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Public\message-handler.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Public\test_client.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Public\utility.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="Handlers\Public\inventory.h">
-      <Filter>헤더 파일\Handlers</Filter>
-    </ClInclude>
-    <ClInclude Include="Public\net-utility.hpp">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
+    <ClInclude Include="Data\Public\characterStatus.hpp" />
+    <ClInclude Include="Data\Public\inventory.hpp" />
+    <ClInclude Include="Data\Public\item.hpp" />
+    <ClInclude Include="Data\Public\user.hpp" />
+    <ClInclude Include="Handlers\Public\inventory.h" />
+    <ClInclude Include="Handlers\Public\login.h" />
+    <ClInclude Include="Handlers\Public\pingpong.h" />
+    <ClInclude Include="Handlers\Public\register.h" />
+    <ClInclude Include="Public\boost-socket.hpp" />
+    <ClInclude Include="Public\dbcon.hpp" />
+    <ClInclude Include="Public\DBServer.h" />
+    <ClInclude Include="Public\message-handler.h" />
+    <ClInclude Include="Public\message.h" />
+    <ClInclude Include="Public\net-utility.hpp" />
+    <ClInclude Include="Public\test_client.h" />
+    <ClInclude Include="Public\utility.hpp" />
+    <ClInclude Include="Handlers\Public\character.h" />
   </ItemGroup>
 </Project>

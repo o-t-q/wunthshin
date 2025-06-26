@@ -3,13 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
 #include "GameFramework/PlayerState.h"
+#include "Network/Subsystem/WSServerSubsystem.h"
+#include "Network/Channel/WSLoginChannel.h"
 #include "wunthshinPlayerState.generated.h"
+
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerAliveChanged, const bool, InbAlive);
 
 class AA_WSCharacter;
+
+
+
 /**
  * 
  */

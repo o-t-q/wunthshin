@@ -84,7 +84,7 @@
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <VcpkgUseStatic>false</VcpkgUseStatic>
+    <VcpkgUseStatic>true</VcpkgUseStatic>
     <VcpkgInstalledDir>
     </VcpkgInstalledDir>
     <VcpkgUseMD>false</VcpkgUseMD>
@@ -195,6 +195,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Handlers\Private\character.cpp" />
     <ClCompile Include="Handlers\Private\inventory.cpp" />
     <ClCompile Include="Handlers\Private\login.cpp" />
     <ClCompile Include="Handlers\Private\pingpong.cpp" />
@@ -206,9 +207,11 @@
     <ClCompile Include="Private\utility.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Data\Public\characterStatus.hpp" />
     <ClInclude Include="Data\Public\inventory.hpp" />
     <ClInclude Include="Data\Public\item.hpp" />
     <ClInclude Include="Data\Public\user.hpp" />
+    <ClInclude Include="Handlers\Public\character.h" />
     <ClInclude Include="Handlers\Public\inventory.h" />
     <ClInclude Include="Handlers\Public\login.h" />
     <ClInclude Include="Handlers\Public\pingpong.h" />

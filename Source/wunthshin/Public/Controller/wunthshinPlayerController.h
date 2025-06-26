@@ -6,6 +6,7 @@
 #include "GameFramework/PlayerController.h"
 #include "wunthshinPlayerController.generated.h"
 
+class AA_WSCharacter;
 /**
  * 
  */
@@ -25,4 +26,7 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 
+private:
+	AA_WSCharacter* CurrentCharacter = nullptr;
+	
 };

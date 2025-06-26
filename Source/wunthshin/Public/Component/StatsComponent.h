@@ -54,6 +54,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void IncreaseStamina(const float InValue);
 
+	// 레벨 업
+	// UFUNCTION()
+	// void LevelUp();
+	
 	// 전체 체력과 현재 체력 비율
 	UFUNCTION(BlueprintCallable)
 	float GetHPRatio() const
@@ -77,6 +81,12 @@ public:
 		return CurrentStats.Stamina / 100.f;
 	}
 
+	UFUNCTION(BlueprintCallable)
+	float GetExpRatio() const
+	{
+		return CurrentStats.CurrentExp / CurrentStats.RequiredLevelUpExp;		
+	}
+	
 	// Delegate 바인딩용 우회함수, GetHPRatio를 호출함
 	UFUNCTION()
 	float GetHPRatioNonConst()
@@ -90,6 +100,12 @@ public:
 		return GetStaminaRatio();
 	}
 
+	UFUNCTION()
+	float GetExpRatioNonConst()
+	{
+		return GetExpRatio();		
+	}
+	
 	UFUNCTION(BlueprintCallable)
 	float GetStamina() const { return CurrentStats.Stamina; }
 
@@ -116,4 +132,7 @@ public:
 	void SetHP(const float HP);
 
 	void CopyStats(const FCharacterStats& CharacterStats);
+
+	void SetCurrentStats(const FString InStatName, const int32 InStatIncreasement);
 };
+

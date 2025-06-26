@@ -4,6 +4,7 @@
 #include "Logging/LogMacros.h"
 
 #include "Actor/Pawn/AA_WSCharacter.h"
+#include "Subsystem/WorldStatusSubsystem.h"
 
 DEFINE_LOG_CATEGORY(LogStatsComponent);
 
@@ -153,4 +154,10 @@ void UStatsComponent::SetHP(const float HP)
 void UStatsComponent::CopyStats(const FCharacterStats& CharacterStats)
 {
     CurrentStats = CharacterStats;
+}
+
+void UStatsComponent::SetCurrentStats(const FString InStatName, const int32 InStatIncreasement)
+{
+    
+    
 }

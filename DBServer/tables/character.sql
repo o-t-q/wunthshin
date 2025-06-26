@@ -1,0 +1,4 @@
+CREATE TABLE characters(
+    charcter_id BIGSERIAL UNIQUE NOT NULL PRIMARY KEY,
+    character_name VARCHAR(255) UNIQUE NOT NULL
+);

@@ -8,6 +8,9 @@ struct WUNTHSHIN_API FCharacterTableRow : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
+	int32 CharacterKey;
+	
+	UPROPERTY(EditAnywhere)
 	FName CharacterName;
 
 	UPROPERTY(EditAnywhere)

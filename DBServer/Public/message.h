@@ -19,6 +19,7 @@ enum class EMessageType : int32_t
     AddItemResponse,
     GetItemsRequest,
     GetItemsResponse,
+    CharacterStatus,
     MAX
 };
 
@@ -29,6 +30,7 @@ enum class EMessageChannelType : int32_t
     Login,
     Register,
     Item,
+    PlayerState,
     MAX
 };
 
@@ -244,6 +246,19 @@ DEFINE_MSG_WITH_BODY(
             count   = InItemCount;
             success = InSuccess;
             end     = IsEnd;
+        } )
+
+DEFINE_MSG_WITH_BODY(
+    CharacterStatusMessage, EMessageType::CharacterStatus, EMessageChannelType::PlayerState,
+        UUID    sessionID{};      // 소유자 userid
+        int64_t character_id = 0; //
+        int64_t changed_Hp   = 0; // 변경할 hp 값
+        int64_t changed_Exp  = 0; // 변경할 exp 값
+        CharacterStatusMessage( const UUID& InSessionID, int64_t characterId, int64_t changedhp, int64_t changedexp ) {
+            sessionID    = InSessionID;
+            character_id = characterId;
+            changed_Hp   = changedhp;
+            changed_Exp  = changedexp;
         } )
 
 #pragma pack( pop )

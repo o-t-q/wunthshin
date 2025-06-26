@@ -61,7 +61,7 @@ struct WUNTHSHIN_API FItemTableRow : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "bCapsule", EditConditionHides))
 	float CapsuleHeight;
-
+	
 	UPROPERTY(EditAnywhere, meta=(RowType="/Script/wunthshin.EffectTableRow"))
 	FDataTableRowHandle ItemEffect;
 

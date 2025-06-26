@@ -31,7 +31,7 @@ struct WUNTHSHIN_API FDamageTakenArray
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponAttackEnded, FGuid, InAttackID);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCharacterStatusChanged);
 /**
  * 현재 월드의 아이템 적용 및 캐릭터 관련 정보를 추적하는 서브시스템
  */
@@ -86,6 +86,8 @@ class WUNTHSHIN_API UWorldStatusSubsystem : public UTickableWorldSubsystem
 public:
 	FOnWeaponAttackEnded OnWeaponAttackEnded;
 
+	FOnCharacterStatusChanged OnCharacterStatusChanged;
+	
 	UWorldStatusSubsystem();
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;

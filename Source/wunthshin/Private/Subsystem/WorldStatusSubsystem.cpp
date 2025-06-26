@@ -18,6 +18,7 @@
 #include "Actor/Pawn/AA_WSCharacter.h"
 #include "Actor/Pawn/A_WSNPCPawn.h"
 #include "Component/C_WSPickUp.h"
+#include "Network/Subsystem/WSServerSubsystem.h"
 
 void UWorldStatusSubsystem::PushTicket_Internal(TSharedPtr<FEventTicket> InTicket)
 {
@@ -59,6 +60,14 @@ void UWorldStatusSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
     DeathLevelSequence = Cast<ULevelSequence>(StaticLoadObject(ULevelSequence::StaticClass(), nullptr, TEXT("/Script/LevelSequence.LevelSequence'/Game/ThirdPerson/Blueprints/LevelChangeSequence/BP_Death_LevelChange.BP_Death_LevelChange'")));
+
+    if ( GetWorld()->IsGameWorld() )
+    {
+        if (UWSServerSubsystem* Subsystem = GetWorld()->GetGameInstance()->GetSubsystem<UWSServerSubsystem>())
+        {
+            OnCharacterStatusChanged.AddUniqueDynamic(Subsystem, &UWSServerSubsystem::SendCharacterStatus);        
+        }
+    }
 }
 
 void UWorldStatusSubsystem::Tick(float InDeltaTime)

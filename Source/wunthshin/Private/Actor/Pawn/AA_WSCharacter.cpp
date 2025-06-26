@@ -33,6 +33,8 @@
 #include "Actor/Item/A_LootingBox.h"
 #include "Component/C_WSCharacterInventory.h"
 #include "Component/C_WSSkill.h"
+#include "Controller/wunthshinPlayerController.h"
+#include "Kismet/GameplayStatics.h"
 #include "Subsystem/CharacterSubsystem.h"
 #include "Subsystem/WorldStatusSubsystem.h"
 #include "Widget/WG_WSDamageCounter.h"
@@ -271,6 +273,9 @@ void AA_WSCharacter::BeginPlay()
             FAttachmentTransformRules::SnapToTargetNotIncludingScale,
             RightHandWeaponSocketName
         ));
+
+    
+    
 }
 
 void AA_WSCharacter::OnConstruction(const FTransform& Transform)
@@ -297,8 +302,12 @@ float AA_WSCharacter::TakeDamage(float Damage, FDamageEvent const& DamageEvent, 
             {
                 ApplyElement(EventInstigator, Weapon->GetElement());
             }
-
+            
             Super::TakeDamage(Damage, DamageEvent, EventInstigator, DamageCauser);
+
+            auto subsystem = GetWorld()->GetSubsystem<UWorldStatusSubsystem>();
+            subsystem->OnCharacterStatusChanged.Broadcast();
+            
             return Damage;
         }
     }
@@ -334,6 +343,14 @@ void AA_WSCharacter::Tick(float DeltaSeconds)
             //GetCharacterMovement()->GravityScale = 0.05f;
             GetCharacterMovement()->Velocity.Z = FMath::Clamp(GetCharacterMovement()->Velocity.Z, -100.f, 0.0f);   
         }
+    }
+
+    // Test
+    auto controller =UGameplayStatics::GetPlayerController(GetWorld(), 0);
+    auto isKeyDown = controller->IsInputKeyDown("F2");
+    if (isKeyDown)
+    {
+        TakeDamage(10.f,FDamageEvent(),controller,this);
     }
 }
 
